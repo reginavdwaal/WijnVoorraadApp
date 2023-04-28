@@ -1,0 +1,18 @@
+<form action="{% url 'WijnVoorraad:drink' voorraad.id %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend><h1>{{ voorraad.wijn.naam }} - {{ voorraad.wijn.domein}}</h1></legend>
+        {{ voorraad.wijn.wijnsoort.omschrijving }},
+        {{ voorraad.wijn.jaar }},
+        {{ voorraad.wijn.land }}<br>
+        Streek {{ voorraad.wijn.streek }}<br>
+        Classificatie {{ voorraad.wijn.classificatie }}<br>
+        Leverancier {{ voorraad.wijn.leverancier }}<br>
+        Website {{ voorraad.wijn.website }}<br>
+        Opmerking {{ voorraad.wijn.opmerking }}<br>
+        Datum aangemaakt {{ voorraad.wijn.datumAangemaakt|date }}<br>
+        <br><br>
+        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    </fieldset>
+    <input type="submit" value="Drink">
+    </form>

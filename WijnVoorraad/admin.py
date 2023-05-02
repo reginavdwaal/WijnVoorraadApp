@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import WijnSoort, DruivenSoort, Deelnemer, Locatie, Vak, Wijn, WijnDruivensoort, WijnVoorraad, VoorraadMutatie
+from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer, DeelnemerUser
+from .models import Wijn, WijnDruivensoort, WijnVoorraad, VoorraadMutatie
 
 class VakInline(admin.TabularInline):
     model = Vak
@@ -12,10 +13,16 @@ class LocatieAdmin(admin.ModelAdmin):
     ]
     inlines = [VakInline]
 
+class UsersInline(admin.TabularInline):
+    model = DeelnemerUser
+    extra = 3
+
+class DeelnemerAdmin(admin.ModelAdmin):
+    inlines = [UsersInline]
+
 class DruivenSoortInline(admin.TabularInline):
     model = WijnDruivensoort
     extra = 4
-
 
 class WijnAdmin(admin.ModelAdmin):
     inlines = [DruivenSoortInline]
@@ -24,11 +31,13 @@ admin.site.register(WijnSoort)
 
 admin.site.register(DruivenSoort)
 
-admin.site.register(Deelnemer)
-
 admin.site.register(Locatie, LocatieAdmin)
 
 admin.site.register(Vak)
+
+admin.site.register(Deelnemer, DeelnemerAdmin)
+
+admin.site.register(DeelnemerUser)
 
 admin.site.register(Wijn, WijnAdmin)
 

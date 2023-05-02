@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -26,15 +27,6 @@ class DruivenSoort(models.Model):
         verbose_name = "druivensoort"
         verbose_name_plural = "druivensoorten"
 
-class Deelnemer(models.Model):
-    naam = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.naam
-    
-    class Meta:
-        ordering = ["naam"]
-
 class Locatie(models.Model):
     omschrijving = models.CharField(max_length=200)
     
@@ -58,6 +50,38 @@ class Vak(models.Model):
         constraints = [
             models.UniqueConstraint(name="unique_code_binnen_locatie",
                                     fields=["locatie", "code"],
+                                    deferrable=Deferrable.DEFERRED,
+                                   )]
+
+class Deelnemer(models.Model):
+    naam = models.CharField(max_length=200)
+    standaardLocatie = models.ForeignKey(Locatie, on_delete=models.SET_NULL, blank=True,null=True)
+    users = models.ManyToManyField(
+        User,
+        through='DeelnemerUser',
+        through_fields=('deelnemer', 'user'),
+    )
+
+    def __str__(self):
+        return self.naam
+    
+    class Meta:
+        ordering = ["naam"]
+
+
+class DeelnemerUser (models.Model):
+    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "%s - %s" % (self.deelnemer.naam, self.user.username)
+    
+    class Meta:
+        ordering = ["deelnemer", "user"]
+        verbose_name_plural = "Deelnemer users"
+        constraints = [
+            models.UniqueConstraint(name="unique_deelnemer_user",
+                                    fields=["deelnemer", "user"],
                                     deferrable=Deferrable.DEFERRED,
                                    )]
 

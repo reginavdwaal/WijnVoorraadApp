@@ -11,20 +11,20 @@
 
 {% if voorraad_list %}
     <table>
-    {% for voorraad in voorraad_list %}
+    {% for v in voorraad_list %}
         <tr class="mainrow">
             <td colspan="2" class="mainrow"> 
-                <b><a href="{% url 'WijnVoorraad:detail' voorraad.id %}">{{ voorraad.wijn.naam }} - {{ voorraad.wijn.domein }}</a></b>
+                <b><a href="{% url 'WijnVoorraad:detail' v.id %}">{{ v.wijn.naam }} - {{ v.wijn.domein }}</a></b>
             </td>
         </tr>
         <tr class="nextrow">
             <td class="nextrow">
-                {{ voorraad.wijn.wijnsoort.omschrijving }},
-                {{ voorraad.wijn.jaar }},
-                {{ voorraad.wijn.land }}
+                {{ v.wijn.wijnsoort.omschrijving }},
+                {{ v.wijn.jaar }},
+                {{ v.wijn.land }}
             </td>
             <td class="nextrow">
-                #{{ voorraad.aantal }}
+                #{{ v.aantal }}
             </td>
         </tr>
     {% endfor %}

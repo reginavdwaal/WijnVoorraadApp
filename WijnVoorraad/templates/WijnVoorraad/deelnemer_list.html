@@ -1,0 +1,8 @@
+{% block content %}
+    <h2>Deelnemers</h2>
+    <ul>
+        {% for d in deelnemers %}
+            <li><b><a href="{% url 'WijnVoorraad:deelnemer_detail' d.id %}">{{ d.naam }}</a></b></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

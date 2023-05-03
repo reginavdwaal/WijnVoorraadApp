@@ -1,0 +1,25 @@
+<h1>{{ deelnemer.naam }}</h1>
+<p>Standaard locatie: {{ object.standaardLocatie }}</p>
+
+<h2>Voorraad</h2>
+<ul>
+    <table>
+        {% for v in voorraad_list %}
+            <tr class="mainrow">
+                <td colspan="2" class="mainrow"> 
+                    <b><a href="{% url 'WijnVoorraad:detail' v.id %}">{{ v.wijn.naam }} - {{ v.wijn.domein }}</a></b>
+                </td>
+            </tr>
+            <tr class="nextrow">
+                <td class="nextrow">
+                    {{ v.wijn.wijnsoort.omschrijving }},
+                    {{ v.wijn.jaar }},
+                    {{ v.wijn.land }}
+                </td>
+                <td class="nextrow">
+                    #{{ v.aantal }}
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+</ul>

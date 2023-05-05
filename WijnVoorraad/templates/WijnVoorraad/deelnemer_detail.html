@@ -1,3 +1,6 @@
+{% extends "./base.html" %}
+
+{% block content %}
 <h1>{{ deelnemer.naam }}</h1>
 <p>Standaard locatie: {{ object.standaardLocatie }}</p>
 
@@ -23,3 +26,4 @@
         {% endfor %}
         </table>
 </ul>
+{% endblock %}

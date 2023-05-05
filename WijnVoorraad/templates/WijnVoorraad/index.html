@@ -1,34 +1,53 @@
-{% load static %}
-
-<link rel="stylesheet" href="{% static 'WijnVoorraad/style.css' %}">
+{% extends "./base.html" %} {% block content %}
+<h2>Deelnemers</h2>
+<ul>
+  {% for d in deelnemers %}
+  <li>
+    <b
+      ><a href="{% url 'WijnVoorraad:deelnemer_detail' d.id %}"
+        >{{ d.naam }}</a
+      ></b
+    >
+  </li>
+  {% endfor %}
+</ul>
 
 {% if user.is_authenticated %}
-    <p>Welcome, {{ user.username }}. Thanks for logging in.</p>
-    <p>Gevonden deelnemers: {{user.DeelnemerUser.deelnemer.naam}}.</p>
+    <p>Welcome, <strong>{{ user.username }}</strong>. Thanks for logging in.</p>
+    {% if deelnemer_list.all.count == 1 %}
+        </p>Deelnemer:&Tab;<strong>{{ deelnemer_list.0.naam }}</strong>&period;</p>
+    {% endif %}
 {% else %}
     <p>Welcome, new user. Please log in.</p>
 {% endif %}
 
-{% if voorraad_list %}
-    <table>
-    {% for v in voorraad_list %}
-        <tr class="mainrow">
-            <td colspan="2" class="mainrow"> 
-                <b><a href="{% url 'WijnVoorraad:detail' v.id %}">{{ v.wijn.naam }} - {{ v.wijn.domein }}</a></b>
-            </td>
-        </tr>
-        <tr class="nextrow">
-            <td class="nextrow">
-                {{ v.wijn.wijnsoort.omschrijving }},
-                {{ v.wijn.jaar }},
-                {{ v.wijn.land }}
-            </td>
-            <td class="nextrow">
-                #{{ v.aantal }}
-            </td>
-        </tr>
-    {% endfor %}
-    </table>
-{% else %}
-    <p>Er is GEEN voorraad.</p>
-{% endif %}
+<table>
+  {% for v in voorraad_list %}
+  <tr class="mainrow">
+    {% if deelnemer_list.all.count != 1 %}
+    <td class="mainrow">
+      {% ifchanged %}<b>{{ v.deelnemer.naam }}</b>{% endifchanged %}
+    </td>
+    {% endif %}
+    <td colspan="2" class="mainrow">
+      <b
+        ><a href="{% url 'WijnVoorraad:detail' v.id %}"
+          >{{ v.wijn.naam }} - {{ v.wijn.domein }}</a
+        ></b
+      >
+    </td>
+  </tr>
+  <tr class="nextrow">
+    {% if deelnemer_list.all.count != 1 %}
+        <td></td>
+    {% endif %}
+    <td class="nextrow">
+      {{ v.wijn.wijnsoort.omschrijving }}, {{ v.wijn.jaar }}, {{ v.wijn.land }}
+    </td>
+    <td class="nextrow">#{{ v.aantal }}</td>
+  </tr>
+  {% empty %}
+  <p>Er is GEEN voorraad.</p>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -11,10 +11,15 @@ from .models import WijnVoorraad, VoorraadMutatie
 def index(request):
     u = request.user
     du = DeelnemerUser.objects.filter(user=u).values('deelnemer')
-    d = Deelnemer.objects.filter(pk__in=du)
-    voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d)  
+    if du.count() != 0:
+        d = Deelnemer.objects.filter(pk__in=du)
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d)  
+    else:
+        d = None
+        voorraad_list = WijnVoorraad.objects.all()
 
     context = {'voorraad_list': voorraad_list}
+    context['deelnemer_list'] = d
     return render(request, 'WijnVoorraad/index.html', context)
 
 def detail(request, voorraad_id):

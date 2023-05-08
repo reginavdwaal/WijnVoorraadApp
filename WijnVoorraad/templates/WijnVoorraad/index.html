@@ -1,24 +1,7 @@
 {% extends "./base.html" %} {% block content %}
-<h2>Deelnemers</h2>
-<ul>
-  {% for d in deelnemers %}
-  <li>
-    <b
-      ><a href="{% url 'WijnVoorraad:deelnemer_detail' d.id %}"
-        >{{ d.naam }}</a
-      ></b
-    >
-  </li>
-  {% endfor %}
-</ul>
 
-{% if user.is_authenticated %}
-    <p>Welcome, <strong>{{ user.username }}</strong>. Thanks for logging in.</p>
-    {% if deelnemer_list.all.count == 1 %}
-        </p>Deelnemer:&Tab;<strong>{{ deelnemer_list.0.naam }}</strong>&period;</p>
-    {% endif %}
-{% else %}
-    <p>Welcome, new user. Please log in.</p>
+{% if deelnemer_list.all.count == 1 %}
+    </p>Deelnemer:&Tab;<strong>{{ deelnemer_list.0.naam }}</strong>&period;</p>
 {% endif %}
 
 <table>

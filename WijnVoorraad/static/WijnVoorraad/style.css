@@ -29,10 +29,6 @@
   --header-bg: var(--secondary);
   --header-link-color: var(--primary-fg);
 
-  --breadcrumbs-fg: #c4dce8;
-  --breadcrumbs-link-fg: var(--body-bg);
-  --breadcrumbs-bg: var(--primary);
-
   --link-fg: #447e9b;
   --link-hover-color: #036;
   --link-selected-fg: #5b80b2;
@@ -673,24 +669,6 @@ td ul.errorlist + input, td ul.errorlist + select, td ul.errorlist + textarea {
 .description {
     font-size: 0.75rem;
     padding: 5px 0 0 12px;
-}
-
-/* BREADCRUMBS */
-
-div.breadcrumbs {
-    background: var(--breadcrumbs-bg);
-    padding: 10px 40px;
-    border: none;
-    color: var(--breadcrumbs-fg);
-    text-align: left;
-}
-
-div.breadcrumbs a {
-    color: var(--breadcrumbs-link-fg);
-}
-
-div.breadcrumbs a:focus, div.breadcrumbs a:hover {
-    color: var(--breadcrumbs-fg);
 }
 
 /* ACTION ICONS */

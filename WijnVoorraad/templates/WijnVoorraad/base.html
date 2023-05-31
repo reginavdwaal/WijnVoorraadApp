@@ -36,7 +36,30 @@
     </div>
     {% endblock %}
     <!-- END Header -->
-   
+
+    <!-- Header Context Deelnemer en Locatie -->
+    {% block Context_deelnemer_locatie %}
+    <div id="deelnemer_locatie">
+      <table>
+        <tr>
+          <td>
+            Deelnemer
+          </td>
+          <td>
+            <strong>{{ request.session.deelnemer }}</strong>
+          </td>
+        <td>
+          Locatie
+        </td>
+        <td>
+          <strong>{{ request.session.locatie }}</strong>
+        </td>
+      </tr>
+    </table>   
+    </div>
+    {% endblock %}
+    <!-- END Header Context Deelnemer en Locatie -->
+  
     {% endif %}
 
     <div class="main" id="main">

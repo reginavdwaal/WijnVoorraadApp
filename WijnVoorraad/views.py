@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views import generic
 from django.views.generic import ListView, DetailView
 
 from .models import WijnSoort, DruivenSoort, Deelnemer, DeelnemerUser, Locatie, Vak, Wijn, WijnDruivensoort
@@ -11,8 +12,11 @@ from .models import WijnVoorraad, VoorraadMutatie
 def index(request):
     u = request.user
     du = DeelnemerUser.objects.filter(user=u).values('deelnemer')
-    if du.count() != 0:
+    if du.count() == 1:
         d = Deelnemer.objects.filter(pk__in=du)
+        l = d[0].standaardLocatie
+        request.session['deelnemer'] = d[0].naam
+        request.session['locatie'] = l.omschrijving
         voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d)  
     else:
         d = None
@@ -20,6 +24,7 @@ def index(request):
 
     context = {'voorraad_list': voorraad_list}
     context['deelnemer_list'] = d
+    request.session['test'] = 'x' 
     return render(request, 'WijnVoorraad/index.html', context)
 
 def detail(request, voorraad_id):

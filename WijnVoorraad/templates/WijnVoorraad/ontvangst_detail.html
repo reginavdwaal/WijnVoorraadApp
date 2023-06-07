@@ -1,0 +1,89 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <h1>Ontvangst details</h1>
+    <table>
+        <tr>
+            <td class="collabel">Deelnemer</td>
+            <td>{{ ontvangst.deelnemer.naam }}</td>            
+        </tr>
+        <tr>
+            <td class="collabel">Ontvangstdatum</td>
+            <td>{{ ontvangst.datumOntvangst }}</td>
+        </tr>
+        <tr>
+            <td class="collabel">Wijn</td>
+            <td>{{ ontvangst.wijn.naam }}</td>
+        </tr>
+        <tr>
+            <td class="collabel">Leverancier</td>
+            <td>{{ ontvangst.leverancier }}</td>
+        </tr>
+        <tr>
+            <td class="collabel">Website</td>
+            <td>{{ ontvangst.website }}</td>
+        </tr>
+        <tr>
+            <td class="collabel">Prijs</td>
+            <td>{{ ontvangst.prijs }}</td>
+        </tr>
+        <tr>
+            <td class="collabel">Opmerking</td>
+            <td>{{ ontvangst.opmerking }}</td>
+        </tr>
+    </table>
+    <br>
+    <h2>Voorraadmutaties</h2>
+    <table>
+        <tr>
+            <td class="rowheader">
+                In/Uit
+            </td>
+            <td class="rowheader">
+                Datum
+            </td>
+            <td class="rowheader">
+                Aantal
+            </td>
+            <td class="rowheader">
+                locatie
+            </td>
+            <td class="rowheader">
+                Vak
+            </td>
+            <td class="rowheader">
+                Actie
+            </td>
+            <td class="rowheader">
+                Omschrijving
+            </td>
+        </tr>
+        {% for m in mutaties %}
+            <tr>
+                <td>
+                    {{ m.get_in_uit_display}}
+                </td>
+                <td>
+                    {{ m.datum }}
+                </td>
+                <td>
+                    {{ m.aantal }}
+                </td>
+                <td>
+                    {{ m.locatie.omschrijving }}
+                </td>
+                <td>
+                    {{ m.vak.code }}
+                </td>
+                <td>
+                    {{ m.get_actie_display }}
+                </td>
+                <td>
+                    {{ m.omschrijving }}
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN voorraadmutaties.</p>
+        {% endfor %}
+      </table>
+{% endblock %}

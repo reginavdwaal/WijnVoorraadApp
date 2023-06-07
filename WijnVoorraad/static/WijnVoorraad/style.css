@@ -4,8 +4,15 @@
 
 .nextrow {
     padding-bottom: 30px;
-  }
+}
 
+.rowheader {
+    font-weight: bold;
+}
+
+.collabel {
+    font-weight: bold;
+}
 /*
     DJANGO Admin styles
 */

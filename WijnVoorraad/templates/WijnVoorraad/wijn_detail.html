@@ -1,0 +1,15 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <legend><h1>{{ wijn.naam }} - {{ wijn.domein}}</h1></legend>
+    {{ wijn.wijnsoort.omschrijving }},
+    {{ wijn.jaar }},
+    {{ wijn.land }}<br>
+    Streek {{ wijn.streek }}<br>
+    Classificatie {{ wijn.classificatie }}<br>
+    Leverancier {{ wijn.leverancier }}<br>
+    Website {{ wijn.website }}<br>
+    Opmerking {{ wijn.opmerking }}<br>
+    Datum aangemaakt {{ wijn.datumAangemaakt|date }}<br>
+    <br><br>
+{% endblock %}

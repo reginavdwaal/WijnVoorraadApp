@@ -175,7 +175,7 @@ class Ontvangst(models.Model):
         return "%s - %s - %s " % (self.deelnemer.naam, self.wijn.naam, self.datumOntvangst.strftime("%d-%m-%Y"))
 
     class Meta:
-        ordering = ["deelnemer", "wijn", "datumOntvangst"]
+        ordering = ["-datumOntvangst", "deelnemer", "wijn"]
         verbose_name_plural = "ontvangsten"
 
 class WijnVoorraad(models.Model):

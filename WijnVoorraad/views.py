@@ -44,14 +44,6 @@ def get_session_context_locatie (request):
         locatie = Locatie.objects.filter(pk=lc)
         return locatie
 
-def detail(request, wijn_id):
-    wijn = get_object_or_404(Wijn, pk=wijn_id)
-    return render(request, 'WijnVoorraad/detail.html', {'wijn': wijn})
-
-def drink(request, voorraad_id):
-    voorraad = get_object_or_404(WijnVoorraad, pk=voorraad_id)
-    return HttpResponseRedirect(reverse('WijnVooraad:detail', args=(voorraad.id,)))
-
 def change_context(request):
     d_id = request.POST['deelnemer_id']
     l_id = request.POST['locatie_id']
@@ -64,11 +56,11 @@ def change_context(request):
     # return render(request, 'WijnVoorraad/wijnvoorraad_list.html')
     return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))
 
-class DeelnemerListView(ListView):
+class DeelnemerListView(LoginRequiredMixin, ListView):
     model = Deelnemer
     context_object_name = 'deelnemers'
 
-class DeelnemerDetailView(DetailView):
+class DeelnemerDetailView(LoginRequiredMixin, DetailView):
     model = Deelnemer
     context_object_name = 'deelnemer'
 
@@ -77,11 +69,11 @@ class DeelnemerDetailView(DetailView):
         context['voorraad_list'] = WijnVoorraad.objects.filter(deelnemer=self.object)  
         return context
 
-class OntvangstListView(ListView):
+class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
     context_object_name = 'ontvangsten'
 
-class OntvangstDetailView(DetailView):
+class OntvangstDetailView(LoginRequiredMixin, DetailView):
     model = Ontvangst
     context_object_name = 'ontvangst'
 
@@ -108,27 +100,43 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         set_context (context)
         return context
 
-class WijnDetailView(DetailView):
+class VoorraadDetailView(LoginRequiredMixin, ListView):
+    model = WijnVoorraad
+    context_object_name = 'voorraad_list'
+    template_name = 'WijnVoorraad/Wijnvoorraad_detail.html'
+
+    def get_queryset(self):
+        set_session_context (self.request)
+        d = get_session_context_deelnemer (self.request)
+        l = get_session_context_locatie (self.request)
+        w = self.kwargs['wijn_id']
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l, wijn=w)
+        return voorraad_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        set_context (context)
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        v_id = self.request.POST['voorraad_id']
+        voorraad = WijnVoorraad.objects.get(pk=v_id)
+        WijnVoorraad.drinken(voorraad)
+        return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
+
+class WijnDetailView(LoginRequiredMixin, DetailView):
     model = Wijn
     context_object_name = 'wijn'
 
 class OntvangstCreateView(LoginRequiredMixin, CreateView):
     form_class = OntvangstForm
     template_name = 'WijnVoorraad/ontvangst_create.html'
-    success_url = '/WijnVoorraad'   #  reverse_lazy('index')
+    success_url = '/WijnVoorraad'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['mutatie_formset'] = OntvangstMutatieInlineFormset()
         return context
-
-    # def get(self, request, *args, **kwargs):
-    #     self.object = None
-    #     form_class = self.get_form_class()
-    #     return self.render_to_response(
-    #         self.get_context_data(form=self.get_form(form_class),
-    #                               MutatieFormSet=self.MutatieFormSet()
-    #                               ))
 
     def post(self, request, *args, **kwargs):
         self.object = None
@@ -157,3 +165,8 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
             self.get_context_data(form=form,
                                   mutatie_formset=mutatie_formset))
 
+class WijnCreateView(LoginRequiredMixin, CreateView):
+    model = Wijn
+    fields = '__all__'
+    template_name = 'WijnVoorraad/wijn_create.html'
+    success_url = '/WijnVoorraad'

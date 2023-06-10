@@ -21,3 +21,4 @@ OntvangstMutatieInlineFormset = inlineformset_factory(
    fields=['locatie', 'vak', 'aantal', 'omschrijving'],
    can_delete=False
    )
+

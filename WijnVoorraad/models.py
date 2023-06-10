@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime 
 from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
@@ -114,12 +115,12 @@ class Wijn(models.Model):
     jaar = models.PositiveSmallIntegerField(
         null=True, blank=True, validators=[validate_jaartal]
     )
-    land = models.CharField(max_length=200, null=True, blank=True)
-    streek = models.CharField(max_length=200, null=True, blank=True)
-    classificatie = models.CharField(max_length=200, null=True, blank=True)
-    leverancier = models.CharField(max_length=200, null=True, blank=True)
-    website = models.URLField(max_length=200, null=True, blank=True)
-    opmerking = models.CharField(max_length=200, null=True, blank=True)
+    land = models.CharField(max_length=200, blank=True)
+    streek = models.CharField(max_length=200, blank=True)
+    classificatie = models.CharField(max_length=200, blank=True)
+    leverancier = models.CharField(max_length=200, blank=True)
+    website = models.URLField(max_length=200, blank=True)
+    opmerking = models.CharField(max_length=200, blank=True)
     #    foto = models.ImageField(null=True, blank=True)
     datumAangemaakt = models.DateTimeField(auto_now_add=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
@@ -128,7 +129,8 @@ class Wijn(models.Model):
         DruivenSoort,
         through="WijnDruivensoort",
         through_fields=("wijn", "druivensoort"),
-    )
+        null=True, blank=True
+        )
 
     def __str__(self):
         return "%s - %s" % (self.naam, self.domein)
@@ -165,11 +167,11 @@ class WijnDruivensoort(models.Model):
 class Ontvangst(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
-    datumOntvangst = models.DateField()
-    leverancier = models.CharField(max_length=200, null=True, blank=True)
-    website = models.URLField(max_length=200, null=True, blank=True)
+    datumOntvangst = models.DateField(default=datetime.now)
+    leverancier = models.CharField(max_length=200, blank=True)
+    website = models.URLField(max_length=200, blank=True)
     prijs = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    opmerking = models.CharField(max_length=200, null=True, blank=True)
+    opmerking = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return "%s - %s - %s " % (self.deelnemer.naam, self.wijn.naam, self.datumOntvangst.strftime("%d-%m-%Y"))
@@ -200,6 +202,9 @@ class WijnVoorraad(models.Model):
                 self.deelnemer.naam,
                 self.locatie.omschrijving,
             )
+
+    def drinken(WijnVoorraad):
+        VoorraadMutatie.drinken(WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak)
         
     def Bijwerken (VoorraadMutatie, old_mutatie):
         if old_mutatie is not None:
@@ -238,6 +243,9 @@ class WijnVoorraad(models.Model):
                                        , vak=VoorraadMutatie.vak)
         vrd.aantal=F('aantal') - VoorraadMutatie.aantal
         vrd.save()
+        vrd.refresh_from_db()
+        if vrd.aantal == 0:
+            vrd.delete()
 
     class Meta:
         ordering = ["wijn", "deelnemer", "locatie", "vak"]
@@ -278,7 +286,7 @@ class VoorraadMutatie(models.Model):
     
     datum = models.DateField()
     aantal = models.IntegerField()
-    omschrijving = models.CharField(max_length=200, null=True, blank=True)
+    omschrijving = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return "%s - %s - %s - %s" % (
@@ -297,6 +305,18 @@ class VoorraadMutatie(models.Model):
         super().save(*args, **kwargs)  # Call the "real" save() method.
         WijnVoorraad.Bijwerken (self, old_mutatie)
 
+    def drinken(ontvangst, locatie, vak=None):
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie
+        if vak is not None:
+            mutatie.vak = vak
+        mutatie.in_uit = 'U'
+        mutatie.actie = 'D'
+        mutatie.datum = datetime.now()
+        mutatie.aantal = 1
+        mutatie.save()
+        
     class Meta:
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"

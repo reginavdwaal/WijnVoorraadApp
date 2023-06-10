@@ -1,0 +1,54 @@
+{% extends "./base_context.html" %}
+
+{% block content %}
+<form method="post">{% csrf_token %}
+<h1>Voorraad 
+  <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
+    {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
+</h1>
+<table>
+    <tr>
+        <td class="rowheader">
+            Vak
+        </td>
+        <td class="rowheader">
+            Aantal
+        </td>
+        <td class="rowheader">
+            Ontvangstdatum
+        </td>
+        <td class="rowheader">
+          Leverancier
+        </td>
+        <td class="rowheader">
+            Opmerking
+        </td>
+  </tr>
+    {% for v in voorraad_list %}
+        <tr>
+          <td>
+                {{ v.vak.code }}
+          </td>
+          <td>
+              {{ v.aantal }}
+          </td>
+          <td>
+                <a href="{% url 'WijnVoorraad:ontvangstdetail' v.ontvangst.id %}">{{ v.ontvangst.datumOntvangst }}</a>
+          </td>
+          <td>
+              {{ v.ontvangst.leverancier }}
+          </td>
+          <td>
+              {{ v.ontvangst.opmerking }}
+          </td>
+          <td>
+              <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
+              <input type="submit" value="Drinken">
+          </td>
+        </tr>
+    {% empty %}
+        <p>Er zijn GEEN ontvangsten.</p>
+    {% endfor %}
+  </table>
+</form>
+{% endblock %}

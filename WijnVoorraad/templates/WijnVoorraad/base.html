@@ -17,12 +17,13 @@
 <div id="container">
 
     {% if not is_popup %}
+
     <!-- Header -->
     {% block header %}
     <div id="header">
         <div id="branding">
           <h1 id="site-name"><img src="{% static 'WijnVoorraad/Wineicon.png'%}" alt="logo">
-            <a href="{% url 'WijnVoorraad:index' %}">{{ site_header|default:_('Wijnvoorraad') }}</a></h1>
+            <a href="{% url 'WijnVoorraad:voorraadlist' %}">{{ site_header|default:_('Wijnvoorraad') }}</a></h1>
         </div>
         <div id="user-tools">
                 Welkom
@@ -37,29 +38,10 @@
     {% endblock %}
     <!-- END Header -->
 
-    <!-- Header Context Deelnemer en Locatie -->
-    {% block Context_deelnemer_locatie %}
-    <div id="deelnemer_locatie">
-      <table>
-        <tr>
-          <td>
-            Deelnemer
-          </td>
-          <td>
-            <strong>{{ request.session.deelnemer }}</strong>
-          </td>
-        <td>
-          Locatie
-        </td>
-        <td>
-          <strong>{{ request.session.locatie }}</strong>
-        </td>
-      </tr>
-    </table>   
-    </div>
-    {% endblock %}
-    <!-- END Header Context Deelnemer en Locatie -->
-  
+    {% block context_deelnemer_locatie %}
+    {% endblock context_deelnemer_locatie %}
+
+    <!-- endif not is_popup -->
     {% endif %}
 
     <div class="main" id="main">

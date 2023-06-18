@@ -1,0 +1,26 @@
+{% extends "./base_context.html" %}
+
+{% block content %}
+
+<table>
+  {% for v in voorraad_list %}
+    <tr class="mainrow">
+    <td colspan="2" class="mainrow">
+      <b>
+        <a href="{% url 'WijnVoorraad:wijndetail' v.wijn %}">{{ v.wijn__naam }} - {{ v.wijn__domein }}</a>
+      </b>
+    </td>
+  </tr>
+  <tr class="nextrow">
+    <td class="nextrow">
+      {{ v.wijn__wijnsoort__omschrijving }}, {{ v.wijn__jaar }}, {{ v.wijn__land }}
+    </td>
+    <td class="nextrow">
+      #<a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn %}">{{ v.aantal }}</a>
+    </td>
+  </tr>
+  {% empty %}
+  <p>Er is GEEN voorraad.</p>
+  {% endfor %}
+</table>
+{% endblock %}

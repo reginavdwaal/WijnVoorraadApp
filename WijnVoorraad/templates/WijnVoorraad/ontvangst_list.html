@@ -1,0 +1,33 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <h1>Ontvangsten</h1>
+    <table>
+        <tr>
+            <td class="rowheader">
+                Ontvangstdatum
+            </td>
+            <td class="rowheader">
+                Deelnemer
+            </td>
+            <td class="rowheader">
+                Wijn
+            </td>
+        </tr>
+        {% for o in ontvangsten %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.datumOntvangst}}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.deelnemer.naam }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.wijn.naam }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN ontvangsten.</p>
+        {% endfor %}
+      </table>
+{% endblock content %}

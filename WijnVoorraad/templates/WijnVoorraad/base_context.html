@@ -1,0 +1,46 @@
+{% extends "./base.html" %}
+
+<!-- Header context Deelnemer en Locatie -->
+{% block context_deelnemer_locatie %}
+<form id="context-form" method="post" action="{% url 'WijnVoorraad:change_context' %}">
+    {% csrf_token %}
+    <div id="deelnemer_locatie">
+      <table>
+        <tr>
+            <td>
+                <label for="deelnemers">Deelnemer:</label>
+            </td>
+            <td>
+                <select name="deelnemer_id" id="deelnemer_id">       
+                    {% for d in deelnemer_list  %}
+                        <option value="{{ d.id }}"
+                        {% if d.naam == request.session.deelnemer %}
+                            selected
+                        {% endif %}
+                        >{{ d.naam }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <label for="locaties">Locatie:</label>
+            </td>
+            <td>
+                <select name="locatie_id" id="locatie_id"">       
+                    {% for l in locatie_list  %}
+                        <option value="{{ l.id }}"
+                        {% if l.omschrijving == request.session.locatie %}
+                            selected
+                        {% endif %}
+                        >{{ l.omschrijving }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <button type="submit">Wijzig</button>
+            </td>
+        </tr>
+    </table>   
+    </div>
+</form>
+{% endblock context_deelnemer_locatie %}
+<!-- END Header Context Deelnemer en Locatie -->

@@ -121,7 +121,7 @@ class Wijn(models.Model):
     leverancier = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
     opmerking = models.CharField(max_length=200, blank=True)
-    #    foto = models.ImageField(null=True, blank=True)
+    foto = models.ImageField(upload_to='images/', null=True, blank=True)
     datumAangemaakt = models.DateTimeField(auto_now_add=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
 

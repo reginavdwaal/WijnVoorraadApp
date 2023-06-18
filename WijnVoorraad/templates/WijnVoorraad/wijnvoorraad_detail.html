@@ -1,7 +1,6 @@
 {% extends "./base_context.html" %}
 
 {% block content %}
-<form method="post">{% csrf_token %}
 <h1>Voorraad 
   <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
     {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
@@ -23,32 +22,51 @@
         <td class="rowheader">
             Opmerking
         </td>
+        <td class="rowheader">
+        </td>
+        <td class="rowheader">
+            Aantal
+        </td>
   </tr>
     {% for v in voorraad_list %}
         <tr>
-          <td>
-                {{ v.vak.code }}
-          </td>
-          <td>
-              {{ v.aantal }}
-          </td>
-          <td>
+            <td style="vertical-align: middle">
+                {% if v.vak.code %}
+                    {{ v.vak.code }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td style="vertical-align: middle">
+                {{ v.aantal }}
+            </td>
+            <td style="vertical-align: middle">
                 <a href="{% url 'WijnVoorraad:ontvangstdetail' v.ontvangst.id %}">{{ v.ontvangst.datumOntvangst }}</a>
-          </td>
-          <td>
-              {{ v.ontvangst.leverancier }}
-          </td>
-          <td>
-              {{ v.ontvangst.opmerking }}
-          </td>
-          <td>
-              <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
-              <input type="submit" value="Drinken">
-          </td>
+            </td>
+            <td style="vertical-align: middle">
+                {{ v.ontvangst.leverancier }}
+            </td>
+            <td style="vertical-align: middle">
+                {{ v.ontvangst.opmerking }}
+            </td>
+            <td>
+                <form method="post">{% csrf_token %}
+                    <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
+                    <input type="submit" value="Drinken">
+                </form>
+            </td>
+            <form method="post" action="{% url 'WijnVoorraad:verplaatsen' v.id v.aantal%}">
+                {% csrf_token %}
+                <td>
+                    <input type="number" name='aantal_verpl' min="1" max="{{ v.aantal }}" id="aantal_verpl{{ forloop.counter }}">
+                </td>
+                <td>
+                    <input type="submit" value="Verplaatsen">
+                </td>
+            </form>
         </tr>
     {% empty %}
         <p>Er zijn GEEN ontvangsten.</p>
     {% endfor %}
   </table>
-</form>
 {% endblock %}

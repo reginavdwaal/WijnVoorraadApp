@@ -1,0 +1,69 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <h1>Wijnen</h1>
+    <table>
+        <tr>
+            <td class="rowheader">
+                Wijnnaam
+            </td>
+            <td class="rowheader">
+                Domein
+            </td>
+            <td class="rowheader">
+                Wijnsoort
+            </td>
+            <td class="rowheader">
+                Jaartal
+            </td>
+            <td class="rowheader">
+                Land
+            </td>
+            <td class="rowheader">
+                Streek
+            </td>
+            <td class="rowheader">
+                Classificatie
+            </td>
+            <td class="rowheader">
+                Leverancier
+            </td>
+            <td class="rowheader">
+                Datum aangemaakt
+            </td>
+        </tr>
+        {% for wijn in wijn_list %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.naam }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.domein}}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.wijnsoort.omschrijving }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.jaar }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.land }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.streek }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.classificatie }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.leverancier }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.datumAangemaakt|date }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN wijnen.</p>
+        {% endfor %}
+      </table>
+{% endblock content %}

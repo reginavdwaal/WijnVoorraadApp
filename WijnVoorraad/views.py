@@ -6,6 +6,7 @@ from django.views import generic
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import FormView
 from django.forms import inlineformset_factory
 from django.db.models import Sum
 from datetime import datetime
@@ -13,7 +14,7 @@ from datetime import datetime
 from .models import WijnSoort, DruivenSoort, Deelnemer, DeelnemerUser, Locatie, Vak, Wijn, WijnDruivensoort
 from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
-from .forms import OntvangstForm, OntvangstMutatieInlineFormset
+from .forms import OntvangstForm, OntvangstMutatieInlineFormset, VoorraadVerplaatsenForm
 
 def set_session_context (request):
     dc = request.session.get('deelnemer', None)
@@ -69,6 +70,10 @@ class DeelnemerDetailView(LoginRequiredMixin, DetailView):
         context['voorraad_list'] = WijnVoorraad.objects.filter(deelnemer=self.object)  
         return context
 
+class WijnListView(LoginRequiredMixin, ListView):
+    model = Wijn
+    context_object_name = 'wijn_list'
+ 
 class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
     context_object_name = 'ontvangsten'
@@ -81,7 +86,6 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['mutaties'] = VoorraadMutatie.objects.filter(ontvangst=self.object)  
         return context
-
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -128,6 +132,11 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
     model = Wijn
     context_object_name = 'wijn'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['ontvangst_list'] = Ontvangst.objects.filter(wijn=self.object)  
+        return context
+
 class OntvangstCreateView(LoginRequiredMixin, CreateView):
     form_class = OntvangstForm
     template_name = 'WijnVoorraad/ontvangst_create.html'
@@ -165,8 +174,57 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
             self.get_context_data(form=form,
                                   mutatie_formset=mutatie_formset))
 
+class OntvangstCreateView2(LoginRequiredMixin, CreateView):
+    form_class = OntvangstForm
+    template_name = 'WijnVoorraad/ontvangst_create.html'
+    success_url = '/WijnVoorraad'
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+    
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.save()
+        actie = form.cleaned_data["actie"]
+        locatie = form.cleaned_data["locatie"]
+        aantal = form.cleaned_data["aantal"]
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = self.object
+        mutatie.locatie = locatie
+        mutatie.in_uit = 'I'
+        mutatie.actie = actie
+        mutatie.datum = datetime.now()
+        mutatie.aantal = aantal
+        mutatie.save()
+        if 'SaveAndPlace' in self.request.POST:
+            v = WijnVoorraad.objects.filter (ontvangst=self.object)
+            url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v[0].id, aantal = aantal))
+            return HttpResponseRedirect(url)
+        else:
+            return HttpResponseRedirect(self.get_success_url())
+   
+    def form_invalid(self, form):
+        return self.render_to_response(
+            self.get_context_data(form=form))
+
 class WijnCreateView(LoginRequiredMixin, CreateView):
     model = Wijn
     fields = '__all__'
     template_name = 'WijnVoorraad/wijn_create.html'
     success_url = '/WijnVoorraad'
+
+class VoorraadVerplaaten(FormView):
+    form_class = VoorraadVerplaatsenForm
+    template_name = "WijnVoorraad/voorraad_verplaatsen.html"
+    success_url = "/WijnVoorraad"
+
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        return super().form_valid(form)

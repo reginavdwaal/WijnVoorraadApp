@@ -10,7 +10,7 @@
         {% for v in voorraad_list %}
             <tr class="mainrow">
                 <td colspan="2" class="mainrow"> 
-                    <b><a href="{% url 'WijnVoorraad:wijndetail' v.wijn.id %}">{{ v.wijn.naam }} - {{ v.wijn.domein }}</a></b>
+                    <b><a href="{% url 'WijnVoorraad:wijndetail' v.id %}">{{ v.wijn.naam }} - {{ v.wijn.domein }}</a></b>
                 </td>
             </tr>
             <tr class="nextrow">

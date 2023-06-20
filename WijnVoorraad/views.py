@@ -124,9 +124,16 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
     
     def post(self, request, *args, **kwargs):
         v_id = self.request.POST['voorraad_id']
-        voorraad = WijnVoorraad.objects.get(pk=v_id)
-        WijnVoorraad.drinken(voorraad)
-        return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
+        if 'Drinken' in self.request.POST:
+            voorraad = WijnVoorraad.objects.get(pk=v_id)
+            WijnVoorraad.drinken(voorraad)
+            return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
+        elif 'Verplaatsen' in self.request.POST:
+            v_aantal_verpl = self.request.POST['aantal_verpl']
+            url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v_id, aantal = v_aantal_verpl))
+            return HttpResponseRedirect(url)
+        else:
+            return super().get(request, *args, **kwargs)
 
 class WijnDetailView(LoginRequiredMixin, DetailView):
     model = Wijn

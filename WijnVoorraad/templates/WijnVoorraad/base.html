@@ -1,14 +1,34 @@
 {% load i18n static %}
-<!DOCTYPE html>
-<html lang="nl-nl">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Wijnvoorraad</title>
-    <link rel="stylesheet" href="{% static 'WijnVoorraad/style.css' %}">
-</head>
 
-<body>
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>
+    {% block title %}
+      {% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Wijnvoorraad') }}
+    {% endblock %}
+  </title>
+  <link rel="stylesheet" href="{% block stylesheet %}{% static "WijnVoorraad/css/eigen.css" %}{% endblock %}">
+  {% block dark-mode-vars %}
+    <link rel="stylesheet" href="{% static "WijnVoorraad/css/dark_mode.css" %}">
+  {% endblock %}
+  {% if not is_popup and is_nav_sidebar_enabled %}
+    <link rel="stylesheet" href="{% static "WijnVoorraad/css/nav_sidebar.css" %}">
+    <script src="{% static 'admin/js/nav_sidebar.js' %}" defer></script>
+  {% endif %}
+  {% block extrastyle %}{% endblock %}
+  {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "WijnVoorraad/css/rtl.css" %}{% endblock %}">{% endif %}
+  {% block extrahead %}{% endblock %}
+  {% block responsive %}
+      <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+      <link rel="stylesheet" href="{% static "WijnVoorraad/css/responsive.css" %}">
+      {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% static "WijnVoorraad/css/responsive_rtl.css" %}">{% endif %}
+  {% endblock %}
+  {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+</head>
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
   data-admin-utc-offset="{% now "Z" %}">
@@ -16,41 +36,70 @@
 <!-- Container -->
 <div id="container">
 
-    {% if not is_popup %}
-
+  {% if not is_popup %}
     <!-- Header -->
     {% block header %}
     <div id="header">
-        <div id="branding">
-          <h1 id="site-name"><img src="{% static 'WijnVoorraad/Wineicon.png'%}" alt="logo">
+      <div id="branding">
+        {% block branding %}
+          <h1 id="site-name"><img src="{% static 'WijnVoorraad/img/Wineicon.png'%}" alt="logo">
             <a href="{% url 'WijnVoorraad:voorraadlist' %}">{{ site_header|default:_('Wijnvoorraad') }}</a></h1>
-        </div>
+        {% endblock %}
+      </div>
+      {% block usertools %}
         <div id="user-tools">
-                Welkom
-                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-                <a href="{% url 'password_change' %}">Wachtwoord wijzigen</a> /
-                <form id="logout-form" method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit">Afmelden</button>
-                </form>
+          {% block welcome-msg %}
+            {% translate 'Welcome,' %}
+            <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+          {% endblock %}
+          {% block userlinks %}
+          {% endblock %}
         </div>
+      {% endblock %}
+      {% block header_bar %}
+      {% if user.id %}
+        <div id="header_bar">
+          <a href="{% url 'WijnVoorraad:voorraadlist' %}">
+            <img src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/></a>
+          <a href="{% url 'WijnVoorraad:voorraadlist' %}">
+            <img src="{% static '/WijnVoorraad/img/Notesicon.png' %}" width="30" height="30" alt="Note"/></a>
+          <a href="{% url 'WijnVoorraad:voorraadvakken' %}">
+            <img src="{% static '/WijnVoorraad/img/dataicon.png' %}" width="30" height="30" alt="Voorraad"/></a>
+          <a href="{% url 'WijnVoorraad:ontvangst-create' %}">
+            <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
+          <a href="{% url 'WijnVoorraad:wijnlist' %}">
+            <img src="{% static '/WijnVoorraad/img/Scanicon.png' %}" width="30" height="30" alt="Scan"/></a>
+          <a href="{% url 'WijnVoorraad:gebruikerdetail' user.id %}">
+            <img src="{% static '/WijnVoorraad/img/Accounticon.png' %}" width="30" height="30" alt="Profiel"/></a>
+        </div>
+      {% endif %}
+      {% endblock header_bar %}
+        {% block nav-global %}{% endblock %}
     </div>
     {% endblock %}
     <!-- END Header -->
 
-    {% block context_deelnemer_locatie %}
-    {% endblock context_deelnemer_locatie %}
+    {% block breadcrumbs %}
+      <div class="breadcrumbs">
+        <a href="{% url 'WijnVoorraad:voorraadlist' %}">{% translate 'Home' %}</a>
+        {% if title %} &rsaquo; {{ title }}{% endif %}
+      </div>
+    {% endblock %}
 
-    <!-- endif not is_popup -->
+  {% endif %}
+  <!-- END Not popup -->
+
+  {% block context_deelnemer_locatie %}
+  {% endblock context_deelnemer_locatie %}
+
+  <div class="main" id="main">
+    {% if not is_popup and is_nav_sidebar_enabled %}
+      {% block nav-sidebar %}
+        {% include "admin/nav_sidebar.html" %}
+      {% endblock %}
     {% endif %}
 
-    <div class="main" id="main">
-      {% if not is_popup and is_nav_sidebar_enabled %}
-        {% block nav-sidebar %}
-          {% include "admin/nav_sidebar.html" %}
-        {% endblock %}
-      {% endif %}
-      <div class="content">
+    <div class="content">
         {% block messages %}
           {% if messages %}
             <ul class="messagelist">{% for message in messages %}
@@ -58,6 +107,7 @@
             {% endfor %}</ul>
           {% endif %}
         {% endblock messages %}
+
         <!-- Content -->
         <div id="content" class="{% block coltype %}colM{% endblock %}">
           {% block pretitle %}{% endblock %}
@@ -67,11 +117,15 @@
             {% block object-tools %}{% endblock %}
             {{ content }}
           {% endblock %}
-          {% block sidebar %}{% endblock %}
+          {% block sidebar %}
+          {% endblock %}
           <br class="clear">
         </div>
         <!-- END Content -->
-        {% block footer %}<div id="footer"></div>{% endblock %}
+        {% block footer %}
+          <div id="footer">
+          </div>
+        {% endblock %}
       </div>
     </div>
 </div>

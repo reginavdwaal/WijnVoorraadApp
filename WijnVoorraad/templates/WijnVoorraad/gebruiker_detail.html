@@ -1,0 +1,70 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="detail-form">
+    <table style="width: 100%">    <!-- table for detail-blocks -->
+    <tr>    <!-- 1 row for detail-blocks -->
+        <td style="padding: 0; border: none; width: 100%">
+            <div class="detail-block">
+                <div class="detail-row">
+                    <label class="detail-column-label">Gebruikersnaam</label>
+                    <label class="detail-column">{{ object.username }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Voornaam</label>
+                    <label class="detail-column">{{ object.first_name }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Achternaam</label>
+                    <label class="detail-column">{{ object.last_name }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">E-mailadres</label>
+                    <label class="detail-column">{{ object.email }}</label>            
+                </div>
+                {% if object.deelnemers.all.count >= 1 %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Deelnemer(s)</label>
+                        {% for du in object.deelnemers.all %}
+                            {% if du == object.deelnemers.all|first %} 
+                                <label class="detail-column">{{ du.naam }}
+                            {% else %}
+                                , {{ du.naam }}
+                            {% endif %}
+                            &nbsp;
+                            <a href="{% url 'WijnVoorraad:deelnemerdetail' du.id %}"
+                                title="Details bekijken">
+                                <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                            </a>
+                        {% endfor %}
+                        </label>
+                    </div>
+                {% endif %}
+            </div>  <!-- end detail-block -->
+        </td> <!-- end column for detail-block -->
+    </tr>  <!-- end row for detail-blocks -->
+    </table>
+</div>  <!-- end detail-form -->
+<br>
+<div class="detail-form">
+    <div class="buttons-block">
+        <form class="buttons-block" id="update-form" method="get" action="{% url 'WijnVoorraad:gebruiker-update' object.id  %}">
+            {% csrf_token %}
+            <input type="submit" name="Update" value="Wijzigen"></input>
+        </form>
+    </div>  <!-- end detail-block -->
+    <div class="buttons-block">
+        <form class="buttons-block" id="wachtwoord-form" action="{% url 'password_change' %}">
+            {% csrf_token %}
+            <input type="submit" name="WachtwoordWijzigen" value="Wachtwoord wijzigen"></input>
+        </form>
+    </div>  <!-- end detail-block -->
+    <div class="buttons-block">
+        <form class="buttons-block" id="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <input  type="submit" name="Uitloggen" value="Uitloggen"></input>
+        </form>
+    </div>  <!-- end detail-block -->
+</div>  <!-- end detail-form -->
+{% endblock %}

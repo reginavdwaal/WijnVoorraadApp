@@ -1,0 +1,20 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <table>
+        {% for locatie in locaties %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:locatiedetail' locatie.id %}">{{ locatie.omschrijving }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN locaties.</p>
+        {% endfor %}
+    </table>
+    <br>
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:locatie-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+{% endblock content %}

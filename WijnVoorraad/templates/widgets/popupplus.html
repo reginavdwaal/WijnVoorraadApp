@@ -1,0 +1,27 @@
+{% load static %}
+    {% if field_id %}
+        <a href="/WijnVoorraad/{{ field }}/update/{{ field_id }}"
+            class="related-widget-wrapper-link change-related"
+            id="update_id_{{ field }}"
+            data-popup="yes"
+            title="Wijzigen{{ field }}"
+            onclick="return showRelatedObjectPopup(this);">
+            <img src="{% static 'admin/img/icon-changelink.svg' %}" width="10" height="10" alt="Wijzigen"/>
+        </a>
+        <a href="/WijnVoorraad/{{ field }}/{{ field_id }}"
+            class="related-widget-wrapper-link view-related"
+            id="view_id_{{ field }}"
+            data-popup="yes"
+            title="Details bekijken"
+            onclick="return showRelatedObjectPopup(this);">
+            <img src="{% static 'admin/img/icon-viewlink.svg' %}" width="10" height="10" alt="Details"/>
+        </a>
+    {% endif %}
+    <a href="/WijnVoorraad/{{ field }}/popupadd"
+        class="related-widget-wrapper-link add-related"
+        id="add_id_{{ field }}"
+        data-popup="yes"
+        title="Toevoegen {{ field }}"
+        onclick="return showRelatedObjectPopup(this);">
+        <img src="{% static 'admin/img/icon-addlink.svg' %}" width="10" height="10" alt="Toevoegen"/>
+    </a>

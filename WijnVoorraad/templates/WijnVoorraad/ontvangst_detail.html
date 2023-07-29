@@ -1,38 +1,69 @@
 {% extends "./base.html" %}
+{% load i18n static %}
 
 {% block content %}
-    <h1>Ontvangst details</h1>
-    <table>
-        <tr>
-            <td class="collabel">Deelnemer</td>
-            <td>{{ ontvangst.deelnemer.naam }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Ontvangstdatum</td>
-            <td>{{ ontvangst.datumOntvangst }}</td>
-        </tr>
-        <tr>
-            <td class="collabel">Wijn</td>
-            <td>{{ ontvangst.wijn.naam }}</td>
-        </tr>
-        <tr>
-            <td class="collabel">Leverancier</td>
-            <td>{{ ontvangst.leverancier }}</td>
-        </tr>
-        <tr>
-            <td class="collabel">Website</td>
-            <td>{{ ontvangst.website }}</td>
-        </tr>
-        <tr>
-            <td class="collabel">Prijs</td>
-            <td>{{ ontvangst.prijs|default_if_none:"" }}</td>
-        </tr>
-        <tr>
-            <td class="collabel">Opmerking</td>
-            <td>{{ ontvangst.opmerking }}</td>
-        </tr>
-    </table>
+<div class="detail-form">
+    <table style="width: 100%">    <!-- table for detail-blocks -->
+    <tr>    <!-- 1 row for detail-blocks -->
+        <td style="padding: 0; border: none; width: 100%">
+            <div class="detail-block">
+                <div class="detail-row">
+                    <label class="detail-column-label">Deelnemer</label> 
+                    <label class="detail-column">
+                        {{  ontvangst.deelnemer.naam }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:deelnemerdetail' ontvangst.deelnemer.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Ontvangstdatum</label>
+                    <label class="detail-column">{{ ontvangst.datumOntvangst }}</label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Wijn</label>
+                    <label class="detail-column">
+                        {{  ontvangst.wijn.naam }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:wijndetail' ontvangst.wijn.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Leverancier</label>
+                    <label class="detail-column">{{ ontvangst.leverancier }}</label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Website</label>
+                    {% if ontvangst.website %}
+                        <a class="detail-column" href="{{ ontvangst.website }}" target=”_blank”>
+                            {{ ontvangst.website }}
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Prijs</label>
+                    <label class="detail-column">{{ ontvangst.prijs|default_if_none:"" }}</label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Opmerking</label>
+                    <label class="detail-column">{{ ontvangst.opmerking }}</label>
+                </div>
+            </div>  <!-- end detail-block -->
+        </td> <!-- end column for detail-block -->
+    </tr>  <!-- end row for detail-blocks -->
+</table>
+</div>  <!-- end detail-form -->
     <br>
+    <form id="update-form" method="get" action="{% url 'WijnVoorraad:ontvangst-update' object.id  %}">
+        {% csrf_token %}
+        <input type="submit" name="Update" value="Wijzigen"></input>
+    </form>
+
     <h2>Voorraadmutaties</h2>
     <table>
         <tr>

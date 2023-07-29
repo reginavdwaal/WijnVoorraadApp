@@ -1,38 +1,39 @@
 {% extends "./base.html" %}
 
 {% block content %}
-    <h1>Wijnen</h1>
     <table>
-        <tr>
-            <td class="rowheader">
-                Wijnnaam
-            </td>
-            <td class="rowheader">
-                Domein
-            </td>
-            <td class="rowheader">
-                Wijnsoort
-            </td>
-            <td class="rowheader">
-                Jaartal
-            </td>
-            <td class="rowheader">
-                Land
-            </td>
-            <td class="rowheader">
-                Streek
-            </td>
-            <td class="rowheader">
-                Classificatie
-            </td>
-            <td class="rowheader">
-                Leverancier
-            </td>
-            <td class="rowheader">
-                Datum aangemaakt
-            </td>
-        </tr>
         {% for wijn in wijn_list %}
+            {% if wijn == wijn_list|first %} 
+            <tr>
+                <td class="rowheader">
+                    Wijnnaam
+                </td>
+                <td class="rowheader">
+                    Domein
+                </td>
+                <td class="rowheader">
+                    Wijnsoort
+                </td>
+                <td class="rowheader">
+                    Jaartal
+                </td>
+                <td class="rowheader">
+                    Land
+                </td>
+                <td class="rowheader">
+                    Streek
+                </td>
+                <td class="rowheader">
+                    Classificatie
+                </td>
+                <td class="rowheader">
+                    Leverancier
+                </td>
+                <td class="rowheader">
+                    Datum aangemaakt
+                </td>
+            </tr>
+            {% endif %}
             <tr>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.naam }}</a>
@@ -44,7 +45,7 @@
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.wijnsoort.omschrijving }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.jaar }}</a>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.jaar|default_if_none:"" }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.land }}</a>
@@ -66,4 +67,9 @@
             <p>Er zijn GEEN wijnen.</p>
         {% endfor %}
       </table>
+      <br>
+      <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijn-create' %}">
+          {% csrf_token %}
+          <input type="submit" name="Insert" value="Toevoegen"></input>
+      </form>
 {% endblock content %}

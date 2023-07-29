@@ -1,0 +1,20 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <table>
+        {% for wijnsoort in wijnsoorten %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijnsoortdetail' wijnsoort.id %}">{{ wijnsoort.omschrijving }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN wijnsoorten.</p>
+        {% endfor %}
+      </table>
+      <br>
+      <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijnsoort-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+{% endblock content %}

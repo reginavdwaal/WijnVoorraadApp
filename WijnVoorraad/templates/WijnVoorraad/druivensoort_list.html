@@ -1,0 +1,20 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <table>
+        {% for druivensoort in druivensoorten %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:druivensoortdetail' druivensoort.id %}">{{ druivensoort.omschrijving }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN druivensoorten.</p>
+        {% endfor %}
+      </table>
+      <br>
+      <form id="create-form" method="get" action="{% url 'WijnVoorraad:druivensoort-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+{% endblock content %}

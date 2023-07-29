@@ -1,11 +1,14 @@
 {% extends "./base_context.html" %}
+{% load i18n static %}
+
+{% block content_title %}
+<h1>Voorraad 
+    <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
+      {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
+</h1>
+{% endblock %}
 
 {% block content %}
-<form method="post">{% csrf_token %}
-<h1>Voorraad 
-  <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
-    {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
-</h1>
 <table>
     <tr>
         <td class="rowheader">
@@ -28,15 +31,15 @@
         <td class="rowheader">
             Aantal
         </td>
-  </tr>
+        <td class="rowheader">
+            Nieuwe locatie
+        </td>
+      </tr>
     {% for v in voorraad_list %}
+        <form method="post">{% csrf_token %}
         <tr>
             <td style="vertical-align: middle">
-                {% if v.vak.code %}
-                    {{ v.vak.code }}
-                {% else %}
-                    -
-                {% endif %}
+                {{ v.vak.code|default_if_none:"-"  }}
             </td>
             <td style="vertical-align: middle">
                 {{ v.aantal }}
@@ -55,15 +58,24 @@
                 <input type="submit" name="Drinken" value="Drinken">
             </td>
             <td>
-                <input type="number" name='aantal_verpl' min="1" max="{{ v.aantal }}" id="aantal_verpl{{ forloop.counter }}">
+                <input type="number" name='aantal_verplaatsen' min="1" max="{{ v.aantal }}" id="aantal_verplaatsen{{ forloop.counter }}">
+            </td>
+            <td>
+                <select name="nieuwe_locatie_id" id="nieuwe_locatie_id{{ forloop.counter }}">       
+                    <option value="-1" selected>--Locatie behouden--</option>
+                {% for l in locaties  %}
+                    <option value="{{ l.id }}"
+                    >{{ l.omschrijving }}</option>
+                {% endfor %}
+            </select>
             </td>
             <td>
                 <input type="submit" name="Verplaatsen" value="Verplaatsen">
             </td>
         </tr>
+        </form>
     {% empty %}
         <p>Er zijn GEEN ontvangsten.</p>
     {% endfor %}
   </table>
-</form>
 {% endblock %}

@@ -1,0 +1,53 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="detail-form">
+    <table style="width: 100%">    <!-- table for detail-blocks -->
+    <tr>    <!-- 1 row for detail-blocks -->
+        <td style="padding: 0; border: none; width: 100%">
+            <div class="detail-block">
+                <div class="detail-row">
+                    <label class="detail-column-label">Omschrijving</label> 
+                    <label class="detail-column">{{ locatie.omschrijving }}</label>             
+                </div>
+            </div>  <!-- end detail-block -->
+        </td> <!-- end column for detail-block -->
+    </tr>  <!-- end row for detail-blocks -->
+</table>
+</div>  <!-- end detail-form -->
+    <br>
+    <form id="update-form" method="get" action="{% url 'WijnVoorraad:locatie-update' object.id  %}">
+        {% csrf_token %}
+        <input type="submit" name="Update" value="Wijzigen"></input>
+    </form>
+
+    <h2>Vakken</h2>
+    <table>
+        <tr>
+            <td class="rowheader">
+                Code
+            </td>
+            <td class="rowheader">
+                Capaciteit
+            </td>
+        </tr>
+        {% for v in vakken %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:vakdetail' v.id %}">{{ v.code }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:vakdetail' v.id %}">{{ v.capaciteit|default_if_none:"" }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Locatie heeft geen vakken.</p>
+        {% endfor %}
+    </table>
+    <br>
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:vak-create' locatie.id %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+{% endblock %}

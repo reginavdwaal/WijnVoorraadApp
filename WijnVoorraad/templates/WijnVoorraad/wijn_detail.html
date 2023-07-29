@@ -1,84 +1,119 @@
 {% extends "./base.html" %}
+{% load i18n static %}
 
 {% block content %}
-    <h1>Wijn details</h1>
-    <div>
-    <table style="float: left;margin-right:100px">
-        <tr>
-            <td class="collabel">Wijnnaam</td>
-            <td>{{ wijn.naam }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Domein</td>
-            <td>{{ wijn.domein}}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Wijnsoort</td>
-            <td>{{ wijn.wijnsoort.omschrijving }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Jaartal</td>
-            <td>{{ wijn.jaar }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Land</td>
-            <td>{{ wijn.land }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Streek</td>
-            <td>{{ wijn.streek }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Classificatie</td>
-            <td>{{ wijn.classificatie }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Leverancier</td>
-            <td>{{ wijn.leverancier }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Website</td>
-            <td>{{ wijn.website }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Opmerking</td>
-            <td>{{ wijn.opmerking }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Datum aangemaakt </td>
-            <td>{{ wijn.datumAangemaakt|date }}</td>            
-        </tr>
-        <tr>
-            <td class="collabel">Datum afgesloten </td>
-            <td>{{ wijn.datumAfgesloten|date }}</td>            
-        </tr>
+<div class="detail-form">
+    <table style="width: 100%">    <!-- table for detail-blocks -->
+    <tr>    <!-- 1 row for detail-blocks -->
+        <!--  -->
+        <!-- bepaal aantal benodigde blokken tbv width -->
+        <!--  -->
+        {% if wijn.foto  %}
+            <td style="padding: 0; border: none; width: 50%">
+        {% else %}
+            <td style="padding: 0; border: none; width: 100%">
+        {% endif %}
+        
+            <div class="detail-block">
+                <div class="detail-row">
+                    <label class="detail-column-label">Wijnnaam</label> 
+                    <label class="detail-column">{{ wijn.naam }}</label>             
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Domein</label>
+                    <label class="detail-column">{{ wijn.domein}}</label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Wijnsoort</label>
+                    <label class="detail-column">
+                        {{ wijn.wijnsoort.omschrijving }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:wijnsoortdetail' wijn.wijnsoort.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Jaartal</label>
+                    <label class="detail-column">{{ wijn.jaar|default_if_none:"" }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Land</label>
+                    <label class="detail-column">{{ wijn.land }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Streek</label>
+                    <label class="detail-column">{{ wijn.streek }}</label>        
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Classificatie</label>
+                    <label class="detail-column">{{ wijn.classificatie }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Leverancier</label>
+                    <label class="detail-column">{{ wijn.leverancier }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Website</label>
+                    {% if wijn.website %}
+                        <a class="detail-column" href="{{ wijn.website }}" target=”_blank”>
+                            {{ wijn.website }}
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Opmerking</label>
+                    <label class="detail-column">{{ wijn.opmerking }} </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Datum aangemaakt</label>
+                    <label class="detail-column">{{ wijn.datumAangemaakt|date }}</label>            
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Datum afgesloten</label>
+                    <label class="detail-column">{{ wijn.datumAfgesloten|date }}</label>            
+                </div>
+                {% if wijn.wijnDruivensoorten.all.count >= 1 %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Druivensoorten</label>
+                        {% for d in wijn.wijnDruivensoorten.all %}
+                            {% if d == wijn.wijnDruivensoorten.all|first %} 
+                                <label class="detail-column">{{ d.omschrijving }}
+                            {% else %}
+                                , {{ d.omschrijving }}
+                            {% endif %}
+                            &nbsp;
+                            <a href="{% url 'WijnVoorraad:druivensoortdetail' d.id %}"
+                                title="Details bekijken">
+                                <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                            </a>
+                            {% endfor %}
+                        </label>
+                    </div>
+            </td> <!-- end column for detail-block -->
+            {% endif %}
+    
+            </div>  <!-- end detail-block -->
+        </td> <!-- end column for detail-block -->
+        {% if wijn.foto  %}
+            <td style="padding: 0;width: 50%">  <!-- new column for new detail-block -->
+            <div class="detail-block">
+                    <img src="{{ wijn.foto.url }}" alt="Foto" style="max-height: 300px" />
+                </div>  <!-- end detail-block -->
+            </td> <!-- end column for detail-block -->
+        {% endif %}
+    </tr>  <!-- end row for detail-blocks -->
     </table>
-    {% if wijn.wijnDruivensoorten.all.count >= 1 %}
-        <table  style="float: left; margin-top: 100px">
-            <tr>
-                <td class="rowheader">
-                    Druivensoort
-                </td>
-            </tr>
-            {% for d in wijn.wijnDruivensoorten.all %}
-                <tr>
-                    <td>
-                        {{ d.omschrijving }}</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
-    {% if wijn.foto  %}
-        <table>
-            <tr><td>
-                <img src="{{ wijn.foto.url }}" alt="Foto" style="width: 20%" />
-            </td></tr>
-        </table>
-    {% endif %}
-    </div>
+</div>  <!-- end detail-form -->
+    <br >
+    <form id="update-form" method="get" action="{% url 'WijnVoorraad:wijn-update' object.id  %}">
+        {% csrf_token %}
+        <input type="submit" name="Update" value="Wijzigen"></input>
+    </form>
+
     {% if ontvangst_list  %}
-    <h1>Ontvangsten</h1>
+    <h2>Ontvangsten</h2>
     <table>
         <tr>
             <td class="rowheader">

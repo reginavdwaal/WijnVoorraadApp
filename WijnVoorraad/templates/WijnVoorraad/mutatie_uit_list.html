@@ -1,0 +1,52 @@
+{% extends "./base_context.html" %}
+
+{% block content %}
+    <table>
+        {% for m in mutatie_list %}
+            {% if m == mutatie_list|first %} 
+            <tr>
+                <td class="rowheader">
+                    Mutatiedatum
+                </td>
+                <td class="rowheader">
+                    Actie
+                </td>
+                <td class="rowheader">
+                    Vak
+                </td>
+                <td class="rowheader">
+                    Aantal
+                </td>
+                <td class="rowheader">
+                    Wijn
+                </td>
+                <td class="rowheader">
+                    Omschrijving
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>
+                    {{ m.datum }}
+                </td>
+                <td>
+                    {{ m.get_actie_display }}
+                </td>
+                <td>
+                    {{ m.vak.code }}
+                </td>
+                <td>
+                    {{ m.aantal }}
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.naam }} - {{ m.ontvangst.wijn.domein }}</a>
+                </td>
+                <td>
+                    {{ m.omschrijving }}
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN uitgaande mutaties.</p>
+        {% endfor %}
+      </table>
+{% endblock content %}

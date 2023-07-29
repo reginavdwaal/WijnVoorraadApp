@@ -1,0 +1,22 @@
+{% extends "./base_form.html" %}
+{% load i18n static %}
+
+{% block header %} {% endblock %}
+{% block breadcrumbs %} {% endblock %}
+{% block header_bar %} {% endblock %}
+
+{% block title %}
+    Toevoegen {{ field }}
+{% endblock %}
+
+{% block content_title %}
+    <h1>Toevoegen {{ field }}</h1>
+{% endblock %}
+
+{% block form_actions %}
+    enctype="multipart/form-data" action="/WijnVoorraad/{{ field }}/popupadd/"
+{% endblock %}
+
+{% block form_buttons %}
+       <p><input type="submit" value="Opslaan"/> | <a href="javascript:window.close()">Cancel</a></p>
+{% endblock %}

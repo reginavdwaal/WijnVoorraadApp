@@ -1,53 +1,7 @@
-{% extends "./base.html" %}
+{% extends "./base_form.html" %}
+{% load i18n static %}
 
-{% block content %}
-<form method="post">{% csrf_token %}
-    <table>
-        {% for field in form %}
-            <tr>
-                <td>
-                    {{ field.errors }}
-                </td>
-                <td class="collabel">
-                    {{ field.label_tag }}
-                </td>
-                <td>
-                    {{ field }}
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-    <br>
-    <h2>Voorraadmutaties</h2>
-    {{ mutatie_formset.non_form_errors.as_ul }}
-    {{ mutatie_formset.management_form }}
-    <table id="formset" class="form">
-        {% for form in mutatie_formset.forms %}
-            {% if forloop.first %}
-                <thead><tr>
-                {% for field in form.visible_fields %}
-                    <th>{{ field.label|capfirst }}
-                {% endfor %}
-                </tr></thead>
-            {% endif %}
-            <tr>
-            {% for field in form.visible_fields %}
-                <td>
-                    {# Include the hidden fields in the form #}
-                    {% if forloop.first %}
-                        {% for hidden in form.hidden_fields %}
-                            {{ hidden }}
-                        {% endfor %}
-                    {% endif %}
-                    {{ field.errors.as_ul }}
-                    {{ field }}
-                </td>
-            {% endfor %}
-            </tr>
-        {% endfor %}
-    </table>
-    <br>
+{% block form_buttons %}
     <input type="submit" name="Save" value="Opslaan">
     <input type="submit" name="SaveAndPlace" value="Opslaan en vakken kiezen">
-</form>
 {% endblock %}

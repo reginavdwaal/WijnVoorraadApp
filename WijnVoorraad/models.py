@@ -3,13 +3,13 @@ from datetime import datetime
 from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from django.db.models import F
+from django.db.models import F, Q
 
 # Create your models here.
 
 
 class WijnSoort(models.Model):
-    omschrijving = models.CharField(max_length=200)
+    omschrijving = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.omschrijving
@@ -19,9 +19,8 @@ class WijnSoort(models.Model):
         verbose_name = "wijnsoort"
         verbose_name_plural = "wijnsoorten"
 
-
 class DruivenSoort(models.Model):
-    omschrijving = models.CharField(max_length=200)
+    omschrijving = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.omschrijving
@@ -33,7 +32,7 @@ class DruivenSoort(models.Model):
 
 
 class Locatie(models.Model):
-    omschrijving = models.CharField(max_length=200)
+    omschrijving = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.omschrijving
@@ -63,14 +62,14 @@ class Vak(models.Model):
 
 
 class Deelnemer(models.Model):
-    naam = models.CharField(max_length=200)
+    naam = models.CharField(max_length=200, unique=True)
     standaardLocatie = models.ForeignKey(
         Locatie, on_delete=models.SET_NULL, blank=True, null=True
     )
     users = models.ManyToManyField(
         User,
-        through="DeelnemerUser",
-        through_fields=("deelnemer", "user"),
+        related_name="deelnemers",
+        related_query_name="deelnemer",
     )
 
     def __str__(self):
@@ -78,25 +77,6 @@ class Deelnemer(models.Model):
 
     class Meta:
         ordering = ["naam"]
-
-
-class DeelnemerUser(models.Model):
-    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return "%s - %s" % (self.deelnemer.naam, self.user.username)
-
-    class Meta:
-        ordering = ["deelnemer", "user"]
-        verbose_name_plural = "Deelnemer users"
-        constraints = [
-            models.UniqueConstraint(
-                name="unique_deelnemer_user",
-                fields=["deelnemer", "user"],
-                deferrable=Deferrable.DEFERRED,
-            )
-        ]
 
 class Wijn(models.Model):
     naam = models.CharField(max_length=200)
@@ -180,85 +160,6 @@ class Ontvangst(models.Model):
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
         verbose_name_plural = "ontvangsten"
 
-class WijnVoorraad(models.Model):
-    wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
-    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
-    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
-    locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
-    vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
-    aantal = models.IntegerField(default=0)
-
-    def __str__(self):
-        if self.vak:
-            return "%s - %s - %s (%s)" % (
-                self.wijn.naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
-                self.vak.code,
-            )
-        else:
-            return "%s - %s - %s" % (
-                self.wijn.naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
-            )
-
-    def drinken(WijnVoorraad):
-        VoorraadMutatie.drinken(WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak)
-        
-    def Bijwerken (VoorraadMutatie, old_mutatie):
-        if old_mutatie is not None:
-            if old_mutatie.in_uit == VoorraadMutatie.IN:
-                # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
-                WijnVoorraad.Bijwerken_mutatie_UIT(old_mutatie)
-            else:
-                # de oude UIT-boeking draaien we terug door deze te verwerken als IN boeking
-                WijnVoorraad.Bijwerken_mutatie_IN(old_mutatie)
-
-        # En dan nu de nieuwe mutatie gewoon verwerken
-        if VoorraadMutatie.in_uit == VoorraadMutatie.IN:
-            WijnVoorraad.Bijwerken_mutatie_IN(VoorraadMutatie)
-        else:
-            WijnVoorraad.Bijwerken_mutatie_UIT(VoorraadMutatie)
-
-    def Bijwerken_mutatie_IN (VoorraadMutatie):
-        try:
-            vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
-                                            , locatie=VoorraadMutatie.locatie
-                                            , vak=VoorraadMutatie.vak)
-            vrd.aantal=F('aantal') + VoorraadMutatie.aantal
-            vrd.save()
-        except WijnVoorraad.DoesNotExist:
-            vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
-                               , deelnemer=VoorraadMutatie.ontvangst.deelnemer
-                               , ontvangst=VoorraadMutatie.ontvangst
-                               , locatie = VoorraadMutatie.locatie
-                               , vak=VoorraadMutatie.vak
-                               , aantal=VoorraadMutatie.aantal)
-            vrd.save()
-
-    def Bijwerken_mutatie_UIT (VoorraadMutatie):
-        vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
-                                       , locatie=VoorraadMutatie.locatie
-                                       , vak=VoorraadMutatie.vak)
-        vrd.aantal=F('aantal') - VoorraadMutatie.aantal
-        vrd.save()
-        vrd.refresh_from_db()
-        if vrd.aantal == 0:
-            vrd.delete()
-
-    class Meta:
-        ordering = ["wijn", "deelnemer", "locatie", "vak"]
-        verbose_name = "Wijnvoorraad"
-        verbose_name_plural = "wijnvoorraad"
-        constraints = [
-            models.UniqueConstraint(
-                name="unique_wijnvoorraad",
-                fields=["wijn", "deelnemer", "locatie", "vak"],
-                deferrable=Deferrable.DEFERRED,
-            )
-        ]
-
 class VoorraadMutatie(models.Model):
     ontvangst = models.ForeignKey(Ontvangst, on_delete=models.CASCADE)
     locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
@@ -305,6 +206,15 @@ class VoorraadMutatie(models.Model):
         super().save(*args, **kwargs)  # Call the "real" save() method.
         WijnVoorraad.Bijwerken (self, old_mutatie)
 
+    def delete(self, *args, **kwargs):
+        try:
+            old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
+        except:
+            old_mutatie = None
+    
+        WijnVoorraad.Bijwerken (None, old_mutatie)
+        super().delete(*args, **kwargs)  # Call the "real" delete() method.
+
     def drinken(ontvangst, locatie, vak=None):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
@@ -317,6 +227,113 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = 1
         mutatie.save()
         
+    def verplaatsen (ontvangst, locatie_oud, vak_oud, locatie_nieuw, vak_nieuw, aantal):
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie_oud
+        if vak_oud is not None:
+            mutatie.vak = vak_oud
+        mutatie.in_uit = 'U'
+        mutatie.actie = 'V'
+        mutatie.datum = datetime.now()
+        mutatie.aantal = aantal
+        mutatie.save()
+
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie_nieuw
+        if vak_nieuw is not None:
+            mutatie.vak = vak_nieuw
+        mutatie.in_uit = 'I'
+        mutatie.actie = 'V'
+        mutatie.datum = datetime.now()
+        mutatie.aantal = aantal
+        mutatie.save()
+
     class Meta:
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"
+
+class WijnVoorraad(models.Model):
+    wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
+    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
+    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
+    locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
+    vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
+    aantal = models.IntegerField(default=0)
+
+    def __str__(self):
+        if self.vak:
+            return "%s - %s - %s (%s)" % (
+                self.wijn.naam,
+                self.deelnemer.naam,
+                self.locatie.omschrijving,
+                self.vak.code,
+            )
+        else:
+            return "%s - %s - %s" % (
+                self.wijn.naam,
+                self.deelnemer.naam,
+                self.locatie.omschrijving,
+            )
+
+    def drinken(WijnVoorraad):
+        VoorraadMutatie.drinken(WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak)
+        
+    def Bijwerken (VoorraadMutatie, old_mutatie):
+        if old_mutatie is not None:
+            if old_mutatie.in_uit == 'I':
+                # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
+                WijnVoorraad.Bijwerken_mutatie_UIT(old_mutatie)
+            else:
+                # de oude UIT-boeking draaien we terug door deze te verwerken als IN boeking
+                WijnVoorraad.Bijwerken_mutatie_IN(old_mutatie)
+
+        if VoorraadMutatie is not None:
+            # Als er een nieuwe mutatie is: gewoon verwerken
+            if VoorraadMutatie.in_uit == 'I':
+                WijnVoorraad.Bijwerken_mutatie_IN(VoorraadMutatie)
+            else:
+                WijnVoorraad.Bijwerken_mutatie_UIT(VoorraadMutatie)
+
+    def Bijwerken_mutatie_IN (VoorraadMutatie):
+        try:
+            vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
+                                            , locatie=VoorraadMutatie.locatie
+                                            , vak=VoorraadMutatie.vak)
+            vrd.aantal=F('aantal') + VoorraadMutatie.aantal
+            vrd.save()
+        except WijnVoorraad.DoesNotExist:
+            vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
+                               , deelnemer=VoorraadMutatie.ontvangst.deelnemer
+                               , ontvangst=VoorraadMutatie.ontvangst
+                               , locatie = VoorraadMutatie.locatie
+                               , vak=VoorraadMutatie.vak
+                               , aantal=VoorraadMutatie.aantal)
+            vrd.save()
+
+    def Bijwerken_mutatie_UIT (VoorraadMutatie):
+        vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
+                                       , locatie=VoorraadMutatie.locatie
+                                       , vak=VoorraadMutatie.vak)
+        vrd.aantal=F('aantal') - VoorraadMutatie.aantal
+        vrd.save()
+        vrd.refresh_from_db()
+        if vrd.aantal == 0:
+            vrd.delete()
+
+    def verplaatsen_zonder_vakken (WijnVoorraad, v_nieuwe_locatie, v_aantal_verplaatsen):
+        vak_nieuw = None;
+        VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, vak_nieuw, v_aantal_verplaatsen)
+
+    class Meta:
+        ordering = ["wijn", "deelnemer", "locatie", "vak"]
+        verbose_name = "Wijnvoorraad"
+        verbose_name_plural = "wijnvoorraad"
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_wijnvoorraad",
+                fields=["wijn", "deelnemer", "locatie", "vak"],
+                deferrable=Deferrable.DEFERRED,
+            )
+        ]

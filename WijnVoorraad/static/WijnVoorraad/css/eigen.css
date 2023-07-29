@@ -1,0 +1,168 @@
+
+/*
+    DJANGO Admin styles
+*/
+
+@import url(base.css);
+
+/* VARIABLE DEFINITIONS */
+:root {
+  --primary: #79aec8;
+  --secondary: #417690;
+  --accent: #f5dd5d;
+  --primary-fg: #fff;
+
+  --body-fg: #333;
+  --body-bg: #fff;
+  --body-quiet-color: #666;
+  --body-loud-color: #000;
+
+  --header-color: #ffc;
+  --header-branding-color: var(--accent);
+  --header-bg: var(--secondary); 
+  --header-link-color: var(--primary-fg);   
+
+  --link-fg: #447e9b;
+  --link-hover-color: #036;
+  --link-selected-fg: #5b80b2;
+
+  --hairline-color: #e8e8e8;
+  --border-color: #ccc;
+
+  --error-fg: #ba2121;
+
+  --message-success-bg: #dfd;
+  --message-warning-bg: #ffc;
+  --message-error-bg: #ffefef;
+
+  --darkened-bg: #f8f8f8; /* A bit darker than --body-bg */
+  --selected-bg: #e4e4e4; /* E.g. selected table cells */
+  --selected-row: #ffc;
+
+  --button-fg: #fff;
+  --button-bg: var(--primary);
+  --button-hover-bg: #609ab6;
+  --default-button-bg: var(--secondary);
+  --default-button-hover-bg: #205067;
+  --close-button-bg: #888; /* Previously #bbb, contrast 1.92 */
+  --close-button-hover-bg: #747474;
+  --delete-button-bg: #ba2121;
+  --delete-button-hover-bg: #a41515;
+
+  --object-tools-fg: var(--button-fg);
+  --object-tools-bg: var(--close-button-bg);
+  --object-tools-hover-bg: var(--close-button-hover-bg);
+
+  --wijnsoort_rood: #FBC9C9;
+  --wijnsoort_wit: #FFFBE8;
+  --wijnsoort_rose: #F6E6EC;
+  --wijnsoort_mousserend: #FFFFFF;
+  --wijnsoort_rodeport: #DBC4E5;
+  --wijnsoort_witteport: #FAE0C9;
+}
+
+.wijnsoort_rood {
+    background-color: var(--wijnsoort_rood);
+}
+
+.wijnsoort_wit {
+    background-color: var(--wijnsoort_wit);
+}
+
+.wijnsoort_rose {
+    background-color: var(--wijnsoort_rose);
+}
+
+.wijnsoort_rodeport {
+    background-color: var(--wijnsoort_rodeport);
+}
+
+.wijnsoort_witteport {
+    background-color: var(--wijnsoort_witteport);
+}
+
+.wijnsoort_mousserend {
+    background-image: url(../img/mousserend.png);
+}
+
+.mainrow {
+    padding-bottom: 4px;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+}
+
+.nextrow_first {
+    padding-top: 4px;
+    padding-bottom: 30px;
+    border-radius: 0 0 0 10px;
+}
+
+.nextrow {
+    padding-top: 4px;
+    padding-bottom: 30px;
+    border-radius: 0;
+}
+
+.nextrow_last {
+    padding-top: 4px;
+    padding-bottom: 30px;
+    border-radius: 0 0 10px 0;
+}
+
+.rowheader {
+    font-weight: bold;
+}
+
+.collabel {
+    font-weight: bold;
+}
+
+.bgstd {
+    background-color: var(--body-bg);
+    padding: 0px;
+}
+
+.detail-form{
+    display: block;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .detail-block {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .detail-row {
+    display: inline-block;
+    overflow: hidden;
+    width: 100%;
+    padding: 0 10px 0 0;
+    word-wrap: break-word;
+}
+
+.detail-column {
+    display: inline-block;
+    width: 400px;
+    overflow: auto;
+    font-size: 0.825rem;
+}
+
+.detail-column-label {
+    display: inline-block;
+    width: 160px;
+    overflow: auto;
+    font-size: 0.825rem;
+    font-weight: bold;
+    color: var(--body-fg);
+    vertical-align: top;
+}
+
+.buttons-block {
+    display: block;
+    float: left;
+    padding: 2px; 
+    border: none; 
+}
+

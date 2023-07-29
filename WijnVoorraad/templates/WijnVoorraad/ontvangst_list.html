@@ -1,20 +1,21 @@
 {% extends "./base.html" %}
 
 {% block content %}
-    <h1>Ontvangsten</h1>
     <table>
-        <tr>
-            <td class="rowheader">
-                Ontvangstdatum
-            </td>
-            <td class="rowheader">
-                Deelnemer
-            </td>
-            <td class="rowheader">
-                Wijn
-            </td>
-        </tr>
         {% for o in ontvangsten %}
+            {% if o == ontvangsten|first %} 
+            <tr>
+                <td class="rowheader">
+                    Ontvangstdatum
+                </td>
+                <td class="rowheader">
+                    Deelnemer
+                </td>
+                <td class="rowheader">
+                    Wijn
+                </td>
+            </tr>
+            {% endif %}
             <tr>
                 <td>
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.datumOntvangst}}</a>
@@ -30,4 +31,9 @@
             <p>Er zijn GEEN ontvangsten.</p>
         {% endfor %}
       </table>
-{% endblock content %}
+      <br>
+      <form id="create-form" method="get" action="{% url 'WijnVoorraad:ontvangst-create' %}">
+          {% csrf_token %}
+          <input type="submit" name="Insert" value="Toevoegen"></input>
+      </form>
+  {% endblock content %}

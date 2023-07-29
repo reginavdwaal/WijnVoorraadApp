@@ -5,17 +5,17 @@
 <table>
   {% for v in voorraad_list %}
     <tr class="mainrow">
-    <td colspan="2" class="mainrow">
+    <td colspan="2" class="mainrow wijnsoort_{{ v.wijn__wijnsoort__omschrijving|lower }}" >
       <b>
         <a href="{% url 'WijnVoorraad:wijndetail' v.wijn %}">{{ v.wijn__naam }} - {{ v.wijn__domein }}</a>
       </b>
     </td>
   </tr>
   <tr class="nextrow">
-    <td class="nextrow">
+    <td class="nextrow_first wijnsoort_{{ v.wijn__wijnsoort__omschrijving|lower }}">
       {{ v.wijn__wijnsoort__omschrijving }}, {{ v.wijn__jaar }}, {{ v.wijn__land }}
     </td>
-    <td class="nextrow">
+    <td class="nextrow_last wijnsoort_{{ v.wijn__wijnsoort__omschrijving|lower }}">
       #<a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn %}">{{ v.aantal }}</a>
     </td>
   </tr>

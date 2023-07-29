@@ -44,14 +44,31 @@
 {% endif %}
 
 <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+<table>
   <div class="form-row">
-    {{ form.username.errors }}
-    {{ form.username.label_tag }} {{ form.username }}
+    <tr><td>
+      {{ form.username.errors }}
+    </td></tr>
+    <tr><td>
+      {{ form.username.label_tag }}
+    </td>
+    <td>
+    {{ form.username }}
+    </td></tr>
   </div>
   <div class="form-row">
-    {{ form.password.errors }}
-    {{ form.password.label_tag }} {{ form.password }}
-    <input type="hidden" name="next" value="{{ next }}">
+    <tr><td>
+      {{ form.password.errors }}
+    </td></tr>
+    <tr><td>
+      {{ form.password.label_tag }}
+    </td>
+    <td>
+       {{ form.password }}
+    </td></tr>
+    <tr><td>
+      <input type="hidden" name="next" value="{{ next }}">
+    </td></tr>
   </div>
   {% url 'admin_password_reset' as password_reset_url %}
   {% if password_reset_url %}
@@ -59,6 +76,7 @@
     <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
   </div>
   {% endif %}
+</table>
   <div class="submit-row">
     <input type="submit" value="{% translate 'Log in' %}">
   </div>

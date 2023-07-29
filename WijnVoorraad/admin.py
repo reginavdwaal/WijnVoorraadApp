@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer, DeelnemerUser
+from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
 
 class VakInline(admin.TabularInline):
@@ -12,13 +12,6 @@ class LocatieAdmin(admin.ModelAdmin):
         (None,               {'fields': ['omschrijving']}),
     ]
     inlines = [VakInline]
-
-class UsersInline(admin.TabularInline):
-    model = DeelnemerUser
-    extra = 3
-
-class DeelnemerAdmin(admin.ModelAdmin):
-    inlines = [UsersInline]
 
 class DruivenSoortInline(admin.TabularInline):
     model = WijnDruivensoort
@@ -35,9 +28,7 @@ admin.site.register(Locatie, LocatieAdmin)
 
 admin.site.register(Vak)
 
-admin.site.register(Deelnemer, DeelnemerAdmin)
-
-admin.site.register(DeelnemerUser)
+admin.site.register(Deelnemer)
 
 admin.site.register(Wijn, WijnAdmin)
 

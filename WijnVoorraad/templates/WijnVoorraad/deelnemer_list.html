@@ -1,10 +1,20 @@
 {% extends "./base.html" %}
 
 {% block content %}
-    <h2>Deelnemers</h2>
-    <ul>
+    <table>
         {% for d in deelnemers %}
-            <li><b><a href="{% url 'WijnVoorraad:deelnemerdetail' d.id %}">{{ d.naam }}</a></b></li>
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:deelnemerdetail' d.id %}">{{ d.naam }}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN deelnemers.</p>
         {% endfor %}
-    </ul>
+    </table>
+    <br>
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:deelnemer-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
 {% endblock content %}

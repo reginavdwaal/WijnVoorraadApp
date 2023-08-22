@@ -1,7 +1,16 @@
 {% extends "./base_context.html" %}
 
 {% block content %}
-
+<form method="post">{% csrf_token %}
+  <label for="wijnsoort">Wijnsoort:</label>
+  <select name="wijnsoort_id_selectie" id="wijnsoort_id_selectie">       
+    <option value="">Alle</option>
+    {% for s in wijnsoort_list  %}
+      <option value="{{ s.id }}">{{ s.omschrijving }}</option>
+    {% endfor %}
+  </select>
+  <input type="text" name='fuzzy_selectie' id="fuzzy_selectie">
+</form>
 <table>
   {% for v in voorraad_list %}
     <tr class="mainrow">

@@ -53,6 +53,12 @@
                     <label class="detail-column-label">Opmerking</label>
                     <label class="detail-column">{{ ontvangst.opmerking }}</label>
                 </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Actuele voorraad</label>
+                    <a class="detail-column" href="{% url 'WijnVoorraad:voorraadontvangst' ontvangst.id %}">
+                        {{ voorraad_aantal.aantal|default_if_none:"-" }}
+                    </a>
+                </div>
             </div>  <!-- end detail-block -->
         </td> <!-- end column for detail-block -->
     </tr>  <!-- end row for detail-blocks -->
@@ -77,7 +83,7 @@
                 Aantal
             </td>
             <td class="rowheader">
-                locatie
+                Locatie
             </td>
             <td class="rowheader">
                 Vak

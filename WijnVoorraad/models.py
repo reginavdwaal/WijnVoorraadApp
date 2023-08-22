@@ -322,9 +322,8 @@ class WijnVoorraad(models.Model):
         if vrd.aantal == 0:
             vrd.delete()
 
-    def verplaatsen_zonder_vakken (WijnVoorraad, v_nieuwe_locatie, v_aantal_verplaatsen):
-        vak_nieuw = None;
-        VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, vak_nieuw, v_aantal_verplaatsen)
+    def verplaatsen (WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
+        VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
 
     class Meta:
         ordering = ["wijn", "deelnemer", "locatie", "vak"]

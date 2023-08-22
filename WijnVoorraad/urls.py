@@ -1,10 +1,13 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
 app_name = 'WijnVoorraad'
 urlpatterns = [
-    path('', views.VoorraadListView.as_view(), name='voorraadlist'),
+    path('home', views.VoorraadListView.as_view(), name='voorraadlist'),
+    path('home/<int:wijnsoort_id_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
+    path('home/<str:fuzzy_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
+    path('home/<int:wijnsoort_id_selectie>/<str:fuzzy_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
     path('gebruiker/<int:pk>/', views.GebruikerDetailView.as_view(), name='gebruikerdetail'),
     path('gebruiker/update/<int:pk>/', views.GebruikerUpdateView.as_view(), name='gebruiker-update'),
     path('deelnemers/', views.DeelnemerListView.as_view(), name='deelnemerlist'),
@@ -44,8 +47,8 @@ urlpatterns = [
     path('ontvangst/update/<int:pk>/', views.OntvangstUpdateView.as_view(), name='ontvangst-update'),
     path('mutaties_uit/', views.MutatiesUitListView.as_view(), name='mutaties_uit'),
     path('voorraad/<int:wijn_id>/', views.VoorraadDetailView.as_view(), name='voorraaddetail'),
+    path('voorraadontvangst/<int:ontvangst_id>/', views.VoorraadOntvangstView.as_view(), name='voorraadontvangst'),
     path('voorraadvakken/', views.VoorraadVakkenListView.as_view(), name='voorraadvakken'),
     path('verplaatsen/<int:voorraad_id>/<int:nieuwe_locatie_id>/<int:aantal>', views.VoorraadVerplaatsen.as_view(), name='verplaatsen'),
-    path('plaatsen/<int:ontvangst_id>', views.VoorraadPlaatsen.as_view(), name='plaatsen'),
     path('change_context/', views.change_context, name='change_context'),
 ]

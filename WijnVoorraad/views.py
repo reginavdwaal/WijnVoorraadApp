@@ -8,7 +8,7 @@ from django.views.generic.edit import CreateView, FormMixin, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.forms import inlineformset_factory
-from django.db.models import Sum
+from django.db.models import Sum, F
 from datetime import datetime
 from django.utils.html import escape
 from django.contrib.auth.models import User
@@ -18,7 +18,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
 from .forms import OntvangstCreateForm, OntvangstUpdateForm, OntvangstMutatieInlineFormset
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm, VoorraadVerplaatsenForm, VoorraadPlaatsenForm
+from .forms import WijnSoortForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -29,13 +29,32 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         set_session_context (self.request, 'WijnVoorraad:voorraadlist')
         d = get_session_context_deelnemer (self.request)
         l = get_session_context_locatie (self.request)
-        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l).values('wijn', 'wijn__naam', 'wijn__domein', 'wijn__wijnsoort__omschrijving', 'wijn__jaar', 'wijn__land', 'deelnemer','locatie').order_by('wijn', 'deelnemer','locatie').annotate(aantal=Sum('aantal'))
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l).values('wijn', 'wijn__naam', 'wijn__domein', 'wijn__wijnsoort__id', 'wijn__wijnsoort__omschrijving', 'wijn__jaar', 'wijn__land', 'deelnemer','locatie').order_by('wijn', 'deelnemer','locatie').annotate(aantal=Sum('aantal'))
+        ws_id = self.kwargs.get('wijnsoort_id_selectie')
+        if ws_id is not None:
+            voorraad_list = voorraad_list.filter(wijn__wijnsoort__id=ws_id)
+        fuzzy = self.kwargs.get('fuzzy_selectie')
+        if fuzzy is not None:
+            voorraad_list = voorraad_list.filter(wijn__naam__icontains=fuzzy)
         return voorraad_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         set_context (context)
+        s = WijnSoort.objects.all
+        context['wijnsoort_list'] = s
         return context
+
+    def post(self, request, *args, **kwargs):
+        ws_id = self.request.POST['wijnsoort_id_selectie']
+        fuzzy = self.request.POST['fuzzy_selectie']
+        args = {}
+        if ws_id:
+            args['wijnsoort_id_selectie'] = ws_id
+        if fuzzy:
+            args['fuzzy_selectie'] = fuzzy
+        url = reverse('WijnVoorraad:voorraadlist', kwargs = args)
+        return HttpResponseRedirect(url)
 
 class VoorraadDetailView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -71,7 +90,47 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
             v_nieuwe_locatie = Locatie.objects.get(pk=v_nieuwe_locatie_id)
             v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie_id)
             if not v_vakken:
-                WijnVoorraad.verplaatsen_zonder_vakken(voorraad, v_nieuwe_locatie, v_aantal_verplaatsen)
+                v_nieuwe_vak = None;
+                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+                url = reverse('WijnVoorraad:voorraadlist')
+            else:
+                url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v_id, nieuwe_locatie_id = v_nieuwe_locatie_id, aantal = v_aantal_verplaatsen))
+            return HttpResponseRedirect(url)
+        else:
+            return super().get(request, *args, **kwargs)
+
+class VoorraadOntvangstView(LoginRequiredMixin, ListView):
+    model = WijnVoorraad
+    context_object_name = 'voorraad_list'
+    template_name = 'WijnVoorraad/Wijnvoorraad_ontvangst.html'
+
+    def get_queryset(self):
+        o = self.kwargs['ontvangst_id']
+        voorraad_list = WijnVoorraad.objects.filter(ontvangst=o)
+        return voorraad_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['locaties'] = Locatie.objects.all()  
+        context['title'] = 'Voorraad ontvangst'  
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        v_id = self.request.POST['voorraad_id']
+        voorraad = WijnVoorraad.objects.get(pk=v_id)
+        if 'Drinken' in self.request.POST:
+            WijnVoorraad.drinken(voorraad)
+            return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
+        elif 'Verplaatsen' in self.request.POST:
+            v_aantal_verplaatsen = self.request.POST['aantal_verplaatsen']
+            v_nieuwe_locatie_id = self.request.POST['nieuwe_locatie_id']
+            if v_nieuwe_locatie_id == '-1':
+                v_nieuwe_locatie_id = voorraad.locatie.id
+            v_nieuwe_locatie = Locatie.objects.get(pk=v_nieuwe_locatie_id)
+            v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie_id)
+            if not v_vakken:
+                v_nieuwe_vak = None;
+                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
                 url = reverse('WijnVoorraad:voorraadlist')
             else:
                 url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v_id, nieuwe_locatie_id = v_nieuwe_locatie_id, aantal = v_aantal_verplaatsen))
@@ -101,45 +160,42 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         context['title'] = 'Vakken'
         return context
 
-# class VoorraadVerplaatsen(FormView):
-#     form_class = VoorraadVerplaatsenForm
-#     template_name = "WijnVoorraad/voorraad_verplaatsen.html"
-#     success_url = "/WijnVoorraad"
-
-#     def form_valid(self, form):
-#         # This method is called when valid form data has been POSTed.
-#         # It should return an HttpResponse.
-#         return super().form_valid(form)
-
-class VoorraadVerplaatsen(ListView, FormMixin):
+class VoorraadVerplaatsen (ListView):
     model = Vak
-    form_class = VoorraadVerplaatsenForm
     template_name = "WijnVoorraad/voorraad_verplaatsen.html"
     success_url = "/WijnVoorraad"
-
-    # def get_queryset(self):
-    #     voorraad_id = self.kwargs['voorraad_id']
-    #     voorraad = WijnVoorraad.objects.get(pk=voorraad_id)
-    #     l = voorraad.locatie
-    #     vakken_list = Vak.objects.filter(locatie=l).annotate(aantal_gebruikt=Sum('wijnvoorraad__aantal'))
-    #     return vakken_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         voorraad_id = self.kwargs['voorraad_id']
-        context['voorraad'] = WijnVoorraad.objects.get(pk=voorraad_id)
+        voorraad = WijnVoorraad.objects.get(pk=voorraad_id)
+        wijn = Wijn.objects.get (pk=voorraad.wijn.id)
         v_nieuwe_locatie_id = self.kwargs['nieuwe_locatie_id']
+        vakken_list = Vak.objects.filter(locatie=v_nieuwe_locatie_id).annotate(aantal_gebruikt=Sum('wijnvoorraad__aantal', default=0)).annotate(beschikbaar=F("capaciteit") - F("aantal_gebruikt")).filter(beschikbaar__gt=0).order_by("code")
+        context['voorraad'] = voorraad
+        context['wijn'] = wijn
+        context['aantal_verplaatsen_org'] = self.kwargs['aantal']
         context['nieuwe_locatie'] = Locatie.objects.get(pk=v_nieuwe_locatie_id)
-        context['aantal_verplaatsen'] = self.kwargs['aantal']
-        vakken_list = Vak.objects.filter(locatie=v_nieuwe_locatie_id).annotate(aantal_gebruikt=Sum('wijnvoorraad__aantal'))
         context['vakken_list'] = vakken_list
         return context
 
-class VoorraadPlaatsen(ListView, FormMixin):
-    model = Vak
-    form_class = VoorraadPlaatsenForm
-    template_name = "WijnVoorraad/voorraad_plaatsen.html"
-    success_url = "/WijnVoorraad"
+    def post(self, request, *args, **kwargs):
+        v_id = self.request.POST['voorraad_id']
+        voorraad = WijnVoorraad.objects.get(pk=v_id)
+        aantal_vakken = self.request.POST['aantal_vakken']
+        try:
+            aantal_vakken_int = int(aantal_vakken)
+        except:
+            aantal_vakken_int = 0
+        for i in range(1,aantal_vakken_int):
+            v_nieuw_vak_id = self.request.POST['nieuw_vak_id'+str(i)]
+            v_aantal_verplaatsen = self.request.POST['aantal_verplaatsen'+str(i)]
+            if v_aantal_verplaatsen:
+                v_nieuwe_vak = Vak.objects.get(pk=v_nieuw_vak_id)
+                v_nieuwe_locatie = v_nieuwe_vak.locatie
+                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+
+        return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))
 
 class MutatiesUitListView(LoginRequiredMixin, ListView):
     model = VoorraadMutatie
@@ -174,6 +230,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['voorraad_aantal'] = WijnVoorraad.objects.filter(ontvangst=self.object).aggregate(aantal=Sum('aantal'))
         context['mutaties'] = VoorraadMutatie.objects.filter(ontvangst=self.object)  
         context['title'] = 'Ontvangst'  
         return context

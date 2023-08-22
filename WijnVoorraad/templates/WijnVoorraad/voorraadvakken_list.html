@@ -29,7 +29,7 @@
                     {% for vrd in voorraad_list %}
                         {% if vrd.vak.code == v.code %}
                             <tr class="bgstd"><td class="bgstd">
-                                <a href="{% url 'WijnVoorraad:wijndetail' vrd.wijn.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
+                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
                                 ( {{ vrd.aantal}} )
                             </td></tr>
                         {% endif %}

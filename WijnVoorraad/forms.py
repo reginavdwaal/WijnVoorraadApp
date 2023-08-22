@@ -117,16 +117,6 @@ class LocatieForm(forms.ModelForm):
       model = Locatie
       fields = '__all__'
 
-class VoorraadVerplaatsenForm(forms.ModelForm):
-   class Meta:
-      model = Vak
-      exclude = ('locatie',)
-
-class VoorraadPlaatsenForm(forms.ModelForm):
-   class Meta:
-      model = Vak
-      exclude = ('locatie',)
-
 class GebruikerForm(forms.ModelForm):
    deelnemers = forms.ModelMultipleChoiceField(Deelnemer.objects, required=False, widget=MultipleSelectWithPop)
 

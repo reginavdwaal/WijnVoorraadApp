@@ -2,41 +2,68 @@
 {% load wijnvoorraad_extras %}
 
 {% block content %}
-<h1>{{ aantal_verplaatsen }} flessen verplaatsen naar {{ nieuwe_locatie.omschrijving }}</h1>
-<table>
-    {% for v in vakken_list %}
-        {% if vakken_list|first %} 
-        <tr>
-            <td class="rowheader">
-                Vak
-            </td>
-            <td class="rowheader">
-                Capaciteit
-            </td>
-            <td class="rowheader">
-                Gebruikt
-            </td>
-            <td class="rowheader">
-                Beschikbaar
-            </td>
-        {% endif %}
-        </tr>
+<script>
+    function findTotal() {
+        var arr = document.getElementsByClassName('aantal');
+        var tot = 0;
+        for (var i = 0; i < arr.length; i++) {
+            if (parseInt(arr[i].value))
+            tot += parseInt(arr[i].value);
+        }
+        document.getElementById('aantal_verplaatsen_totaal').value = tot;
+        var org = document.getElementById('aantal_verplaatsen_org').value;
+        var nog = org - tot
+        document.getElementById('aantal_verplaatsen_nog').value = nog;
+        if (nog == 0) {
+            document.getElementById('Save').disabled = false;       // enable
+        }
+        else {
+            document.getElementById('Save').disabled = true;        // disable
+        }
+    }
+</script>
+<h1>{{ aantal_verplaatsen_org }} flessen {{wijn.naam}} verplaatsen naar {{ nieuwe_locatie.omschrijving }}</h1>
+<h2>Beschikbare vakken:</h2>
+<form method="post">{% csrf_token %}
+    <input type="hidden" name='voorraad_id' id="voorraad_id" value="{{voorraad.id}}">
+    <input type="hidden" name='aantal_verplaatsen_org' id="aantal_verplaatsen_org" value="{{aantal_verplaatsen_org}}">
+    <input type="hidden" name='aantal_vakken' id="aantal_vakken" value="{{vakken_list|length}}">
+    <input type="submit" name="Save" id="Save" value="Opslaan" disabled>
+    <label for="aantal_verplaatsen_totaal">Totaal</label>
+    <input type="text" name='aantal_verplaatsen_totaal' id="aantal_verplaatsen_totaal" disabled>
+    <label for="aantal_verplaatsen_nog">Nog te verdelen</label>
+    <input type="text" name='aantal_verplaatsen_nog' id="aantal_verplaatsen_nog" value="{{aantal_verplaatsen_org}}" disabled>
+    <table>
+        {% for v in vakken_list %}
+            {% if v == vakken_list|first %} 
             <tr>
-            <td>
-                {{ v.code}}
-            </td>
-            <td>
-                {{ v.capaciteit }}
-            </td>
-            <td>
-                {{ v.aantal_gebruikt }}
-            </td>
-            <td>
-                {{ v.capaciteit|sub:v.aantal_gebruikt }}
-            </td>
-        </tr>
-    {% empty %}
-        <p>Deze locatie heeft geen vakken.</p>
-    {% endfor %}
-  </table>
-  {% endblock %}
+                <td class="rowheader">
+                    Vak
+                </td>
+                <td class="rowheader">
+                    Beschikbaar
+                </td>
+            {% endif %}
+            </tr>
+                <tr>
+                <td>
+                    <b>{{ v.code}}</b>
+                </td>
+                <td>
+                    {{ v.beschikbaar|default_if_none:"-" }} / {{ v.capaciteit|default_if_none:"-" }}
+                </td>
+                <td>
+                    <input type="hidden" name='nieuw_vak_id{{ forloop.counter }}' id="vak{{ forloop.counter }}" value="{{v.id}}">
+                    {% if v.beschikbaar > aantal_verplaatsen_org %}
+                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}' min="1" max="{{ aantal_verplaatsen_org }}" id="aantal_verplaatsen{{ forloop.counter }}">
+                    {% else %}
+                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}' min="1" max="{{ v.beschikbaar }}" id="aantal_verplaatsen{{ forloop.counter }}">
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <p>Deze locatie heeft geen vakken met beschikbare capaciteit.</p>
+        {% endfor %}
+    </table>
+</form>
+{% endblock %}

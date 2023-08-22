@@ -1,8 +1,8 @@
-{% extends "./base_context.html" %}
+{% extends "./base.html" %}
 {% load i18n static %}
 
 {% block content_title %}
-<h1>Voorraad 
+<h1>Voorraad ontvangst {{ voorraad_list.first.ontvangst.datumOntvangst }}: 
     <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
       {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
 </h1>
@@ -12,19 +12,13 @@
 <table>
     <tr>
         <td class="rowheader">
+            Locatie
+        </td>
+        <td class="rowheader">
             Vak
         </td>
         <td class="rowheader">
             Aantal
-        </td>
-        <td class="rowheader">
-            Ontvangstdatum
-        </td>
-        <td class="rowheader">
-          Leverancier
-        </td>
-        <td class="rowheader">
-            Opmerking
         </td>
         <td class="rowheader">
         </td>
@@ -39,19 +33,13 @@
         <form method="post">{% csrf_token %}
         <tr>
             <td style="vertical-align: middle">
+                {{ v.locatie.omschrijving }}
+            </td>
+            <td style="vertical-align: middle">
                 {{ v.vak.code|default_if_none:"-"  }}
             </td>
             <td style="vertical-align: middle">
                 {{ v.aantal }}
-            </td>
-            <td style="vertical-align: middle">
-                <a href="{% url 'WijnVoorraad:ontvangstdetail' v.ontvangst.id %}">{{ v.ontvangst.datumOntvangst }}</a>
-            </td>
-            <td style="vertical-align: middle">
-                {{ v.ontvangst.leverancier }}
-            </td>
-            <td style="vertical-align: middle">
-                {{ v.ontvangst.opmerking }}
             </td>
             <td>
                 <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
@@ -75,7 +63,7 @@
         </tr>
         </form>
     {% empty %}
-        <p>Er is geen actuele voorraad voor deze deelnemer, locatie en wijn.</p>
+        <p>Er is geen actuele voorraad voor deze ontvangst.</p>
     {% endfor %}
   </table>
 {% endblock %}

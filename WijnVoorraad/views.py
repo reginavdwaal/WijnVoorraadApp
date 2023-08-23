@@ -48,12 +48,12 @@ class VoorraadListView(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         ws_id = self.request.POST['wijnsoort_id_selectie']
         fuzzy = self.request.POST['fuzzy_selectie']
-        args = {}
+        my_kwargs = {}
         if ws_id:
-            args['wijnsoort_id_selectie'] = ws_id
+            my_kwargs['wijnsoort_id_selectie'] = ws_id
         if fuzzy:
-            args['fuzzy_selectie'] = fuzzy
-        url = reverse('WijnVoorraad:voorraadlist', kwargs = args)
+            my_kwargs['fuzzy_selectie'] = fuzzy
+        url = reverse('WijnVoorraad:voorraadlist', kwargs = my_kwargs)
         return HttpResponseRedirect(url)
 
 class VoorraadDetailView(LoginRequiredMixin, ListView):

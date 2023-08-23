@@ -55,9 +55,17 @@
                 <td>
                     <input type="hidden" name='nieuw_vak_id{{ forloop.counter }}' id="vak{{ forloop.counter }}" value="{{v.id}}">
                     {% if v.beschikbaar > aantal_verplaatsen_org %}
-                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}' min="1" max="{{ aantal_verplaatsen_org }}" id="aantal_verplaatsen{{ forloop.counter }}">
+                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
+                            min="1" max="{{ aantal_verplaatsen_org }}" id="aantal_verplaatsen{{ forloop.counter }}"
+                            oninput="javascript: if (this.value > this.max) this.value = this.max;"
+                            onchange="javascript: if (parseInt(this.value) > parseInt(this.max)) this.value = parseInt(this.max);"
+                            />
                     {% else %}
-                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}' min="1" max="{{ v.beschikbaar }}" id="aantal_verplaatsen{{ forloop.counter }}">
+                        <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
+                            min="1" max="{{ v.beschikbaar }}" id="aantal_verplaatsen{{ forloop.counter }}"
+                            oninput="javascript: if (this.value > this.max) this.value = this.max;"
+                            onchange="javascript: if (parseInt(this.value) > parseInt(this.max)) this.value = parseInt(this.max);"
+                            />
                     {% endif %}
                 </td>
             </tr>

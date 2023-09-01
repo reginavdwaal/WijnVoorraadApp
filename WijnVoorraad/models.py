@@ -115,6 +115,9 @@ class Wijn(models.Model):
     def __str__(self):
         return "%s - %s" % (self.naam, self.domein)
 
+    def jaar_str(jaar):
+        return str(jaar)
+    
     class Meta:
         ordering = ["naam"]
         verbose_name_plural = "wijnen"

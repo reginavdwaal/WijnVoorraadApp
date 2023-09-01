@@ -5,6 +5,7 @@ from . import views
 app_name = 'WijnVoorraad'
 urlpatterns = [
     path('home', views.VoorraadListView.as_view(), name='voorraadlist'),
+    path('voorraad/filter', views.VoorraadFilterView.as_view(), name='voorraadlist_filter'),
     path('home/<int:wijnsoort_id_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
     path('home/<str:fuzzy_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
     path('home/<int:wijnsoort_id_selectie>/<str:fuzzy_selectie>/', views.VoorraadListView.as_view(), name='voorraadlist'),
@@ -46,6 +47,7 @@ urlpatterns = [
     path('ontvangst/create', views.OntvangstCreateView.as_view(), name='ontvangst-create'),
     path('ontvangst/update/<int:pk>/', views.OntvangstUpdateView.as_view(), name='ontvangst-update'),
     path('mutaties_uit/', views.MutatiesUitListView.as_view(), name='mutaties_uit'),
+    path('mutaties_in/', views.MutatiesInListView.as_view(), name='mutaties_in'),
     path('voorraad/<int:wijn_id>/', views.VoorraadDetailView.as_view(), name='voorraaddetail'),
     path('voorraadontvangst/<int:ontvangst_id>/', views.VoorraadOntvangstView.as_view(), name='voorraadontvangst'),
     path('voorraadvakken/', views.VoorraadVakkenListView.as_view(), name='voorraadvakken'),

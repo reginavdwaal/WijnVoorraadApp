@@ -8,7 +8,8 @@ from django.views.generic.edit import CreateView, FormMixin, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.forms import inlineformset_factory
-from django.db.models import Sum, F
+from django.db.models import Sum, F, TextField
+from django.db.models.functions import Cast, Chr
 from datetime import datetime
 from django.utils.html import escape
 from django.contrib.auth.models import User
@@ -18,7 +19,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
 from .forms import OntvangstCreateForm, OntvangstUpdateForm, OntvangstMutatieInlineFormset
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm
+from .forms import WijnSoortForm, VoorraadFilterForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -35,18 +36,86 @@ class VoorraadListView(LoginRequiredMixin, ListView):
             voorraad_list = voorraad_list.filter(wijn__wijnsoort__id=ws_id)
         fuzzy = self.kwargs.get('fuzzy_selectie')
         if fuzzy is not None:
-            voorraad_list = voorraad_list.filter(wijn__naam__icontains=fuzzy)
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    fuzzy = str(num)
+                except ValueError:
+                    pass
+
+            voorraad_list = voorraad_list.filter(
+                wijn__naam__icontains=fuzzy) | voorraad_list.filter(
+                wijn__domein__icontains=fuzzy) | voorraad_list.filter(
+                wijn__wijnsoort__omschrijving__icontains=fuzzy) | voorraad_list.filter(
+                wijn__jaar__icontains=fuzzy) | voorraad_list.filter(
+                wijn__land__icontains=fuzzy) | voorraad_list.filter(
+                wijn__streek__icontains=fuzzy) | voorraad_list.filter(
+                wijn__classificatie__icontains=fuzzy) | voorraad_list.filter(
+                wijn__leverancier__icontains=fuzzy) | voorraad_list.filter(
+                wijn__opmerking__icontains=fuzzy) | voorraad_list.filter(
+                wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
         return voorraad_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         set_context (context)
-        s = WijnSoort.objects.all
-        context['wijnsoort_list'] = s
+        fuzzy = self.kwargs.get('fuzzy_selectie')
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    context['fuzzy_selectie'] = str(num)
+                except ValueError:
+                    context['fuzzy_selectie'] = fuzzy
         return context
 
     def post(self, request, *args, **kwargs):
-        ws_id = self.request.POST['wijnsoort_id_selectie']
+        fuzzy = self.request.POST['fuzzy_selectie']
+        my_kwargs = {}
+        if fuzzy:
+            try:
+                int(fuzzy)
+                my_kwargs['fuzzy_selectie'] = fuzzy + 'num'
+            except ValueError:
+                my_kwargs['fuzzy_selectie'] = fuzzy
+
+        url = reverse('WijnVoorraad:voorraadlist', kwargs = my_kwargs)
+        return HttpResponseRedirect(url)
+
+class VoorraadFilterView(LoginRequiredMixin, FormView):
+    form_class = VoorraadFilterForm
+    template_name = 'WijnVoorraad/wijnvoorraad_filter.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Voorraad filter'  
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        set_session_context (self.request, 'WijnVoorraad:voorraadlist_filter')
+        initial['deelnemer'] = self.request.session.get('deelnemer_id', None)
+        initial['locatie'] = self.request.session.get('locatie_id', None)
+        return initial
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+    
+    def form_valid(self, form):
+        d_id = self.request.POST['deelnemer']
+        l_id = self.request.POST['locatie']
+        d = Deelnemer.objects.get(pk=d_id)
+        l = Locatie.objects.get(pk=l_id)
+        self.request.session['deelnemer_id'] = d_id
+        self.request.session['deelnemer'] = d.naam
+        self.request.session['locatie_id'] = l_id
+        self.request.session['locatie'] = l.omschrijving
+        ws_id = self.request.POST['wijnsoort']
         fuzzy = self.request.POST['fuzzy_selectie']
         my_kwargs = {}
         if ws_id:
@@ -55,11 +124,17 @@ class VoorraadListView(LoginRequiredMixin, ListView):
             my_kwargs['fuzzy_selectie'] = fuzzy
         url = reverse('WijnVoorraad:voorraadlist', kwargs = my_kwargs)
         return HttpResponseRedirect(url)
+        # return HttpResponseRedirect(self.get_success_url())
+   
+    def form_invalid(self, form):
+        return self.render_to_response(
+            self.get_context_data(form=form))
+
 
 class VoorraadDetailView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
     context_object_name = 'voorraad_list'
-    template_name = 'WijnVoorraad/Wijnvoorraad_detail.html'
+    template_name = 'WijnVoorraad/wijnvoorraad_detail.html'
 
     def get_queryset(self):
         set_session_context (self.request, 'WijnVoorraad:voorraadlist')
@@ -163,7 +238,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
 class VoorraadVerplaatsen (ListView):
     model = Vak
     template_name = "WijnVoorraad/voorraad_verplaatsen.html"
-    success_url = "/WijnVoorraad"
+    success_url = "/WijnVoorraad/home"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -215,6 +290,24 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
         context['title'] = 'Uitgaande mutaties'
         return context
 
+class MutatiesInListView(LoginRequiredMixin, ListView):
+    model = VoorraadMutatie
+    context_object_name = 'mutatie_list'
+    template_name = 'WijnVoorraad/mutatie_in_list.html'
+
+    def get_queryset(self):
+        set_session_context (self.request, 'WijnVoorraad:mutaties_in')
+        d = get_session_context_deelnemer (self.request)
+        l = get_session_context_locatie (self.request)
+        mutatie_list = VoorraadMutatie.objects.filter(ontvangst__deelnemer__in=d, locatie__in=l, in_uit='I').order_by('-datum')
+        return mutatie_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        set_context (context)
+        context['title'] = 'Inkomende mutaties'
+        return context
+
 class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
     context_object_name = 'ontvangsten'
@@ -239,7 +332,7 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
     form_class = OntvangstCreateForm
     model = Ontvangst
     template_name = 'WijnVoorraad/ontvangst_create.html'
-    success_url = '/WijnVoorraad'
+    success_url = '/WijnVoorraad/home'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -315,7 +408,7 @@ class WijnCreateView(LoginRequiredMixin, CreateView):
     form_class = WijnForm
     model = Wijn
     template_name = 'WijnVoorraad/general_create_update.html'
-    success_url = '/WijnVoorraad'
+    success_url = '/WijnVoorraad/home'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

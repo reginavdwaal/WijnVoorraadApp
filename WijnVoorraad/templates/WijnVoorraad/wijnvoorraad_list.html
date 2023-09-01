@@ -1,15 +1,16 @@
-{% extends "./base_context.html" %}
+{% extends "./base.html" %}
+{% load i18n static %}
 
 {% block content %}
 <form method="post">{% csrf_token %}
-  <label for="wijnsoort">Wijnsoort:</label>
-  <select name="wijnsoort_id_selectie" id="wijnsoort_id_selectie">       
-    <option value="">Alle</option>
-    {% for s in wijnsoort_list  %}
-      <option value="{{ s.id }}">{{ s.omschrijving }}</option>
-    {% endfor %}
-  </select>
-  <input type="text" name='fuzzy_selectie' id="fuzzy_selectie">
+  <input class="clear_style" type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ fuzzy_selectie | default_if_none:'' }}"/>
+  <button class="clear_style" type="submit">
+    <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
+    </button>
+  <a class="clear_style" href="{% url 'WijnVoorraad:voorraadlist_filter' %}">
+    <img class="clear_style" src="{% static '/WijnVoorraad/img/Filtericon.png' %}" width="30" height="30" alt="Filter"/></a>
+  <a class="clear_style" href="{% url 'WijnVoorraad:ontvangst-create' %}">
+    <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
 </form>
 <table>
   {% for v in voorraad_list %}
@@ -22,7 +23,7 @@
   </tr>
   <tr class="nextrow">
     <td class="nextrow_first wijnsoort_{{ v.wijn__wijnsoort__omschrijving|lower }}">
-      {{ v.wijn__wijnsoort__omschrijving }}, {{ v.wijn__jaar }}, {{ v.wijn__land }}
+      {{ v.wijn__wijnsoort__omschrijving }}, {{ v.wijn__jaar | default_if_none:"" }}, {{ v.wijn__land }}
     </td>
     <td class="nextrow_last wijnsoort_{{ v.wijn__wijnsoort__omschrijving|lower }}">
       #<a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn %}">{{ v.aantal }}</a>

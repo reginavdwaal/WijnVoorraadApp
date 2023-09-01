@@ -19,8 +19,12 @@
 
   --header-color: #ffc;
   --header-branding-color: var(--accent);
-  --header-bg: var(--secondary); 
-  --header-link-color: var(--primary-fg);   
+  --header-bg: var(--secondary);
+  --header-link-color: #000000;  /* var(--primary-fg); */
+
+  --breadcrumbs-fg: #c4dce8;
+  --breadcrumbs-link-fg: var(--body-bg);
+  --breadcrumbs-bg: var(--primary);
 
   --link-fg: #447e9b;
   --link-hover-color: #036;
@@ -53,12 +57,17 @@
   --object-tools-bg: var(--close-button-bg);
   --object-tools-hover-bg: var(--close-button-hover-bg);
 
+  /* EIGEN VARS */
   --wijnsoort_rood: #FBC9C9;
   --wijnsoort_wit: #FFFBE8;
   --wijnsoort_rose: #F6E6EC;
   --wijnsoort_mousserend: #FFFFFF;
   --wijnsoort_rodeport: #DBC4E5;
   --wijnsoort_witteport: #FAE0C9;
+
+  --dropmenu-bg: var(--body-bg);
+  --dropmenu-bg-hover: #e4e4e4;
+  --dropmenu-btn-bg-hover: #79aec8;
 }
 
 .wijnsoort_rood {
@@ -166,3 +175,47 @@
     border: none; 
 }
 
+.clear_style {
+    border: none; 
+    padding: 0px;
+    vertical-align: middle;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdownmenu {
+    position: relative;
+    display: inline-block;
+  }
+  
+/* Dropdown Button */
+.dropdownmenu-button {
+    background-color: var(--header-bg);
+    border: none;
+  }
+  
+  /* Dropdown Content (Hidden by Default) */
+  .dropdownmenu-content {
+    display: none;
+    position: absolute;
+    right: 0px;
+    background-color: var(--dropmenu-bg);
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+  
+  /* Links inside the dropdown */
+  .dropdownmenu-content a {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+  }
+  
+  /* Change color of dropdown links on hover */
+  .dropdownmenu-content a:hover {background-color: var(--dropmenu-bg-hover);}
+  
+  /* Show the dropdown menu on hover */
+  .dropdownmenu:hover .dropdownmenu-content {display: block;}
+  
+  /* Change the background color of the dropdown button when the dropdown content is shown */
+  .dropdownmenu:hover .dropdownmenu-button {background-color: var(--dropmenu-btn-bg-hover)}

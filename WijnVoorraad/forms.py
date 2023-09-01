@@ -20,6 +20,12 @@ class MultipleSelectWithPop(forms.SelectMultiple):
       popupplus = render_to_string("widgets/popupplus.html", {'field': name})
       return html+popupplus
 
+class VoorraadFilterForm(forms.Form):
+   deelnemer = forms.ModelChoiceField(Deelnemer.objects, empty_label="----------", required=True, widget=SelectWithPop)
+   locatie = forms.ModelChoiceField(Locatie.objects, empty_label="----------", required=True, widget=SelectWithPop)
+   wijnsoort = forms.ModelChoiceField(WijnSoort.objects, empty_label="----------", required=False, widget=SelectWithPop)
+   fuzzy_selectie = forms.CharField(max_length=200, required=False)
+
 class OntvangstCreateForm(forms.ModelForm):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
    wijn = forms.ModelChoiceField(Wijn.objects, widget=SelectWithPop)

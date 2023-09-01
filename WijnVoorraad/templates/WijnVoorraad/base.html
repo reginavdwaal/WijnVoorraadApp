@@ -59,16 +59,23 @@
       {% block header_bar %}
       {% if user.id %}
         <div id="header_bar">
-          <a href="{% url 'WijnVoorraad:voorraadlist' %}">
-            <img src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/></a>
-          <a href="{% url 'WijnVoorraad:voorraadlist' %}">
-            <img src="{% static '/WijnVoorraad/img/Notesicon.png' %}" width="30" height="30" alt="Note"/></a>
-          <a href="{% url 'WijnVoorraad:voorraadvakken' %}">
-            <img src="{% static '/WijnVoorraad/img/dataicon.png' %}" width="30" height="30" alt="Voorraad"/></a>
-          <a href="{% url 'WijnVoorraad:ontvangst-create' %}">
-            <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
-          <a href="{% url 'WijnVoorraad:wijnlist' %}">
-            <img src="{% static '/WijnVoorraad/img/Scanicon.png' %}" width="30" height="30" alt="Scan"/></a>
+          <div class="dropdownmenu">
+            <button class="dropdownmenu-button" type="submit">
+              <img src="{% static '/WijnVoorraad/img/dataicon.png' %}" width="30" height="30" alt="Menu"/>
+            </button>
+          
+            <div class="dropdownmenu-content">
+              <a href="{% url 'WijnVoorraad:deelnemerlist' %}">Deelnemers</a>
+              <a href="{% url 'WijnVoorraad:druivensoortlist' %}">Druivensoorten</a>
+              <a href="{% url 'WijnVoorraad:wijnsoortlist' %}">Wijnsoorten</a>
+              <a href="{% url 'WijnVoorraad:locatielist' %}">Locaties</a>
+              <a href="{% url 'WijnVoorraad:wijnlist' %}">Wijnen</a>
+              <a href="{% url 'WijnVoorraad:ontvangstlist' %}">Ontvangsten</a>
+              <a href="{% url 'WijnVoorraad:mutaties_in' %}">Inkomende mutaties</a>
+              <a href="{% url 'WijnVoorraad:mutaties_uit' %}">Uitgaande mutaties</a>
+              <a href="{% url 'WijnVoorraad:voorraadvakken' %}">Actuele voorraad vakken</a>
+            </div>  
+          </div>
           <a href="{% url 'WijnVoorraad:gebruikerdetail' user.id %}">
             <img src="{% static '/WijnVoorraad/img/Accounticon.png' %}" width="30" height="30" alt="Profiel"/></a>
         </div>

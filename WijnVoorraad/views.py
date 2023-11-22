@@ -8,8 +8,7 @@ from django.views.generic.edit import CreateView, FormMixin, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.forms import inlineformset_factory
-from django.db.models import Sum, F, TextField
-from django.db.models.functions import Cast, Chr
+from django.db.models import Sum, F, Count, TextField, QuerySet
 from datetime import datetime
 from django.utils.html import escape
 from django.contrib.auth.models import User
@@ -17,7 +16,7 @@ from django.contrib.auth.models import User
 from .models import WijnSoort, DruivenSoort, Deelnemer, Locatie, Vak, Wijn, WijnDruivensoort
 from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
-from .forms import OntvangstCreateForm, OntvangstUpdateForm, OntvangstMutatieInlineFormset
+from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
 from .forms import WijnSoortForm, VoorraadFilterForm
 
@@ -30,7 +29,8 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         set_session_context (self.request, 'WijnVoorraad:voorraadlist')
         d = get_session_context_deelnemer (self.request)
         l = get_session_context_locatie (self.request)
-        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l).values('wijn', 'wijn__naam', 'wijn__domein', 'wijn__wijnsoort__id', 'wijn__wijnsoort__omschrijving', 'wijn__jaar', 'wijn__land', 'deelnemer','locatie').order_by('wijn', 'deelnemer','locatie').annotate(aantal=Sum('aantal'))
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l).group_by('wijn', 'ontvangst', 'deelnemer', 'locatie').distinct().order_by('wijn', 'deelnemer','locatie').annotate(aantal=Sum('aantal'))
+
         ws_id = self.kwargs.get('wijnsoort_id_selectie')
         if ws_id is not None:
             voorraad_list = voorraad_list.filter(wijn__wijnsoort__id=ws_id)
@@ -141,12 +141,17 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         d = get_session_context_deelnemer (self.request)
         l = get_session_context_locatie (self.request)
         w = self.kwargs['wijn_id']
-        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l, wijn=w)
+        o = self.kwargs['ontvangst_id']
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l, wijn=w, ontvangst=o)
         return voorraad_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         set_context (context)
+        w = self.kwargs['wijn_id']
+        context['wijn'] = Wijn.objects.get(pk=w)
+        o = self.kwargs['ontvangst_id']
+        context['ontvangst'] = Ontvangst.objects.get(pk=o)
         context['locaties'] = Locatie.objects.all()  
         context['title'] = 'Voorraad details'  
         return context
@@ -186,6 +191,8 @@ class VoorraadOntvangstView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        o = self.kwargs['ontvangst_id']
+        context['ontvangst'] = Ontvangst.objects.get (pk=o)
         context['locaties'] = Locatie.objects.all()  
         context['title'] = 'Voorraad ontvangst'  
         return context
@@ -339,6 +346,15 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
         context['title'] = 'Nieuwe ontvangst'  
         return context
 
+    def get_form_kwargs(self):
+        kwargs = super(OntvangstCreateView, self).get_form_kwargs()
+        set_session_context (self.request, 'WijnVoorraad:ontvangst-create')
+        my_defaults = {}
+        my_defaults ['deelnemer_id'] = self.request.session.get('deelnemer_id', None)
+        my_defaults ['locatie_id'] = self.request.session.get('locatie_id', None)
+        kwargs.update({'defaults': my_defaults})
+        return kwargs
+    
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()

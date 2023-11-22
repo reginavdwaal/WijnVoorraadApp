@@ -2,34 +2,39 @@
 {% load i18n static %}
 
 {% block content_title %}
-<h1>Voorraad ontvangst {{ voorraad_list.first.ontvangst.datumOntvangst }}: 
-    <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
-      {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
+<h1>Voorraad ontvangst {{ ontvangst.datumOntvangst }}: 
+    <a href="{% url 'WijnVoorraad:wijndetail' ontvangst.wijn.id %}">
+      {{ ontvangst.wijn.naam }} - {{ ontvangst.wijn.domein }}</a>
 </h1>
 {% endblock %}
 
 {% block content %}
 <table>
-    <tr>
-        <td class="rowheader">
-            Locatie
-        </td>
-        <td class="rowheader">
-            Vak
-        </td>
-        <td class="rowheader">
-            Aantal
-        </td>
-        <td class="rowheader">
-        </td>
-        <td class="rowheader">
-            Aantal
-        </td>
-        <td class="rowheader">
-            Nieuwe locatie
-        </td>
-      </tr>
     {% for v in voorraad_list %}
+        {% if v == voorraad_list|first %}    
+            <thead>
+            <tr>
+                <th>
+                    Locatie
+                </th>
+                <th>
+                    Vak
+                </th>
+                <th>
+                    Aantal
+                </th>
+                <th>
+                </th>
+                <th>
+                    Aantal
+                </th>
+                <th>
+                    Nieuwe locatie
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+        {% endif %}
         <form method="post">{% csrf_token %}
         <tr>
             <td style="vertical-align: middle">
@@ -63,7 +68,9 @@
         </tr>
         </form>
     {% empty %}
+        <tbody>
         <p>Er is geen actuele voorraad voor deze ontvangst.</p>
     {% endfor %}
-  </table>
+    </tbody>
+</table>
 {% endblock %}

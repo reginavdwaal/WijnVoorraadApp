@@ -3,8 +3,17 @@
 
 {% block content %}
 <div id="content-main">
-    <div class="content-row">
-        <div class="col-6 col-s-8">
+    <table style="width: 100%">    <!-- table for detail-blocks naast elkaar -->
+    <tr>    <!-- 1 row for detail-blocks -->
+        <!--  -->
+        <!-- bepaal aantal benodigde blokken tbv width -->
+        <!--  -->
+        {% if wijn.foto  %}
+            <td style="padding: 0; border: none; width: 50%">
+        {% else %}
+            <td style="padding: 0; border: none; width: 100%">
+        {% endif %}
+        
             <div class="detail-block">
                 <div class="detail-row">
                     <label class="detail-column-label">Wijnnaam</label> 
@@ -84,15 +93,16 @@
                     </div>
                 {% endif %}
             </div>  <!-- end detail-block -->
-        </div> <!-- end col -->
+        </td> <!-- end column for detail-block -->
         {% if wijn.foto  %}
-            <div class="col-6 col-s-4">
-                <div class="detail-block">
+            <td style="padding: 0;width: 50%">  <!-- new column for new detail-block -->
+            <div class="detail-block">
                     <img src="{{ wijn.foto.url }}" alt="Foto" style="max-height: 300px" />
                 </div>  <!-- end detail-block -->
-            </div>  <!-- end col -->
+            </td> <!-- end column for detail-block -->
         {% endif %}
-        </div>   <!-- end content-row -->
+    </tr>  <!-- end row for detail-blocks -->
+    </table>
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">

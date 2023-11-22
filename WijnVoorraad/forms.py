@@ -3,6 +3,7 @@ from django.forms import inlineformset_factory
 from django.template.loader import render_to_string
 # import django.forms as forms
 from django.contrib.auth.models import User
+from django_select2 import forms as s2forms
 
 from .models import Ontvangst, VoorraadMutatie, Locatie, Vak, Wijn, DruivenSoort, Deelnemer, WijnSoort
 
@@ -20,6 +21,20 @@ class MultipleSelectWithPop(forms.SelectMultiple):
       popupplus = render_to_string("widgets/popupplus.html", {'field': name})
       return html+popupplus
 
+class WijnWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        "naam__icontains",
+        "domein__icontains",
+    ]
+
+class WijnWidgetWithPop(WijnWidget):
+
+   def render(self, name, *args, **kwargs):
+      html = super(WijnWidgetWithPop, self).render(name, *args, **kwargs)
+      popupplus = render_to_string("widgets/popupplus.html", {'field': name, 'field_id': kwargs.get('value')})
+      return html+popupplus
+
+
 class VoorraadFilterForm(forms.Form):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, empty_label="----------", required=True, widget=SelectWithPop)
    locatie = forms.ModelChoiceField(Locatie.objects, empty_label="----------", required=True, widget=SelectWithPop)
@@ -28,7 +43,7 @@ class VoorraadFilterForm(forms.Form):
 
 class OntvangstCreateForm(forms.ModelForm):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
-   wijn = forms.ModelChoiceField(Wijn.objects, widget=SelectWithPop)
+   wijn = forms.ModelChoiceField(Wijn.objects, widget=WijnWidgetWithPop(attrs={'class': 'wijn_invoer'}))
    website = forms.CharField(max_length=200, required=False)
    opmerking = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'size': '40'}))
    KOOP = "K"
@@ -40,6 +55,13 @@ class OntvangstCreateForm(forms.ModelForm):
    actie = forms.ChoiceField(choices=actie_choices)
    locatie = forms.ModelChoiceField(Locatie.objects, empty_label="----------", required=True, widget=SelectWithPop)
    aantal = forms.IntegerField()
+
+   def __init__(self, *args, **kwargs):
+      #   instance = kwargs.get('instance')
+      defaults = kwargs.pop('defaults')
+      super(OntvangstCreateForm, self).__init__(*args, **kwargs)
+      self.initial['deelnemer'] = defaults ['deelnemer_id']
+      self.initial['locatie'] = defaults ['locatie_id']
 
    class Meta:
      model = Ontvangst
@@ -61,26 +83,6 @@ class OntvangstUpdateForm(forms.ModelForm):
    class Meta:
      model = Ontvangst
      fields = '__all__'
-
-class VoorraadMutatieForm(forms.ModelForm):
-
-   def __init__(self, *args, **kwargs):
-      #   instance = kwargs.get('instance')
-        super(VoorraadMutatieForm, self).__init__(*args, **kwargs)
-        self.fields['vak'].queryset = Vak.objects.filter(locatie=2)
-
-   class Meta:
-      model = VoorraadMutatie
-      fields = '__all__'
-
-OntvangstMutatieInlineFormset = inlineformset_factory(
-   Ontvangst,
-   VoorraadMutatie,
-   form=VoorraadMutatieForm,
-   extra=5,
-   fields=['locatie', 'vak', 'aantal', 'omschrijving'],
-   can_delete=False
-   )
 
 class DeelnemerForm(forms.ModelForm):
    naam = forms.CharField(widget=forms.TextInput(attrs={'size': '40'}))

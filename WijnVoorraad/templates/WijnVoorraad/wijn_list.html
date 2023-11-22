@@ -1,38 +1,42 @@
 {% extends "./base.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for wijn in wijn_list %}
             {% if wijn == wijn_list|first %} 
+            <thead>
             <tr>
-                <td class="rowheader">
+                <th>
                     Wijnnaam
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Domein
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Wijnsoort
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Jaartal
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Land
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Streek
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Classificatie
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Leverancier
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Datum aangemaakt
-                </td>
+                </th>
             </tr>
+            </thead>
+            <tbody>
             {% endif %}
             <tr>
                 <td>
@@ -64,12 +68,17 @@
                 </td>
             </tr>
         {% empty %}
+            <tbody>
             <p>Er zijn GEEN wijnen.</p>
         {% endfor %}
-      </table>
-      <br>
-      <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijn-create' %}">
-          {% csrf_token %}
-          <input type="submit" name="Insert" value="Toevoegen"></input>
-      </form>
+        </tbody>
+    </table>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijn-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+</div>
 {% endblock content %}

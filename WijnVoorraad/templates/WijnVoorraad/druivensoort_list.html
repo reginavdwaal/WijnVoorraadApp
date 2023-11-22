@@ -1,6 +1,7 @@
 {% extends "./base.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for druivensoort in druivensoorten %}
             <tr>
@@ -11,10 +12,13 @@
         {% empty %}
             <p>Er zijn GEEN druivensoorten.</p>
         {% endfor %}
-      </table>
-      <br>
-      <form id="create-form" method="get" action="{% url 'WijnVoorraad:druivensoort-create' %}">
+    </table>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:druivensoort-create' %}">
         {% csrf_token %}
         <input type="submit" name="Insert" value="Toevoegen"></input>
     </form>
+</div>
 {% endblock content %}

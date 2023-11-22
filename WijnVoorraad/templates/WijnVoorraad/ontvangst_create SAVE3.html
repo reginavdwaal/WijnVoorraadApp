@@ -1,0 +1,52 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+
+{% block extrahead %}{{ block.super }}
+<script src="{% url 'admin:jsi18n' %}"></script>
+<script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+<script src="{% static 'admin/js/calendar.js' %}"></script>
+<script src="{% static 'admin/js/jquery.init.js' %}"></script>
+<script src="{% static 'admin/js/admin/DateTimeShortcuts.js' %}"></script>
+<script src="{% static 'admin/js/core.js' %}"></script>
+<script src="{% static 'admin/js/inlines.js' %}"></script>
+<script src="{% static 'admin/js/actions.js' %}"></script>
+<script src="{% static 'admin/js/urlify.js' %}"></script>
+<script src="{% static 'admin/js/prepopulate.js' %}"></script>
+<script src="{% static 'admin/js/vendor/xregexp/xregexp.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
+{{ media }}
+{{ form.media.css }}
+<style>
+    input, select {width: 100%}
+</style>
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "WijnVoorraad/css/forms.css" %}">
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block content %}
+<form method="post" {% block form_actions %} {% endblock %}>
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        {% for field in form %}
+            <div class="form-row required {% if field.errors %} errors {% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+            </div>
+            {% if field.errors %}
+                <div class="form-row">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+    {% block form_buttons %}
+        <input type="submit" name="Save" value="Opslaan">
+    {% endblock %}
+</form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{{ form.media.js }}
+{% endblock %}

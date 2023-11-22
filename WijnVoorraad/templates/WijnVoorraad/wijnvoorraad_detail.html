@@ -1,41 +1,171 @@
-{% extends "./base_context.html" %}
+{% extends "./base.html" %}
 {% load i18n static %}
 
-{% block content_title %}
-<h1>Voorraad 
-    <a href="{% url 'WijnVoorraad:wijndetail' voorraad_list.first.wijn.id %}">
-      {{ voorraad_list.first.wijn.naam }} - {{ voorraad_list.first.wijn.domein }}</a>
-</h1>
-{% endblock %}
-
 {% block content %}
+<div id="content-main">
+    <div class="content-row">
+        <div class="col-6 col-s-8">
+            <div class="detail-block">
+                <div class="detail-row">
+                    <label class="detail-column-label">Wijnnaam</label> 
+                    <label class="detail-column">
+                        {{ wijn.naam }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Domein</label>
+                    <label class="detail-column">{{ wijn.domein}}</label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Wijnsoort</label>
+                    <label class="detail-column">
+                        {{ wijn.wijnsoort.omschrijving }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:wijnsoortdetail' wijn.wijnsoort.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>            
+                </div>
+                {% if wijn.jaar %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Jaartal</label>
+                        <label class="detail-column">{{ wijn.jaar|default_if_none:"" }}</label>            
+                    </div>
+                {% endif %}
+                {% if wijn.land %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Land</label>
+                        <label class="detail-column">{{ wijn.land }}</label>            
+                    </div>
+                {% endif %}
+                {% if wijn.streek %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Streek</label>
+                        <label class="detail-column">{{ wijn.streek }}</label>        
+                    </div>
+                {% endif %}
+                {% if wijn.classificatie %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Classificatie</label>
+                        <label class="detail-column">{{ wijn.classificatie }}</label>            
+                    </div>
+                {% endif %}
+                {% if wijn.leverancier %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Leverancier</label>
+                        <label class="detail-column">{{ wijn.leverancier }}</label>            
+                    </div>
+                {% endif %}
+                {% if wijn.website %}
+                    <div class="detail-row">
+                    <label class="detail-column-label">Website</label>
+                        <a class="detail-column" href="{{ wijn.website }}" target=”_blank”>
+                            {{ wijn.website }}
+                        </a>
+                    </div>
+                {% endif %}
+                {% if wijn.opmerking %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Opmerking</label>
+                        <label class="detail-column">{{ wijn.opmerking }} </label>
+                    </div>
+                {% endif %}
+                <div class="detail-row">
+                    <label class="detail-column-label">Ontvangstdatum</label>
+                    <label  class="detail-column">
+                        {{ ontvangst.datumOntvangst }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:ontvangstdetail' ontvangst.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                </label>            
+
+                </div>
+                {% if ontvangst.leverancier %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Leverancier</label>
+                        <label class="detail-column">{{ ontvangst.leverancier }}</label>
+                    </div>
+                {% endif %}
+                {% if ontvangst.website %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Website</label>
+                        <a class="detail-column" href="{{ ontvangst.website }}" target=”_blank”>
+                            {{ ontvangst.website }}
+                        </a>
+                    </div>
+                {% endif %}
+                {% if ontvangst.prijs %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Prijs</label>
+                        <label class="detail-column">{{ ontvangst.prijs|default_if_none:"" }}</label>
+                    </div>
+                {% endif %}
+                {% if ontvangst.prijs %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Opmerking</label>
+                        <label class="detail-column">{{ ontvangst.opmerking }}</label>
+                    </div>
+                {% endif %}
+                {% if wijn.wijnDruivensoorten.all.count >= 1 %}
+                    <div class="detail-row">
+                        <label class="detail-column-label">Druivensoorten</label>
+                        {% for d in wijn.wijnDruivensoorten.all %}
+                            {% if d == wijn.wijnDruivensoorten.all|first %} 
+                                <label class="detail-column">{{ d.omschrijving }}
+                            {% else %}
+                                , {{ d.omschrijving }}
+                            {% endif %}
+                            &nbsp;
+                            <a href="{% url 'WijnVoorraad:druivensoortdetail' d.id %}"
+                                title="Details bekijken">
+                                <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                            </a>
+                            {% endfor %}
+                        </label>
+                    </div>
+                {% endif %}
+            </div>  <!-- end detail-block -->
+        </div> <!-- end col -->
+        {% if wijn.foto  %}
+            <div class="col-6 col-s-4">
+                <div class="detail-block">
+                    <img src="{{ wijn.foto.url }}" alt="Foto" style="max-height: 300px" />
+                </div>  <!-- end detail-block -->
+            </div>  <!-- end col -->
+        {% endif %}
+        </div>   <!-- end content-row -->
+</div>  <!-- end content-main -->
 <table>
-    <tr>
-        <td class="rowheader">
-            Vak
-        </td>
-        <td class="rowheader">
-            Aantal
-        </td>
-        <td class="rowheader">
-            Ontvangstdatum
-        </td>
-        <td class="rowheader">
-          Leverancier
-        </td>
-        <td class="rowheader">
-            Opmerking
-        </td>
-        <td class="rowheader">
-        </td>
-        <td class="rowheader">
-            Aantal
-        </td>
-        <td class="rowheader">
-            Nieuwe locatie
-        </td>
-      </tr>
     {% for v in voorraad_list %}
+        {% if v == voorraad_list|first %}
+            <thead>
+                <tr>
+                    <th>
+                        Vak
+                    </th>
+                    <th>
+                        Aantal
+                    </th>
+                    <th>
+                    </th>
+                    <th>
+                        Aantal
+                    </th>
+                    <th>
+                        Nieuwe locatie
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+        {% endif %} 
         <form method="post">{% csrf_token %}
         <tr>
             <td style="vertical-align: middle">
@@ -43,15 +173,6 @@
             </td>
             <td style="vertical-align: middle">
                 {{ v.aantal }}
-            </td>
-            <td style="vertical-align: middle">
-                <a href="{% url 'WijnVoorraad:ontvangstdetail' v.ontvangst.id %}">{{ v.ontvangst.datumOntvangst }}</a>
-            </td>
-            <td style="vertical-align: middle">
-                {{ v.ontvangst.leverancier }}
-            </td>
-            <td style="vertical-align: middle">
-                {{ v.ontvangst.opmerking }}
             </td>
             <td>
                 <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
@@ -75,7 +196,9 @@
         </tr>
         </form>
     {% empty %}
+        <tbody>
         <p>Er is geen actuele voorraad voor deze deelnemer, locatie en wijn.</p>
     {% endfor %}
-  </table>
+    </tbody>
+</table>
 {% endblock %}

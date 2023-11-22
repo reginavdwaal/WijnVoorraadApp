@@ -2,27 +2,23 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="detail-form">
-    <table style="width: 100%">    <!-- table for detail-blocks -->
-    <tr>    <!-- 1 row for detail-blocks -->
-        <td style="padding: 0; border: none; width: 100%">
-            <div class="detail-block">
-                <div class="detail-row">
-                    <label class="detail-column-label">Code</label> 
-                    <label class="detail-column">{{ vak.code }}</label>             
-                </div>
-                <div class="detail-row">
-                    <label class="detail-column-label">Capaciteit</label> 
-                    <label class="detail-column">{{ vak.capaciteit|default_if_none:"" }}</label>             
-                </div>
-            </div>  <!-- end detail-block -->
-        </td> <!-- end column for detail-block -->
-    </tr>  <!-- end row for detail-blocks -->
-</table>
-</div>  <!-- end detail-form -->
-    <br>
+<div id="content-main">
+    <div class="detail-block">
+        <div class="detail-row">
+            <label class="detail-column-label">Code</label> 
+            <label class="detail-column">{{ vak.code }}</label>             
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Capaciteit</label> 
+            <label class="detail-column">{{ vak.capaciteit|default_if_none:"" }}</label>             
+        </div>
+    </div>  <!-- end detail-block -->
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
     <form id="update-form" method="get" action="{% url 'WijnVoorraad:vak-update' object.id  %}">
         {% csrf_token %}
         <input type="submit" name="Update" value="Wijzigen"></input>
     </form>
+</div>
 {% endblock %}

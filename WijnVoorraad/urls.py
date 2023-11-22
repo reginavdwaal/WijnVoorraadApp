@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 
 from . import views
 
@@ -48,7 +48,7 @@ urlpatterns = [
     path('ontvangst/update/<int:pk>/', views.OntvangstUpdateView.as_view(), name='ontvangst-update'),
     path('mutaties_uit/', views.MutatiesUitListView.as_view(), name='mutaties_uit'),
     path('mutaties_in/', views.MutatiesInListView.as_view(), name='mutaties_in'),
-    path('voorraad/<int:wijn_id>/', views.VoorraadDetailView.as_view(), name='voorraaddetail'),
+    path('voorraad/<int:wijn_id>/<int:ontvangst_id>', views.VoorraadDetailView.as_view(), name='voorraaddetail'),
     path('voorraadontvangst/<int:ontvangst_id>/', views.VoorraadOntvangstView.as_view(), name='voorraadontvangst'),
     path('voorraadvakken/', views.VoorraadVakkenListView.as_view(), name='voorraadvakken'),
     path('verplaatsen/<int:voorraad_id>/<int:nieuwe_locatie_id>/<int:aantal>', views.VoorraadVerplaatsen.as_view(), name='verplaatsen'),

@@ -36,16 +36,19 @@
     <table>
         {% for v in vakken_list %}
             {% if v == vakken_list|first %} 
+            <thead>
             <tr>
-                <td class="rowheader">
+                <th>
                     Vak
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Beschikbaar
-                </td>
-            {% endif %}
+                </th>
             </tr>
-                <tr>
+            </thead>
+            <tbody>
+            {% endif %}
+            <tr>
                 <td>
                     <b>{{ v.code}}</b>
                 </td>
@@ -70,8 +73,10 @@
                 </td>
             </tr>
         {% empty %}
+            <tbody>
             <p>Deze locatie heeft geen vakken met beschikbare capaciteit.</p>
         {% endfor %}
+        </tbody>
     </table>
 </form>
 {% endblock %}

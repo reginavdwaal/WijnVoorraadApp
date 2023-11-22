@@ -1,29 +1,33 @@
 {% extends "./base_context.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 
+            <thead>
             <tr>
-                <td class="rowheader">
+                <th>
                     Mutatiedatum
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Actie
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Vak
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Aantal
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Wijn
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Omschrijving
-                </td>
+                </th>
             </tr>
+            </thead>
+            <tbody>
             {% endif %}
             <tr>
                 <td>
@@ -46,7 +50,10 @@
                 </td>
             </tr>
         {% empty %}
+            <tbody>
             <p>Er zijn GEEN uitgaande mutaties binnen deze context.</p>
         {% endfor %}
-      </table>
+        </tbody>
+    </table>
+</div>
 {% endblock content %}

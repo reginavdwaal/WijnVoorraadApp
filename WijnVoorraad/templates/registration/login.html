@@ -1,13 +1,10 @@
 {% extends "WijnVoorraad/base.html" %}
 {% load i18n static %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/login.css" %}">
+{% block extrastyle %}{{ block.super }}
 {{ form.media }}
 {% endblock %}
 
-{% block bodyclass %}{{ block.super }} login{% endblock %}
-
-{% block usertools %}{% endblock %}
 
 {% block nav-global %}{% endblock %}
 
@@ -77,9 +74,7 @@
   </div>
   {% endif %}
 </table>
-  <div class="submit-row">
-    <input type="submit" value="{% translate 'Log in' %}">
-  </div>
+<input type="submit" value="{% translate 'Log in' %}">
 </form>
 
 </div>

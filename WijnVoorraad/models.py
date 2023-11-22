@@ -4,6 +4,8 @@ from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.db.models import F, Q
+from django.db.models.query import QuerySet
+from django_group_by import GroupByMixin
 
 # Create your models here.
 
@@ -257,7 +259,11 @@ class VoorraadMutatie(models.Model):
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"
 
+class WijnVoorraadQuerySet(QuerySet, GroupByMixin):
+    pass
+
 class WijnVoorraad(models.Model):
+    objects = WijnVoorraadQuerySet.as_manager()
     wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)

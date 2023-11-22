@@ -14,10 +14,6 @@ input[type="submit"], button {
 
     /* Layout */
 
-    body {
-        font-size: 1rem;
-    }
-    
     #container {
         min-width: 0;
     }
@@ -57,17 +53,22 @@ input[type="submit"], button {
 
     td, th {
         padding: 10px;
+        font-size: 0.950rem;     /* 0.875rem */
     }
 
     .detail-column {
-        width: 100%;
+        width: 80%;
     }
 
     .detail-column-label {
-        width: 100%;
+        width: 80%;
     }
 
     /* Forms */
+
+    label {
+        font-size: 0.950rem;
+    }
 
     .form-row input[type=text],
     .form-row input[type=password],
@@ -76,11 +77,13 @@ input[type="submit"], button {
     .form-row input[type=tel],
     .form-row input[type=number],
     .form-row textarea,
-    .form-row select {
+    .form-row select,
+    .form-row .vTextField {
         box-sizing: border-box;
         margin: 0;
         padding: 2px 8px;  /* 6px 8px */
         min-height: 36px; 
+        font-size: 0.950rem;
     }
 
     .form-row select {
@@ -96,7 +99,9 @@ input[type="submit"], button {
         padding-top: 6px;
     }
 
-    .aligned .datetimeshortcuts {
+    .aligned .related-lookup,
+    .aligned .datetimeshortcuts,
+    .aligned .related-lookup + strong {
         align-self: center;
         margin-left: 15px;
     }
@@ -105,7 +110,19 @@ input[type="submit"], button {
         margin-left: 2px;
     }
 
-    .button, input[type=submit], input[type=button], a.button {
+    .submit-row {
+        padding: 8px 8px 3px 8px;
+    }
+
+    .submit-row a.deletelink {
+        padding: 10px 7px;
+    }
+
+    .submit-row input.default {
+        margin: 0 0 5px 5px;
+    }
+
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
         padding: 7px;
     }
 
@@ -129,8 +146,26 @@ input[type="submit"], button {
         max-width: 120px;
     }
 
+    .datetime span {
+        font-size: 0.8125rem;
+    }
+
+    .datetime .timezonewarning {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--body-quiet-color);
+    }
+
     .datetimeshortcuts {
         color: var(--border-color); /* XXX Redundant, .datetime span also sets #ccc */
+    }
+
+    .form-row .datetime input.vDateField, .form-row .datetime input.vTimeField {
+        width: 75%;
+    }
+
+    .inline-group {
+        overflow: auto;
     }
 
     /* Messages */
@@ -148,6 +183,17 @@ input[type="submit"], button {
         background-position: 30px 14px;
     }
 
+    /* Login */
+
+    .login #header {
+        padding: 15px 20px;
+    }
+
+    .login #branding h1 {
+        margin: 0;
+    }
+
+
 /* Mobile */
 
 @media (max-width: 767px) {
@@ -163,6 +209,22 @@ input[type="submit"], button {
 
     div.breadcrumbs {
         padding: 10px 15px;
+    }
+
+    .object-tools {
+        float: none;
+        margin: 0 0 15px;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .object-tools li {
+        height: auto;
+        margin-left: 0;
+    }
+
+    .object-tools li + li {
+        margin-left: 15px;
     }
 
     /* Forms */
@@ -186,6 +248,10 @@ input[type="submit"], button {
         max-width: none;
     }
 
+    fieldset.collapsed .form-row {
+        display: none;
+    }
+
     .aligned label {
         width: 100%;
         padding: 0 0 10px;
@@ -202,6 +268,15 @@ input[type="submit"], button {
         max-width: 75%;
     }
 
+    .aligned .checkbox-row {
+        align-items: center;
+    }
+
+    .aligned .checkbox-row input {
+        flex: 0 1 auto;
+        margin: 0;
+    }
+
     .aligned .vCheckboxLabel {
         flex: 1 0;
         padding: 1px 0 0 5px;
@@ -212,6 +287,25 @@ input[type="submit"], button {
     .aligned label + div.readonly {
         padding: 0;
         margin-left: 0;
+    }
+
+    .aligned p.file-upload {
+        margin-left: 0;
+        font-size: 0.8125rem;
+    }
+
+    span.clearable-file-input {
+        margin-left: 15px;
+    }
+
+    span.clearable-file-input label {
+        font-size: 0.8125rem;
+        padding-bottom: 0;
+    }
+
+    .aligned .timezonewarning {
+        flex: 1 0 100%;
+        margin-top: 5px;
     }
 
     form .aligned .form-row div.help {
@@ -260,6 +354,104 @@ input[type="submit"], button {
         margin-left: 15px;
     }
 
+    /* Inlines */
+
+    .inline-group[data-inline-type="stacked"] .inline-related {
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-top: 15px;
+        overflow: auto;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related > * {
+        box-sizing: border-box;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related .module {
+        padding: 0 10px;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related .module .form-row {
+        border-top: 1px solid var(--hairline-color);
+        border-bottom: none;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related .module .form-row:first-child {
+        border-top: none;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related h3 {
+        padding: 10px;
+        border-top-width: 0;
+        border-bottom-width: 2px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related h3 .inline_label {
+        margin-right: auto;
+    }
+
+    .inline-group[data-inline-type="stacked"] .inline-related h3 span.delete {
+        float: none;
+        flex: 1 1 100%;
+        margin-top: 5px;
+    }
+
+    .inline-group[data-inline-type="stacked"] .aligned .form-row > div:not([class]) {
+        width: 100%;
+    }
+
+    .inline-group[data-inline-type="stacked"] .aligned label {
+        width: 100%;
+    }
+
+    .inline-group[data-inline-type="stacked"] div.add-row {
+        margin-top: 15px;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+    }
+
+    .inline-group div.add-row,
+    .inline-group .tabular tr.add-row td {
+        padding: 0;
+    }
+
+    .inline-group div.add-row a,
+    .inline-group .tabular tr.add-row td a {
+        display: block;
+        padding: 8px 10px 8px 26px;
+        background-position: 8px 9px;
+    }
+
+    /* Submit row */
+
+    .submit-row {
+        padding: 10px 10px 5px;
+        margin: 0 0 15px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .submit-row > * {
+        width: 100%;
+    }
+
+    .submit-row input, .submit-row input.default, .submit-row a, .submit-row a.closelink {
+        float: none;
+        margin: 0 0 10px;
+        text-align: center;
+    }
+
+    .submit-row a.closelink {
+        padding: 10px 0;
+    }
+
+    .submit-row p.deletelink-box {
+        order: 4;
+    }
+
     /* Messages */
 
     ul.messagelist li {
@@ -281,9 +473,57 @@ input[type="submit"], button {
         padding: 4px 10px;
     }
 
+    /* Login */
+
+    body.login {
+        padding: 0 15px;
+    }
+
+    .login #container {
+        width: auto;
+        max-width: 480px;
+        margin: 50px auto;
+    }
+
+    .login #header,
+    .login #content {
+        padding: 15px;
+    }
+
+    .login #content-main {
+        float: none;
+    }
+
+    .login .form-row {
+        padding: 0;
+    }
+
+    .login .form-row + .form-row {
+        margin-top: 15px;
+    }
+
+    .login .form-row label {
+        margin: 0 0 5px;
+        line-height: 1.2;
+    }
+
+    .login .submit-row {
+        padding: 15px 0 0;
+    }
+
+    .login br {
+        display: none;
+    }
+
+    .login .submit-row input {
+        margin: 0;
+        text-transform: uppercase;
+    }
+
     .errornote {
         margin: 0 0 20px;
         padding: 8px 12px;
+        font-size: 0.8125rem;
     }
 
     /* Calendar and clock */
@@ -358,6 +598,33 @@ input[type="submit"], button {
     .calendarbox .calendarnav-previous, .calendarbox .calendarnav-next {
         z-index: 1;
         top: 10px;
+    }
+
+    /* select2  */
+
+    .select2-dropdown {
+        width: 80%;
+    }
+
+    .select2-search--dropdown .select2-search__field {
+        width: 100%;
+    }
+
+    .select2-close-mask {
+        min-width: 80%;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        width: 80%;
+    }
+
+    .select2-container .select2-selection--single {
+        /* hetzelfde als input fields */
+        box-sizing: border-box;
+        margin: 0;
+        padding: 2px 8px;  /* 6px 8px */
+        min-height: 36px; 
+        font-size: 0.950rem;
     }
 
 }

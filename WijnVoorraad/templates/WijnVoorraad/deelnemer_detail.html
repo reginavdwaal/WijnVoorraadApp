@@ -2,36 +2,32 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="detail-form">
-    <table style="width: 100%">    <!-- table for detail-blocks -->
-    <tr>    <!-- 1 row for detail-blocks -->
-        <td style="padding: 0; border: none; width: 100%">
-            <div class="detail-block">
-                <div class="detail-row">
-                    <label class="detail-column-label">Naam</label>
-                    <label class="detail-column">{{ object.naam }}</label>            
-                </div>
-                <div class="detail-row">
-                    <label class="detail-column-label">Standaard locatie</label>
-                    {% if object.standaardLocatie %}
-                        <label class="detail-column">
-                            {{ object.standaardLocatie }}
-                            &nbsp;
-                            <a href="{% url 'WijnVoorraad:locatiedetail' object.standaardLocatie.id %}"
-                                title="Details bekijken">
-                                <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
-                            </a>
-                        </label>
-                    {% endif %}
-                </div>
-            </div>  <!-- end detail-block -->
-        </td> <!-- end column for detail-block -->
-    </tr>  <!-- end row for detail-blocks -->
-    </table>
-</div>  <!-- end detail-form -->
-<br >
+<div id="content-main">
+    <div class="detail-block">
+        <div class="detail-row">
+            <label class="detail-column-label">Naam</label>
+            <label class="detail-column">{{ object.naam }}</label>            
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Standaard locatie</label>
+            {% if object.standaardLocatie %}
+                <label class="detail-column">
+                    {{ object.standaardLocatie }}
+                    &nbsp;
+                    <a href="{% url 'WijnVoorraad:locatiedetail' object.standaardLocatie.id %}"
+                        title="Details bekijken">
+                        <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                    </a>
+                </label>
+            {% endif %}
+        </div>
+    </div>  <!-- end detail-block -->
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
     <form id="update-form" method="get" action="{% url 'WijnVoorraad:deelnemer-update' object.id  %}">
         {% csrf_token %}
         <input type="submit" name="Update" value="Wijzigen"></input>
     </form>
+</div>
 {% endblock %}

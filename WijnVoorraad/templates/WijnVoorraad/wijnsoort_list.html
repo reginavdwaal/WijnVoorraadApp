@@ -1,6 +1,7 @@
 {% extends "./base.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for wijnsoort in wijnsoorten %}
             <tr>
@@ -11,10 +12,13 @@
         {% empty %}
             <p>Er zijn GEEN wijnsoorten.</p>
         {% endfor %}
-      </table>
-      <br>
-      <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijnsoort-create' %}">
+    </table>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijnsoort-create' %}">
         {% csrf_token %}
         <input type="submit" name="Insert" value="Toevoegen"></input>
     </form>
+</div>
 {% endblock content %}

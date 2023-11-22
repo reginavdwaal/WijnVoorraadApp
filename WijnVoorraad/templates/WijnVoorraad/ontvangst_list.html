@@ -1,20 +1,24 @@
 {% extends "./base.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for o in ontvangsten %}
             {% if o == ontvangsten|first %} 
+            <thead>
             <tr>
-                <td class="rowheader">
+                <th>
                     Ontvangstdatum
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Deelnemer
-                </td>
-                <td class="rowheader">
+                </th>
+                <th>
                     Wijn
-                </td>
+                </th>
             </tr>
+            </thead>
+            <tbody>
             {% endif %}
             <tr>
                 <td>
@@ -28,12 +32,17 @@
                 </td>
             </tr>
         {% empty %}
+            <tbody>
             <p>Er zijn GEEN ontvangsten.</p>
         {% endfor %}
-      </table>
-      <br>
-      <form id="create-form" method="get" action="{% url 'WijnVoorraad:ontvangst-create' %}">
-          {% csrf_token %}
-          <input type="submit" name="Insert" value="Toevoegen"></input>
-      </form>
-  {% endblock content %}
+        </tbody>
+    </table>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:ontvangst-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+</div>
+{% endblock content %}

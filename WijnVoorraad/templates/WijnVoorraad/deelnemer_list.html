@@ -1,6 +1,7 @@
 {% extends "./base.html" %}
 
 {% block content %}
+<div id="content-main">
     <table>
         {% for d in deelnemers %}
             <tr>
@@ -12,9 +13,12 @@
             <p>Er zijn GEEN deelnemers.</p>
         {% endfor %}
     </table>
-    <br>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
     <form id="create-form" method="get" action="{% url 'WijnVoorraad:deelnemer-create' %}">
         {% csrf_token %}
         <input type="submit" name="Insert" value="Toevoegen"></input>
     </form>
+</div>
 {% endblock content %}

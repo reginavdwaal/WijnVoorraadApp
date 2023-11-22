@@ -2,43 +2,50 @@
 {% load wijnvoorraad_extras %}
 
 {% block content %}
-<table>
-    {% for v in vakken_list %}
-        {% if v == vakken_list|first %} 
-        <tr>
-            <td class="rowheader">
-                Vak
-            </td>
-            <td class="rowheader">
-                Gebruikt
-            </td>
-            <td class="rowheader">
-                Wijnen (aantal)
-            </td>
-        </tr>
-        {% endif %}
-        <tr>
-            <td>
-                {{ v.code}}
-            </td>
-            <td>
-                {{ v.aantal_gebruikt|default_if_none:"-" }} / {{ v.capaciteit|default_if_none:"-" }}
-            </td>
-            <td>
-                <table class="bgstd">
-                    {% for vrd in voorraad_list %}
-                        {% if vrd.vak.code == v.code %}
-                            <tr class="bgstd"><td class="bgstd">
-                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
-                                ( {{ vrd.aantal}} )
-                            </td></tr>
-                        {% endif %}
-                    {% endfor %}
-                </table>
-            </td>
-       </tr>
-    {% empty %}
-        <p>Deze locatie heeft geen vakken.</p>
-    {% endfor %}
-  </table>
-  {% endblock %}
+<div id="content-main">
+    <table>
+        {% for v in vakken_list %}
+            {% if v == vakken_list|first %} 
+                <thead>
+                    <tr>
+                        <th>
+                            Vak
+                        </th>
+                        <th>
+                            Gebruikt
+                        </th>
+                        <th>
+                            Wijnen (aantal)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% endif %}
+            <tr>
+                <td>
+                    {{ v.code}}
+                </td>
+                <td>
+                    {{ v.aantal_gebruikt|default_if_none:"-" }} / {{ v.capaciteit|default_if_none:"-" }}
+                </td>
+                <td>
+                    <table class="bgstd">
+                        {% for vrd in voorraad_list %}
+                            {% if vrd.vak.code == v.code %}
+                                <tr class="bgstd"><td class="bgstd">
+                                    <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
+                                    ( {{ vrd.aantal}} )
+                                </td></tr>
+                            {% endif %}
+                        {% endfor %}
+                    </table>
+                </td>
+           </tr>
+        {% empty %}
+            <tbody>
+            <p>Deze locatie heeft geen vakken.</p>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

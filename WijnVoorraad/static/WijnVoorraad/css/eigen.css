@@ -15,7 +15,7 @@
 
   --body-bg: #fff;
   --body-fg: #333;
-  --body-headers-color: #666; /* h1 t/m h5 */ 
+  --body-headers-color: #333; /* h1 t/m h5 */ 
 
   --header-bg: #417690;
   --header-color: #ffc;
@@ -29,11 +29,12 @@
   --link-hover-color: #036;
   --link-hover-bg: #b9c0f196;
 
-  --table-header-fg: #666; /* th, thead */ 
+  --table-header-fg: #333; /* th, thead */ 
   --darkened-bg: #f8f8f8; /* A bit darker than --body-bg */
-  --border-color: #ccc; /* border inputfield, table?? */ 
+  --border-color: #ccc; /* border inputfields */ 
   --focus_border-color: #ccc; /* border inputfield met focus */ 
-  --hairline-color: #e8e8e8;
+  --hairline-color: #e8e8e8; /* lines between rows in table */
+  --table-kader-color: #000000; /* border tables met class "metkader" */ 
 
   --error-fg: #ba2121;
 
@@ -116,6 +117,10 @@ tr.wijnvoorraad_row:hover a {
     font-weight: bold;
     background: var(--link-hover-bg);
   }
+
+table.metkader {
+    border: 2px solid var(--table-kader-color);
+}
 
 .bgstd {
     background-color: var(--body-bg);

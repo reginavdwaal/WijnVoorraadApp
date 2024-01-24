@@ -201,7 +201,7 @@ p img, h1 img, h2 img, h3 img, h4 img, td img {
 
 table {
     border-collapse: collapse;
-    border-color: var(--border-color);
+    border: 0;
 }
 
 td, th {
@@ -216,18 +216,12 @@ th {
     text-align: left;
 }
 
-thead th,
-tfoot td {
+thead th {
     color: var(--table-header-fg);
     padding: 5px 10px;
     border: none;
     border-top: 1px solid var(--hairline-color);
     border-bottom: 1px solid var(--hairline-color);
-}
-
-tfoot td {
-    border-bottom: none;
-    border-top: 1px solid var(--hairline-color);
 }
 
 tr:nth-child(odd), .row-form-errors {

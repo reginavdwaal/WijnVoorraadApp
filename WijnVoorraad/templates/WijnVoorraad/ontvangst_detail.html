@@ -110,7 +110,7 @@
                     {{ m.locatie.omschrijving }}
                 </td>
                 <td>
-                    {{ m.vak.code }}
+                    {{ m.vak.code|default:"---" }}
                 </td>
                 <td>
                     {{ m.get_actie_display }}

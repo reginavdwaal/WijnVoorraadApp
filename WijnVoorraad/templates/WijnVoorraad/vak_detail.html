@@ -6,7 +6,7 @@
     <div class="detail-block">
         <div class="detail-row">
             <label class="detail-column-label">Code</label> 
-            <label class="detail-column">{{ vak.code }}</label>             
+            <label class="detail-column">{{ vak.code|default:"---" }}</label>             
         </div>
         <div class="detail-row">
             <label class="detail-column-label">Capaciteit</label> 

@@ -37,7 +37,7 @@
                     {{ m.get_actie_display }}
                 </td>
                 <td>
-                    {{ m.vak.code }}
+                    {{ m.vak.code|default:"---" }}
                 </td>
                 <td>
                     {{ m.aantal }}

@@ -41,7 +41,7 @@
                 {{ v.locatie.omschrijving }}
             </td>
             <td style="vertical-align: middle">
-                {{ v.vak.code|default_if_none:"-"  }}
+                {{ v.vak.code|default:"---" }}
             </td>
             <td style="vertical-align: middle">
                 {{ v.aantal }}

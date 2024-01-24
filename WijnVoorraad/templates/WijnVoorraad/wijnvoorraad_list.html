@@ -23,7 +23,7 @@
             <b>{{ v.wijn.naam }} - {{ v.wijn.domein }}</b>
           </a>
         </td>
-        <td class="col-10 col-s-10">
+        <td class="col-11 col-s-10">
           <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">
             {{ v.wijn.wijnsoort.omschrijving }}
             {% if v.wijn.jaar %}
@@ -37,7 +37,7 @@
             {% endfor %}
           </a>
         </td>
-        <td class="col-2 col-s-2">
+        <td class="col-1 col-s-2">
           <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">#{{ v.aantal }}</a>
         </td>
       </tr>

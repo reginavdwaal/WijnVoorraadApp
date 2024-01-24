@@ -2,8 +2,50 @@
 {% load i18n static %}
 
 {% block content %}
+{% block content_title %}{% endblock %}
+<h2>Vooraad van {{ wijn.naam }}</h2>
+
 <div id="content-main">
     <div class="content-row">
+        <div class="col-3 col-s-12">
+            <table class="metkader" width="100%">
+                {% for v in voorraad_list %}
+                    {% if v == voorraad_list|first %}
+                        <thead>
+                            <tr>
+                                <th style="text-align: center">
+                                    Vak
+                                </th>
+                                <th style="text-align: center">
+                                    Aantal
+                                </th>
+                                <th>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    {% endif %} 
+                    <form method="post">{% csrf_token %}
+                    <tr>
+                        <td style="vertical-align: middle; text-align: center">
+                            {{ v.vak.code |default:"---" }}
+                        </td>
+                        <td style="vertical-align: middle; text-align: center">
+                            {{ v.aantal }}
+                        </td>
+                        <td>
+                            <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
+                            <input type="submit" name="Drinken" value="Drinken">
+                        </td>
+                    </tr>
+                    </form>
+                {% empty %}
+                    <tbody>
+                    <p>Er is geen actuele voorraad voor deze deelnemer, locatie en wijn.</p>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div> <!-- end col -->
         <div class="col-6 col-s-8">
             <div class="detail-block">
                 <div class="detail-row">
@@ -135,50 +177,48 @@
             </div>  <!-- end detail-block -->
         </div> <!-- end col -->
         {% if wijn.foto  %}
-            <div class="col-6 col-s-4">
+            <div class="col-3 col-s-4">
                 <div class="detail-block">
                     <img src="{{ wijn.foto.url }}" alt="Foto" style="max-height: 300px" />
                 </div>  <!-- end detail-block -->
             </div>  <!-- end col -->
         {% endif %}
-        </div>   <!-- end content-row -->
+    </div>   <!-- end content-row -->
 </div>  <!-- end content-main -->
+<br class="clear">
+<h2>Verplaatsen van de voorraad</h2>
 <table>
     {% for v in voorraad_list %}
         {% if v == voorraad_list|first %}
             <thead>
                 <tr>
-                    <th>
+                    <th style="text-align: center">
                         Vak
                     </th>
-                    <th>
-                        Aantal
+                    <th style="text-align: center">
+                        Voorraad
                     </th>
-                    <th>
-                    </th>
-                    <th>
-                        Aantal
+                    <th style="text-align: center">
+                        Aantal verplaatsen
                     </th>
                     <th>
                         Nieuwe locatie
                     </th>
                 </tr>
-            </thead>
+                <th>
+                </th>
+        </thead>
             <tbody>
         {% endif %} 
         <form method="post">{% csrf_token %}
         <tr>
-            <td style="vertical-align: middle">
-                {{ v.vak.code|default_if_none:"-"  }}
+            <td style="vertical-align: middle; text-align: center">
+                {{ v.vak.code|default:"---" }}
             </td>
-            <td style="vertical-align: middle">
+            <td style="vertical-align: middle; text-align: center">
                 {{ v.aantal }}
             </td>
-            <td>
-                <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
-                <input type="submit" name="Drinken" value="Drinken">
-            </td>
-            <td>
+            <td style="text-align: center">
                 <input type="number" name='aantal_verplaatsen' min="1" max="{{ v.aantal }}" id="aantal_verplaatsen{{ forloop.counter }}">
             </td>
             <td>

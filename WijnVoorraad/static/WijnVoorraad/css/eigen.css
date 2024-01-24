@@ -27,6 +27,7 @@
 
   --link-fg: #447e9b;
   --link-hover-color: #036;
+  --link-hover-bg: #b9c0f196;
 
   --table-header-fg: #666; /* th, thead */ 
   --darkened-bg: #f8f8f8; /* A bit darker than --body-bg */
@@ -39,9 +40,6 @@
   --message-success-bg: #dfd;
   --message-warning-bg: #ffc;
   --message-error-bg: #ffefef;
-
-  --selected-bg: #e4e4e4; /* E.g. selected table cells */
-  --selected-row: #ffc;
 
   --button-fg: #fff;
   --button-bg: #79aec8;
@@ -60,53 +58,64 @@
   --dropmenu-btn-bg-hover: #79aec8;
 }
 
-.wijnsoort_rood {
+tr.wijnsoort_rood {
     background-color: var(--wijnsoort_rood);
 }
 
-.wijnsoort_wit {
+tr.wijnsoort_wit {
     background-color: var(--wijnsoort_wit);
 }
 
-.wijnsoort_rose {
+tr.wijnsoort_rose {
     background-color: var(--wijnsoort_rose);
 }
 
-.wijnsoort_rodeport {
+tr.wijnsoort_rodeport {
     background-color: var(--wijnsoort_rodeport);
 }
 
-.wijnsoort_witteport {
+tr.wijnsoort_witteport {
     background-color: var(--wijnsoort_witteport);
 }
 
-.wijnsoort_mousserend {
+tr.wijnsoort_mousserend {
     background-image: url(../img/mousserend.png);
 }
 
-.mainrow {
-    padding-bottom: 4px;
-    border-bottom: none;
-    border-radius: 10px 10px 0 0;
+table.wijnvoorraad {
+    border-collapse: separate;
+    border-spacing: 5px;
+    overflow: hidden;
 }
 
-.nextrow_first {
-    padding-top: 4px;
-    padding-bottom: 30px;
-    border-radius: 0 0 0 10px;
+tr.wijnvoorraad_row {
+    display: block;
+    border: 1px solid #ffffff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-collapse: separate;
+    overflow: hidden;
+} 
+
+tr.wijnvoorraad_row td {
+    padding: 0px;
+    border: 0;
 }
 
-.nextrow {
+.wijnvoorraad_row td a {
+    padding-left: 8px;
+    padding-right: 8px;
     padding-top: 4px;
-    padding-bottom: 30px;
-    border-radius: 0;
+    padding-bottom: 10px;
+    display: flex;
 }
 
-.nextrow_last {
-    padding-top: 4px;
-    padding-bottom: 30px;
-    border-radius: 0 0 10px 0;
-}
+tr.wijnvoorraad_row:hover a {
+    font-weight: bold;
+    background: var(--link-hover-bg);
+  }
 
 .bgstd {
     background-color: var(--body-bg);
@@ -131,7 +140,24 @@
     padding: 5px;
     box-sizing: border-box;
 }
-  
+
+@media only screen and (max-width: 600px) {
+/* For phone: */
+    .col-s-1 {width: 8.33%;}
+    .col-s-2 {width: 16.66%;}
+    .col-s-3 {width: 25%;}
+    .col-s-4 {width: 33.33%;}
+    .col-s-5 {width: 41.66%;}
+    .col-s-6 {width: 50%;}
+    .col-s-7 {width: 58.33%;}
+    .col-s-8 {width: 66.66%;}
+    .col-s-9 {width: 75%;}
+    .col-s-10 {width: 83.33%;}
+    .col-s-11 {width: 91.66%;}
+    .col-s-12 {width: 100%;}
+}
+    
+   
 @media only screen and (min-width: 600px) {
 /* For tablets: */
     .col-s-1 {width: 8.33%;}

@@ -15,15 +15,17 @@
         <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
     </div>
   </form>
-  <table class="wijnvoorraad">
+  <table class="table-clickable">
     {% for v in voorraad_list %}
-      <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
-        <td class="col-12 col-s-12" >
+      <tr class="mainrow">
+        <td colspan="2" class="mainrowcol wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}" >
           <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
             <b>{{ v.wijn.naam }} - {{ v.wijn.domein }}</b>
           </a>
         </td>
-        <td class="col-10 col-s-10">
+      </tr>
+      <tr class="nextrow">
+        <td class="nextrow_firstcol wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
           <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">
             {{ v.wijn.wijnsoort.omschrijving }}
             {% if v.wijn.jaar %}
@@ -37,7 +39,7 @@
             {% endfor %}
           </a>
         </td>
-        <td class="col-2 col-s-2">
+        <td class="nextrow_lastcol wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
           <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">#{{ v.aantal }}</a>
         </td>
       </tr>

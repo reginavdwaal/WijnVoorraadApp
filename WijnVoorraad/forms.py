@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from django_select2 import forms as s2forms
 
-from .models import Ontvangst, VoorraadMutatie, Locatie, Vak, Wijn, DruivenSoort, Deelnemer, WijnSoort
+from .models import Ontvangst, VoorraadMutatie, Locatie, Vak, Wijn, DruivenSoort, Deelnemer, WijnSoort, WijnVoorraad
 
 class SelectWithPop(forms.Select):
 
@@ -34,12 +34,19 @@ class WijnWidgetWithPop(WijnWidget):
       popupplus = render_to_string("widgets/popupplus.html", {'field': name, 'field_id': kwargs.get('value')})
       return html+popupplus
 
-
 class VoorraadFilterForm(forms.Form):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, empty_label="----------", required=True, widget=SelectWithPop)
    locatie = forms.ModelChoiceField(Locatie.objects, empty_label="----------", required=True, widget=SelectWithPop)
    wijnsoort = forms.ModelChoiceField(WijnSoort.objects, empty_label="----------", required=False, widget=SelectWithPop)
    fuzzy_selectie = forms.CharField(max_length=200, required=False)
+
+class VoorraadVerplaatsenForm(forms.ModelForm):
+   aantal_verplaatsen = forms.IntegerField()
+   nieuwe_locatie = forms.ModelChoiceField(Locatie.objects, empty_label="--Locatie behouden--", required=False, widget=SelectWithPop)
+
+   class Meta:
+     model = WijnVoorraad
+     fields = ["aantal_verplaatsen", "nieuwe_locatie"]
 
 class OntvangstCreateForm(forms.ModelForm):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)

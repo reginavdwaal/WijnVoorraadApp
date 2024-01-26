@@ -214,6 +214,7 @@ table.metkader {
     box-sizing: border-box;
     width: 55%;   /* 400px; */
     overflow: auto;
+    font-weight: normal;
 }
 
 .detail-column-label {

@@ -17,19 +17,15 @@
                 <th>
                     Locatie
                 </th>
-                <th>
+                <th style="text-align: center">
                     Vak
                 </th>
-                <th>
+                <th style="text-align: center">
                     Aantal
                 </th>
                 <th>
                 </th>
                 <th>
-                    Aantal
-                </th>
-                <th>
-                    Nieuwe locatie
                 </th>
             </tr>
             </thead>
@@ -40,10 +36,10 @@
             <td style="vertical-align: middle">
                 {{ v.locatie.omschrijving }}
             </td>
-            <td style="vertical-align: middle">
+            <td style="vertical-align: middle; text-align: center">
                 {{ v.vak.code|default:"---" }}
             </td>
-            <td style="vertical-align: middle">
+            <td style="vertical-align: middle; text-align: center">
                 {{ v.aantal }}
             </td>
             <td>
@@ -51,18 +47,7 @@
                 <input type="submit" name="Drinken" value="Drinken">
             </td>
             <td>
-                <input type="number" name='aantal_verplaatsen' min="1" max="{{ v.aantal }}" id="aantal_verplaatsen{{ forloop.counter }}">
-            </td>
-            <td>
-                <select name="nieuwe_locatie_id" id="nieuwe_locatie_id{{ forloop.counter }}">       
-                    <option value="-1" selected>--Locatie behouden--</option>
-                {% for l in locaties  %}
-                    <option value="{{ l.id }}"
-                    >{{ l.omschrijving }}</option>
-                {% endfor %}
-            </select>
-            </td>
-            <td>
+                <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
                 <input type="submit" name="Verplaatsen" value="Verplaatsen">
             </td>
         </tr>

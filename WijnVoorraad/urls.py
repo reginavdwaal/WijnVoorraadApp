@@ -51,6 +51,7 @@ urlpatterns = [
     path('voorraad/<int:wijn_id>/<int:ontvangst_id>', views.VoorraadDetailView.as_view(), name='voorraaddetail'),
     path('voorraadontvangst/<int:ontvangst_id>/', views.VoorraadOntvangstView.as_view(), name='voorraadontvangst'),
     path('voorraadvakken/', views.VoorraadVakkenListView.as_view(), name='voorraadvakken'),
-    path('verplaatsen/<int:voorraad_id>/<int:nieuwe_locatie_id>/<int:aantal>', views.VoorraadVerplaatsen.as_view(), name='verplaatsen'),
+    path('verplaatsinvakken/<int:voorraad_id>/<int:nieuwe_locatie_id>/<int:aantal>', views.VoorraadVerplaatsInVakken.as_view(), name='verplaatsinvakken'),
+    path('verplaatsen/<int:pk>', views.VoorraadVerplaatsen.as_view(), name='verplaatsen'),
     path('change_context/', views.change_context, name='change_context'),
 ]

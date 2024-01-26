@@ -32,7 +32,6 @@ class DruivenSoort(models.Model):
         verbose_name = "druivensoort"
         verbose_name_plural = "druivensoorten"
 
-
 class Locatie(models.Model):
     omschrijving = models.CharField(max_length=200, unique=True)
 
@@ -41,7 +40,6 @@ class Locatie(models.Model):
 
     class Meta:
         ordering = ["omschrijving"]
-
 
 class Vak(models.Model):
     locatie = models.ForeignKey(Locatie, on_delete=models.CASCADE)
@@ -61,7 +59,6 @@ class Vak(models.Model):
                 deferrable=Deferrable.DEFERRED,
             )
         ]
-
 
 class Deelnemer(models.Model):
     naam = models.CharField(max_length=200, unique=True)

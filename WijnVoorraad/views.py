@@ -18,7 +18,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm, VoorraadFilterForm
+from .forms import WijnSoortForm, VoorraadFilterForm, VoorraadVerplaatsenForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -152,7 +152,6 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         context['wijn'] = Wijn.objects.get(pk=w)
         o = self.kwargs['ontvangst_id']
         context['ontvangst'] = Ontvangst.objects.get(pk=o)
-        context['locaties'] = Locatie.objects.all()  
         context['title'] = 'Voorraad details'  
         return context
     
@@ -163,18 +162,7 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
             WijnVoorraad.drinken(voorraad)
             return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
         elif 'Verplaatsen' in self.request.POST:
-            v_aantal_verplaatsen = self.request.POST['aantal_verplaatsen']
-            v_nieuwe_locatie_id = self.request.POST['nieuwe_locatie_id']
-            if v_nieuwe_locatie_id == '-1':
-                v_nieuwe_locatie_id = voorraad.locatie.id
-            v_nieuwe_locatie = Locatie.objects.get(pk=v_nieuwe_locatie_id)
-            v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie_id)
-            if not v_vakken:
-                v_nieuwe_vak = None;
-                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
-                url = reverse('WijnVoorraad:voorraadlist')
-            else:
-                url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v_id, nieuwe_locatie_id = v_nieuwe_locatie_id, aantal = v_aantal_verplaatsen))
+            url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(pk = v_id))
             return HttpResponseRedirect(url)
         else:
             return super().get(request, *args, **kwargs)
@@ -193,7 +181,6 @@ class VoorraadOntvangstView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         o = self.kwargs['ontvangst_id']
         context['ontvangst'] = Ontvangst.objects.get (pk=o)
-        context['locaties'] = Locatie.objects.all()  
         context['title'] = 'Voorraad ontvangst'  
         return context
     
@@ -204,18 +191,7 @@ class VoorraadOntvangstView(LoginRequiredMixin, ListView):
             WijnVoorraad.drinken(voorraad)
             return HttpResponseRedirect(reverse('WijnVoorraad:voorraadlist'))        
         elif 'Verplaatsen' in self.request.POST:
-            v_aantal_verplaatsen = self.request.POST['aantal_verplaatsen']
-            v_nieuwe_locatie_id = self.request.POST['nieuwe_locatie_id']
-            if v_nieuwe_locatie_id == '-1':
-                v_nieuwe_locatie_id = voorraad.locatie.id
-            v_nieuwe_locatie = Locatie.objects.get(pk=v_nieuwe_locatie_id)
-            v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie_id)
-            if not v_vakken:
-                v_nieuwe_vak = None;
-                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
-                url = reverse('WijnVoorraad:voorraadlist')
-            else:
-                url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v_id, nieuwe_locatie_id = v_nieuwe_locatie_id, aantal = v_aantal_verplaatsen))
+            url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(pk = v_id))
             return HttpResponseRedirect(url)
         else:
             return super().get(request, *args, **kwargs)
@@ -242,9 +218,76 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         context['title'] = 'Vakken'
         return context
 
-class VoorraadVerplaatsen (ListView):
-    model = Vak
+class VoorraadVerplaatsen (LoginRequiredMixin, FormMixin, DetailView):
+    form_class = VoorraadVerplaatsenForm
+    model = WijnVoorraad
     template_name = "WijnVoorraad/voorraad_verplaatsen.html"
+    success_url = "/WijnVoorraad/home"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        voorraad = self.object
+        wijn = Wijn.objects.get (pk=voorraad.wijn.id)
+        locatie = Locatie.objects.get (pk=voorraad.locatie.id)
+        vak = None
+        if voorraad.vak:
+            vak = Vak.objects.get (pk=voorraad.vak.id)
+        context['voorraad'] = voorraad
+        context['wijn'] = wijn
+        context['locatie'] = locatie
+        context['vak'] = vak
+        context['title'] = 'Verplaatsen'  
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        v_id = self.request.POST['voorraad_id']
+        voorraad = WijnVoorraad.objects.get(pk=v_id)
+        v_nieuwe_locatie = form.cleaned_data["nieuwe_locatie"]
+        v_aantal_verplaatsen = form.cleaned_data["aantal_verplaatsen"]
+
+        if 'SaveAndPlace' in self.request.POST:
+            #
+            # Er is gekozen om  vakken te kiezen.
+            #
+            if v_nieuwe_locatie is None:
+                # Behouden van dezelfde locatie
+                v_nieuwe_locatie = voorraad.locatie
+            v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie)
+            if not v_vakken:
+                # Als de nieuwe locatie geen vakken heeft, valt er ook niets te kiezen.
+                # Als er geen nieuwe locatie is gekozen (maar behouden locatie), dan valt er niets te verplaatsen.
+                if v_nieuwe_locatie != voorraad.locatie:
+                    # Alsnog direct verplaatsen op de nieuwe locatie
+                    v_nieuwe_vak = None;
+                    WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+                url = reverse('WijnVoorraad:voorraadlist')
+            else:
+                url = reverse('WijnVoorraad:verplaatsinvakken', kwargs = dict(voorraad_id = voorraad.id, nieuwe_locatie_id = v_nieuwe_locatie.id, aantal = v_aantal_verplaatsen))
+        else:
+            #
+            # Er is gekozen om GEEN vakken te kiezen.
+            # Als er geen nieuwe locatie is gekozen, valt er niets te verplaatsen
+            #
+            if v_nieuwe_locatie:
+                #
+                # Wel een nieuwe locatie: Verplaatsen naar de nieuwe locatie zonder vak te kiezen
+                #
+                v_nieuwe_vak = None;
+                WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+            url = reverse('WijnVoorraad:voorraadlist')
+        return HttpResponseRedirect(url)
+  
+class VoorraadVerplaatsInVakken (LoginRequiredMixin, ListView):
+    model = Vak
+    template_name = "WijnVoorraad/voorraad_verplaatsinvakken.html"
     success_url = "/WijnVoorraad/home"
 
     def get_context_data(self, **kwargs):
@@ -380,7 +423,7 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
         mutatie.save()
         if 'SaveAndPlace' in self.request.POST:
             v = WijnVoorraad.objects.filter (ontvangst=self.object)
-            url = reverse('WijnVoorraad:verplaatsen', kwargs = dict(voorraad_id = v[0].id, aantal = aantal))
+            url = reverse('WijnVoorraad:verplaatsinvakken', kwargs = dict(voorraad_id = v[0].id, nieuwe_locatie_id = locatie.id, aantal = aantal))
             return HttpResponseRedirect(url)
         else:
             return HttpResponseRedirect(self.get_success_url())

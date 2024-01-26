@@ -21,6 +21,8 @@
                                 </th>
                                 <th>
                                 </th>
+                                <th>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -36,6 +38,10 @@
                         <td>
                             <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
                             <input type="submit" name="Drinken" value="Drinken">
+                        </td>
+                        <td>
+                            <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
+                            <input type="submit" name="Verplaatsen" value="Verplaatsen">
                         </td>
                     </tr>
                     </form>
@@ -185,60 +191,4 @@
         {% endif %}
     </div>   <!-- end content-row -->
 </div>  <!-- end content-main -->
-<br class="clear">
-<h2>Verplaatsen van de voorraad</h2>
-<table>
-    {% for v in voorraad_list %}
-        {% if v == voorraad_list|first %}
-            <thead>
-                <tr>
-                    <th style="text-align: center">
-                        Vak
-                    </th>
-                    <th style="text-align: center">
-                        Voorraad
-                    </th>
-                    <th style="text-align: center">
-                        Aantal verplaatsen
-                    </th>
-                    <th>
-                        Nieuwe locatie
-                    </th>
-                </tr>
-                <th>
-                </th>
-        </thead>
-            <tbody>
-        {% endif %} 
-        <form method="post">{% csrf_token %}
-        <tr>
-            <td style="vertical-align: middle; text-align: center">
-                {{ v.vak.code|default:"---" }}
-            </td>
-            <td style="vertical-align: middle; text-align: center">
-                {{ v.aantal }}
-            </td>
-            <td style="text-align: center">
-                <input type="number" name='aantal_verplaatsen' min="1" max="{{ v.aantal }}" id="aantal_verplaatsen{{ forloop.counter }}">
-            </td>
-            <td>
-                <select name="nieuwe_locatie_id" id="nieuwe_locatie_id{{ forloop.counter }}">       
-                    <option value="-1" selected>--Locatie behouden--</option>
-                {% for l in locaties  %}
-                    <option value="{{ l.id }}"
-                    >{{ l.omschrijving }}</option>
-                {% endfor %}
-            </select>
-            </td>
-            <td>
-                <input type="submit" name="Verplaatsen" value="Verplaatsen">
-            </td>
-        </tr>
-        </form>
-    {% empty %}
-        <tbody>
-        <p>Er is geen actuele voorraad voor deze deelnemer, locatie en wijn.</p>
-    {% endfor %}
-    </tbody>
-</table>
 {% endblock %}

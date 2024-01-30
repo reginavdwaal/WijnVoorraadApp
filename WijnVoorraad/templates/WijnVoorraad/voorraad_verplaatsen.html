@@ -8,7 +8,7 @@
     <fieldset class="module aligned">
         <div class="form-row">
             <label class="detail-column-label">Wijn</label>
-            <label class="detail-column">
+            <label>
                 {{  wijn.naam }}
                 &nbsp;
                 <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}"
@@ -19,28 +19,34 @@
         </div>
         <div class="form-row">
             <label class="detail-column-label">Locatie</label>
-            <label class="detail-column">{{ locatie.omschrijving }}</label>
+            <label>{{ locatie.omschrijving }}</label>
         </div>
         <div class="form-row">
             <label class="detail-column-label">Vak</label>
-            <label class="detail-column">{{ vak.code|default:"---" }}</label>
+            <label>{{ vak.code|default:"---" }}</label>
         </div>
         <div class="form-row">
             <label class="detail-column-label">Voorraad</label>
-            <label class="detail-column">{{ voorraad.aantal|default_if_none:"-" }}</label>
+            <label>{{ voorraad.aantal|default_if_none:"-" }}</label>
         </div>
-        {% for field in form %}
-            <div class="form-row required {% if field.errors %} errors {% endif %}">
-                {{ field.label_tag }}
-                {{ field }}
-            </div>
-            {% if field.errors %}
-                <div class="form-row">
-                    {{ field.errors }}
-                </div>
-            {% endif %}
-        {% endfor %}
+
+        <div class="form-row">
+            <label class="detail-column-label">Aantal verplaatsen</label>
+            <input type="number" name='aantal_verplaatsen' required
+                    min="1" max="{{ voorraad.aantal }}" id="aantal_verplaatsen"/>
+        </div>
+
+        <div class="form-row">
+            <label class="detail-column-label">Locatie</label>
+            <select name="nieuwe_locatie" id="nieuwe_locatie">       
+                <option value="" selected="">--Locatie behouden--</option>
+                {% for l in locatie_list  %}
+                    <option value="{{ l.id }}">{{ l.omschrijving }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </fieldset>
+    <br class="clear">
     {% block form_buttons %}
         <input type="submit" name="Save" value="Opslaan">
         <input type="submit" name="SaveAndPlace" value="Opslaan en vakken kiezen">

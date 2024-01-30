@@ -18,7 +18,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm, VoorraadFilterForm, VoorraadVerplaatsenForm
+from .forms import WijnSoortForm, VoorraadFilterForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -218,8 +218,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         context['title'] = 'Vakken'
         return context
 
-class VoorraadVerplaatsen (LoginRequiredMixin, FormMixin, DetailView):
-    form_class = VoorraadVerplaatsenForm
+class VoorraadVerplaatsen (LoginRequiredMixin, DetailView):
     model = WijnVoorraad
     template_name = "WijnVoorraad/voorraad_verplaatsen.html"
     success_url = "/WijnVoorraad/home"
@@ -236,30 +235,24 @@ class VoorraadVerplaatsen (LoginRequiredMixin, FormMixin, DetailView):
         context['wijn'] = wijn
         context['locatie'] = locatie
         context['vak'] = vak
+        locatie_list = Locatie.objects.all
+        context['locatie_list'] = locatie_list
         context['title'] = 'Verplaatsen'  
         return context
 
     def post(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-
-    def form_valid(self, form):
         v_id = self.request.POST['voorraad_id']
         voorraad = WijnVoorraad.objects.get(pk=v_id)
-        v_nieuwe_locatie = form.cleaned_data["nieuwe_locatie"]
-        v_aantal_verplaatsen = form.cleaned_data["aantal_verplaatsen"]
+        v_nieuwe_locatie = self.request.POST["nieuwe_locatie"]
+        v_aantal_verplaatsen = self.request.POST["aantal_verplaatsen"]
+        if not v_nieuwe_locatie:
+            # Behouden van dezelfde locatie
+            v_nieuwe_locatie = voorraad.locatie
 
         if 'SaveAndPlace' in self.request.POST:
             #
             # Er is gekozen om  vakken te kiezen.
             #
-            if v_nieuwe_locatie is None:
-                # Behouden van dezelfde locatie
-                v_nieuwe_locatie = voorraad.locatie
             v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie)
             if not v_vakken:
                 # Als de nieuwe locatie geen vakken heeft, valt er ook niets te kiezen.
@@ -276,15 +269,16 @@ class VoorraadVerplaatsen (LoginRequiredMixin, FormMixin, DetailView):
             # Er is gekozen om GEEN vakken te kiezen.
             # Als er geen nieuwe locatie is gekozen, valt er niets te verplaatsen
             #
-            if v_nieuwe_locatie:
+            if v_nieuwe_locatie != voorraad.locatie or voorraad.vak:
                 #
-                # Wel een nieuwe locatie: Verplaatsen naar de nieuwe locatie zonder vak te kiezen
+                # Wel een nieuwe locatie OF zelfde locatie maar voorraad is van een specifiek vak: 
+                # Verplaatsen naar de nieuwe locatie zonder vak te kiezen
                 #
                 v_nieuwe_vak = None;
                 WijnVoorraad.verplaatsen(voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
             url = reverse('WijnVoorraad:voorraadlist')
         return HttpResponseRedirect(url)
-  
+
 class VoorraadVerplaatsInVakken (LoginRequiredMixin, ListView):
     model = Vak
     template_name = "WijnVoorraad/voorraad_verplaatsinvakken.html"

@@ -40,14 +40,6 @@ class VoorraadFilterForm(forms.Form):
    wijnsoort = forms.ModelChoiceField(WijnSoort.objects, empty_label="----------", required=False, widget=SelectWithPop)
    fuzzy_selectie = forms.CharField(max_length=200, required=False)
 
-class VoorraadVerplaatsenForm(forms.ModelForm):
-   aantal_verplaatsen = forms.IntegerField()
-   nieuwe_locatie = forms.ModelChoiceField(Locatie.objects, empty_label="--Locatie behouden--", required=False, widget=SelectWithPop)
-
-   class Meta:
-     model = WijnVoorraad
-     fields = ["aantal_verplaatsen", "nieuwe_locatie"]
-
 class OntvangstCreateForm(forms.ModelForm):
    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
    wijn = forms.ModelChoiceField(Wijn.objects, widget=WijnWidgetWithPop(attrs={'class': 'wijn_invoer'}))

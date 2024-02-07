@@ -38,6 +38,7 @@ urlpatterns = [
     path('vak/create/<int:locatie_id>/', views.VakCreateView.as_view(), name='vak-create'),
     path('vak/update/<int:pk>/', views.VakUpdateView.as_view(), name='vak-update'),
     path('wijnen/', views.WijnListView.as_view(), name='wijnlist'),
+    path('wijnen/<str:fuzzy_selectie>/', views.WijnListView.as_view(), name='wijnlist'),
     path('wijn/<int:pk>/', views.WijnDetailView.as_view(), name='wijndetail'),
     path('wijn/create/', views.WijnCreateView.as_view(), name='wijn-create'),
     path('wijn/update/<int:pk>/', views.WijnUpdateView.as_view(), name='wijn-update'),

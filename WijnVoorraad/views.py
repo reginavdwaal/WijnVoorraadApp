@@ -130,7 +130,6 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
         return self.render_to_response(
             self.get_context_data(form=form))
 
-
 class VoorraadDetailView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
     context_object_name = 'voorraad_list'
@@ -442,10 +441,55 @@ class WijnListView(LoginRequiredMixin, ListView):
     model = Wijn
     context_object_name = 'wijn_list'
 
+    def get_queryset(self):
+        wijn_list = Wijn.objects.all()
+        fuzzy = self.kwargs.get('fuzzy_selectie')
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    fuzzy = str(num)
+                except ValueError:
+                    pass
+
+            wijn_list = wijn_list.filter(
+                naam__icontains=fuzzy) | wijn_list.filter(
+                domein__icontains=fuzzy) | wijn_list.filter(
+                wijnsoort__omschrijving__icontains=fuzzy) | wijn_list.filter(
+                jaar__icontains=fuzzy) | wijn_list.filter(
+                land__icontains=fuzzy) | wijn_list.filter(
+                streek__icontains=fuzzy) | wijn_list.filter(
+                classificatie__icontains=fuzzy) | wijn_list.filter(
+                leverancier__icontains=fuzzy) | wijn_list.filter(
+                opmerking__icontains=fuzzy) | wijn_list.filter(
+                wijnDruivensoorten__omschrijving__icontains=fuzzy)
+        return wijn_list
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        fuzzy = self.kwargs.get('fuzzy_selectie')
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    context['fuzzy_selectie'] = str(num)
+                except ValueError:
+                    context['fuzzy_selectie'] = fuzzy
         context['title'] = 'Wijnen'  
         return context
+    
+    def post(self, request, *args, **kwargs):
+        fuzzy = self.request.POST['fuzzy_selectie']
+        my_kwargs = {}
+        if fuzzy:
+            try:
+                int(fuzzy)
+                my_kwargs['fuzzy_selectie'] = fuzzy + 'num'
+            except ValueError:
+                my_kwargs['fuzzy_selectie'] = fuzzy
+
+        url = reverse('WijnVoorraad:wijnlist', kwargs = my_kwargs)
+        return HttpResponseRedirect(url)
 
 class WijnDetailView(LoginRequiredMixin, DetailView):
     model = Wijn

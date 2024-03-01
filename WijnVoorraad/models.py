@@ -3,7 +3,7 @@ from datetime import datetime
 from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from django.db.models import F, Q
+from django.db.models import F, Q, Sum
 from django.db.models.query import QuerySet
 from django_group_by import GroupByMixin
 
@@ -110,13 +110,19 @@ class Wijn(models.Model):
         through_fields=("wijn", "druivensoort"),
         null=True, blank=True
         )
-
+    
     def __str__(self):
         return "%s - %s" % (self.naam, self.domein)
 
     def jaar_str(jaar):
         return str(jaar)
     
+    def check_afsluiten(self):
+        vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(aantal=Sum('aantal'))
+        if vrd_aantal['aantal'] is None:
+           self.datumAfgesloten = datetime.now()
+           self.save()
+
     class Meta:
         ordering = ["naam"]
         verbose_name_plural = "wijnen"
@@ -325,8 +331,10 @@ class WijnVoorraad(models.Model):
         vrd.aantal=F('aantal') - VoorraadMutatie.aantal
         vrd.save()
         vrd.refresh_from_db()
+        wijn = vrd.wijn
         if vrd.aantal == 0:
             vrd.delete()
+            wijn.check_afsluiten()
 
     def verplaatsen (WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
         VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)

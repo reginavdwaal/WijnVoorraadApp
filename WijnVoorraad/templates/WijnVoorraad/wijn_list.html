@@ -1,7 +1,18 @@
 {% extends "./base.html" %}
+{% load i18n static %}
 
 {% block content %}
 <div id="content-main">
+    <form method="post">{% csrf_token %}
+        <div class="form-row">
+          <input type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ fuzzy_selectie | default_if_none:'' }}"/>
+          <button class="clear_style" type="submit">
+            <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
+          </button>
+          <a class="clear_style" href="{% url 'WijnVoorraad:wijn-create' %}">
+            <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
+        </div>
+    </form>
     <table>
         {% for wijn in wijn_list %}
             {% if wijn == wijn_list|first %} 
@@ -34,6 +45,9 @@
                 <th>
                     Datum aangemaakt
                 </th>
+                <th>
+                    Datum afgesloten
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -65,6 +79,9 @@
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.datumAangemaakt|date }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.datumAfgesloten|date }}</a>
                 </td>
             </tr>
         {% empty %}

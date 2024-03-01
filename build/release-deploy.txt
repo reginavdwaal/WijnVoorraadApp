@@ -1,0 +1,84 @@
+Release
+Make sure new requirements.txt is made!
+
+-Tag repo in github
+-get release on server
+	- ssh to server
+	- make tmp dir in /domains/vdwaal.net
+cd domains/vdwaal.net
+mkdir latest
+cd latest
+	- clone release
+git clone --branch release-tag https://github.com/chezhj/SmartTrainingChecklist.git
+git clone --branch v0.6.0alpha https://github.com/chezhj/SmartTrainingChecklist.git
+
+- Now copy related files
+cd domains/vdwaal.net/latest/SmartTrainingChecklist
+cp -r checklist ../../checklist/
+cp -r smart_training_checklist ../../checklist/
+cp db.sqlite3 ../../checklist/
+cp passenger_wsgid.py ../../checklist/
+cp manage.py ../../checklist/
+cp requirements.txt ../../checklist
+
+cd /home/vdwanet/domains/vdwaal.net
+source setenv.sh 
+# sets DJANGO module and SECRET KEY
+
+## [vdwanet@da122 checklist]$ DJANGO_SETTINGS_MODULE="smart_training_checklist.settings.prod"
+## [vdwanet@da122 checklist]$ export DJANGO_SETTINGS_MODULE
+
+
+
+source /home/vdwanet/virtualenv/domains/vdwaal.net/checklist/3.8/bin/activate 
+cd /home/vdwanet/domains/vdwaal.net/checklist
+
+- 
+
+- migrate database
+python manage.py migrate
+- collect static files
+python manage.py collectstatic
+- restart "app" 
+via web interface (try restart.txt later)
+- remove temp dir
+cd domains/vdwaal.net
+rm -r latest
+
+
+# check if I can run from symlink 
+mv checklist checklist_060
+ln -s checklist_060 checklist
+
+Restart ad try
+
+ln -s target_file link_name
+02-10-2023
+Symbolic links worden niet ondersteund door de python /apache module
+
+Dus de strategie wordt 
+- koperen naar checklist-new
+- app uit zetten
+- mv checklist checklist-v 
+- mv checklist-new checklist
+- setenv
+
+- virtualenv
+source /home/vdwanet/virtualenv/domains/vdwaal.net/checklist/3.8/bin/activate && cd /home/vdwanet/domains/vdwaal.net/checklist
+- pip load requirements.txt
+- database migratie (nog niet nodig)
+- collectstatic
+- app starten
+
+- Now copy related files
+NEW_PATH=./checklist_new
+SRC_PATH=./latest/
+cd
+cd domains/vdwaal.net
+cd latest/SmartTrainingChecklist
+cp -r checklist ../../checklist/
+cp -r smart_training_checklist ../../checklist/
+cp db.sqlite3 ../../checklist/
+cp passenger_wsgid.py ../../checklist/
+cp manage.py ../../checklist/
+cp requirements.txt ../../checklist

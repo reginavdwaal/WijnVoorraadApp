@@ -18,7 +18,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm, VoorraadFilterForm
+from .forms import WijnSoortForm, VoorraadFilterForm, MutatieForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -67,6 +67,8 @@ class VoorraadListView(LoginRequiredMixin, ListView):
                     context['fuzzy_selectie'] = str(num)
                 except ValueError:
                     context['fuzzy_selectie'] = fuzzy
+            else:
+                context['fuzzy_selectie'] = fuzzy
         return context
 
     def post(self, request, *args, **kwargs):
@@ -351,6 +353,27 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
         context['title'] = 'Inkomende mutaties'
         return context
 
+class MutatieDetailView(LoginRequiredMixin, DetailView):
+    model = VoorraadMutatie
+    template_name = 'WijnVoorraad/mutatie_detail.html'
+    context_object_name = 'mutatie'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Mutatie'  
+        return context
+
+class MutatieUpdateView(LoginRequiredMixin, UpdateView):
+    form_class = MutatieForm
+    model = VoorraadMutatie
+    template_name = 'WijnVoorraad/general_create_update.html'
+    success_url = '/WijnVoorraad/mutatie/{id}'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Update mutatie'  
+        return context
+
 class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
     context_object_name = 'ontvangsten'
@@ -475,6 +498,9 @@ class WijnListView(LoginRequiredMixin, ListView):
                     context['fuzzy_selectie'] = str(num)
                 except ValueError:
                     context['fuzzy_selectie'] = fuzzy
+            else:
+                context['fuzzy_selectie'] = fuzzy
+
         context['title'] = 'Wijnen'  
         return context
     
@@ -497,6 +523,7 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['voorraad_aantal'] = WijnVoorraad.objects.filter(ontvangst__wijn=self.object).aggregate(aantal=Sum('aantal'))
         context['ontvangst_list'] = Ontvangst.objects.filter(wijn=self.object)  
         context['title'] = 'Wijn'  
         return context

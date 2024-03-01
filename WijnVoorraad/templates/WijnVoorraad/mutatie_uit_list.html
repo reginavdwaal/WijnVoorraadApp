@@ -31,22 +31,22 @@
             {% endif %}
             <tr>
                 <td>
-                    {{ m.datum }}
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.datum }}</a>
                 </td>
                 <td>
-                    {{ m.get_actie_display }}
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.get_actie_display }}</a>
                 </td>
                 <td>
-                    {{ m.vak.code|default:"---" }}
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.vak.code|default:"---" }}</a>
                 </td>
                 <td>
-                    {{ m.aantal }}
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.aantal }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.naam }} - {{ m.ontvangst.wijn.domein }}</a>
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.ontvangst.wijn.naam }} - {{ m.ontvangst.wijn.domein }}</a>
                 </td>
                 <td>
-                    {{ m.omschrijving }}
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.omschrijving }}</a>
                 </td>
             </tr>
         {% empty %}

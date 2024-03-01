@@ -1,0 +1,73 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div id="content-main">
+    <div class="detail-block">
+        <div class="detail-row">
+            <label class="detail-column-label">In/Uit</label>
+            <label class="detail-column">{{ mutatie.get_in_uit_display }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Deelnemer</label> 
+            <label class="detail-column">
+                {{  mutatie.ontvangst.deelnemer.naam }}
+                &nbsp;
+                <a href="{% url 'WijnVoorraad:deelnemerdetail' mutatie.ontvangst.deelnemer.id %}"
+                    title="Details bekijken">
+                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                </a>
+            </label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Locatie</label> 
+            <label class="detail-column">
+                {{  mutatie.locatie.omschrijving }}
+                &nbsp;
+                <a href="{% url 'WijnVoorraad:locatiedetail' mutatie.locatie.id %}"
+                    title="Details bekijken">
+                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                </a>
+            </label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Datum</label>
+            <label class="detail-column">{{ mutatie.datum }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Actie</label>
+            <label class="detail-column">{{ mutatie.get_actie_display }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Vak</label>
+            <label class="detail-column">{{ mutatie.vak.code|default:"---" }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Aantal</label>
+            <label class="detail-column">{{  mutatie.aantal }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Wijn</label>
+            <label class="detail-column">
+                {{  mutatie.ontvangst.wijn.naam }} - {{ mutatie.ontvangst.wijn.domein }}
+                &nbsp;
+                <a href="{% url 'WijnVoorraad:wijndetail' mutatie.ontvangst.wijn.id %}"
+                    title="Details bekijken">
+                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                </a>
+            </label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Omschrijving</label>
+            <label class="detail-column">{{  mutatie.omschrijving }}</label>
+        </div>
+    </div>  <!-- end detail-block -->
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="update-form" method="get" action="{% url 'WijnVoorraad:mutatie-update' object.id  %}">
+        {% csrf_token %}
+        <input type="submit" name="Update" value="Wijzigen"></input>
+    </form>
+</div>
+{% endblock %}

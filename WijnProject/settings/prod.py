@@ -11,10 +11,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "vdwaal.net",
-    "fly.vdwaal.net",
+    "vino.vdwaal.net",
 ]
 
-WWW_DIR = Path(BASE_DIR).resolve().parent / "public_html/xxxxxx/"
+WWW_DIR = Path(BASE_DIR).resolve()/ "public_html/"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

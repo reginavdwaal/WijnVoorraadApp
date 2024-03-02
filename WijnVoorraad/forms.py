@@ -109,6 +109,35 @@ class WijnForm(forms.ModelForm):
       model = Wijn
       fields = '__all__'
 
+class MutatieForm(forms.ModelForm):
+   ontvangst = forms.ModelChoiceField(Ontvangst.objects, required=True, widget=SelectWithPop)
+   locatie = forms.ModelChoiceField(Locatie.objects, required=True, widget=SelectWithPop)
+   IN = "I"
+   UIT = "U"
+   in_uit_choices = [
+        (IN, "In"),
+        (UIT, "Uit"),
+   ]
+   in_uit = forms.ChoiceField(choices=in_uit_choices)
+   datum = forms.DateField()
+   aantal = forms.IntegerField()
+   omschrijving = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'size': '40'}))
+   KOOP = "K"
+   ONTVANGST = "O"
+   VERPLAATSING = "V"
+   DRINK = "D"
+   actie_choices = [
+        (KOOP, "Koop"),
+        (ONTVANGST, "Ontvangst"),
+        (VERPLAATSING, "Verplaatsing"),
+        (DRINK, "Drink")
+   ]
+   actie = forms.ChoiceField(choices=actie_choices)
+
+   class Meta:
+      model = VoorraadMutatie
+      fields = '__all__'
+
 class DruivenSoortForm(forms.ModelForm):
    class Meta:
       model = DruivenSoort

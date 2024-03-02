@@ -83,6 +83,10 @@
                         </label>
                     </div>
                 {% endif %}
+                <div class="detail-row">
+                    <label class="detail-column-label">Actuele voorraad</label>
+                    <label class="detail-column">{{ voorraad_aantal.aantal|default_if_none:"-" }}</label>            
+                </div>
             </div>  <!-- end detail-block -->
         </div> <!-- end col -->
         {% if wijn.foto  %}

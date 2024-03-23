@@ -1,6 +1,6 @@
 {% load static %}
     {% if field_id %}
-        <a href="/WijnVoorraad/{{ field }}/update/{{ field_id }}"
+        <a href="/{{ field }}/update/{{ field_id }}"
             class="related-widget-wrapper-link change-related"
             id="update_id_{{ field }}"
             data-popup="yes"
@@ -8,7 +8,7 @@
             onclick="return showRelatedObjectPopup(this);">
             <img src="{% static 'admin/img/icon-changelink.svg' %}" width="10" height="10" alt="Wijzigen"/>
         </a>
-        <a href="/WijnVoorraad/{{ field }}/{{ field_id }}"
+        <a href="/{{ field }}/{{ field_id }}"
             class="related-widget-wrapper-link view-related"
             id="view_id_{{ field }}"
             data-popup="yes"
@@ -17,7 +17,7 @@
             <img src="{% static 'admin/img/icon-viewlink.svg' %}" width="10" height="10" alt="Details"/>
         </a>
     {% endif %}
-    <a href="/WijnVoorraad/{{ field }}/popupadd"
+    <a href="/{{ field }}/popupadd"
         class="related-widget-wrapper-link add-related"
         id="add_id_{{ field }}"
         data-popup="yes"

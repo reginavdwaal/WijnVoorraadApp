@@ -1,49 +1,62 @@
 {% extends "./base.html" %}
 {% load i18n static %}
-
 {% block content %}
-<div id="content-main">
-  <form method="post">{% csrf_token %}
-    <div class="form-row">
-      <input type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ fuzzy_selectie| default_if_none:'' }}"/>
-      <button class="clear_style" type="submit">
-        <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
-      </button>
-      <a class="clear_style" href="{% url 'WijnVoorraad:voorraadlist_filter' %}">
-        <img class="clear_style" src="{% static '/WijnVoorraad/img/Filtericon.png' %}" width="30" height="30" alt="Filter"/></a>
-      <a class="clear_style" href="{% url 'WijnVoorraad:ontvangst-create' %}">
-        <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
-    </div>
-  </form>
-  <table class="wijnvoorraad">
-    {% for v in voorraad_list %}
-      <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
-        <td class="col-12 col-s-12" >
-          <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
-            <b>{{ v.wijn.naam }} - {{ v.wijn.domein }}</b>
-          </a>
-        </td>
-        <td class="col-11 col-s-10">
-          <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">
-            {{ v.wijn.wijnsoort.omschrijving }}
-            {% if v.wijn.jaar %}
-              , {{ v.wijn.jaar | default_if_none:"" }}
-            {% endif %}
-            {% if v.wijn.land %}
-              , {{ v.wijn.land }}
-            {% endif %}
-            {% for d in v.wijn.wijnDruivensoorten.all %}
-              , {{ d.omschrijving }}
-            {% endfor %}
-          </a>
-        </td>
-        <td class="col-1 col-s-2">
-          <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}" tabindex="-1">#{{ v.aantal }}</a>
-        </td>
-      </tr>
-    {% empty %}
-      <p>Er is GEEN voorraad.</p>
-    {% endfor %}
-  </table>
-</div>
+  <div id="content-main">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <input type="text"
+               name='fuzzy_selectie'
+               id="fuzzy_selectie"
+               value="{{ fuzzy_selectie| default_if_none:'' }}" />
+        <button class="clear_style" type="submit">
+          <img class="clear_style"
+               src="{% static '/WijnVoorraad/img/Searchicon.png' %}"
+               width="30"
+               height="30"
+               alt="Zoeken" />
+        </button>
+        <a class="clear_style"
+           href="{% url 'WijnVoorraad:voorraadlist_filter' %}">
+          <img class="clear_style"
+               src="{% static '/WijnVoorraad/img/Filtericon.png' %}"
+               width="30"
+               height="30"
+               alt="Filter" />
+        </a>
+        <a class="clear_style" href="{% url 'WijnVoorraad:ontvangst-create' %}">
+          <img src="{% static '/WijnVoorraad/img/Addicon.png' %}"
+               width="30"
+               height="30"
+               alt="Toevoegen" />
+        </a>
+      </div>
+    </form>
+    <table class="wijnvoorraad">
+      {% for v in voorraad_list %}
+        <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
+          <td class="col-12 col-s-12">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
+              <b>{{ v.wijn.naam }} - {{ v.wijn.domein }}</b>
+            </a>
+          </td>
+          <td class="col-11 col-s-10">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}"
+               tabindex="-1">
+              {{ v.wijn.wijnsoort.omschrijving }}
+              {% if v.wijn.jaar %}, {{ v.wijn.jaar | default_if_none:"" }}{% endif %}
+              {% if v.wijn.land %}, {{ v.wijn.land }}{% endif %}
+              {% for d in v.wijn.wijnDruivensoorten.all %}, {{ d.omschrijving }}{% endfor %}
+            </a>
+          </td>
+          <td class="col-1 col-s-2">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}"
+               tabindex="-1">#{{ v.aantal }}</a>
+          </td>
+        </tr>
+      {% empty %}
+        <p>Er is GEEN voorraad.</p>
+      {% endfor %}
+    </table>
+  </div>
 {% endblock %}

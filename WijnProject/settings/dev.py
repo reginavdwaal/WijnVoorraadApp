@@ -1,4 +1,5 @@
 """Development settings file"""
+
 # pylint: disable=unused-wildcard-import,wildcard-import
 from .base import *
 
@@ -18,3 +19,6 @@ ALLOWED_HOSTS = ["espresso", "localhost", "AsusRegina", "192.168.178.96"]
 
 STATIC_URL = "static/"
 STATIC_ROOT = "static/"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

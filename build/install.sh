@@ -1,6 +1,8 @@
 #!/bin/bash
 
 GITHUB_URL=https://github.com/reginavdwaal/WijnVoorraadApp.git
+DOMAIN=vino.vdwaal.net
+APP=vino
 
 # Check if the release tag argument is provided
 if [ -z "$1" ]; then
@@ -12,10 +14,10 @@ if [ -z "$1" ]; then
 fi
 
 RELEASE_TAG="$1"
-NEW_PATH="./vino_$RELEASE_TAG"
-SRC_PATH="./source_$RELEASE_TAG"
+NEW_PATH="./$APP_$RELEASE_TAG"
+SRC_PATH="./$APP_source_$RELEASE_TAG"
 
-cd ~/domains/vdwaal.net || exit
+cd ~/domains/ || exit
 
 # Ensure the checklist_new directory exists
 mkdir -p "$NEW_PATH"
@@ -29,3 +31,6 @@ cp -r "$SRC_PATH/WijnProject" "$NEW_PATH/"
 cp "$SRC_PATH/passenger_wsgi.py" "$NEW_PATH/"
 cp "$SRC_PATH/manage.py" "$NEW_PATH/"
 cp "$SRC_PATH/requirements.txt" "$NEW_PATH/"
+
+tar -cvzf $APP_current.tar.gz $DOMAIN/
+

@@ -1,15 +1,19 @@
 {
     "python.testing.pytestArgs": [
-       "WijnVoorraad"
-   ],
-   "python.testing.unittestEnabled": false,
-   "python.testing.pytestEnabled": true,
-   "python.testing.unittestArgs": [
-       "-v",
-       "-s",
-       ".",
-       "-p",
-       "test*.py"
-   ],
-   "python.linting.enabled": true
+        "WijnVoorraad"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test*.py"
+    ],
+    "python.linting.enabled": true,
+    "pylint.args": [
+        "--django-settings-module=WijnProject.settings.dev",
+        "--load-plugins=pylint_django"
+    ]
 }

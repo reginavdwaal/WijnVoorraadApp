@@ -1,8 +1,8 @@
 #!/bin/bash
 
 GITHUB_URL=https://github.com/reginavdwaal/WijnVoorraadApp.git
-DOMAIN=vino.vdwaal.net
-APP=vino
+DOMAIN="vino.vdwaal.net"
+APP="vino"
 
 # Check if the release tag argument is provided
 if [ -z "$1" ]; then
@@ -14,8 +14,8 @@ if [ -z "$1" ]; then
 fi
 
 RELEASE_TAG="$1"
-NEW_PATH="./$APP_$RELEASE_TAG"
-SRC_PATH="./$APP_source_$RELEASE_TAG"
+NEW_PATH="./${APP}_${RELEASE_TAG}"
+SRC_PATH="./${APP}_source_${RELEASE_TAG}"
 
 cd ~/domains/ || exit
 
@@ -32,5 +32,10 @@ cp "$SRC_PATH/passenger_wsgi.py" "$NEW_PATH/"
 cp "$SRC_PATH/manage.py" "$NEW_PATH/"
 cp "$SRC_PATH/requirements.txt" "$NEW_PATH/"
 
-tar -cvzf $APP_current.tar.gz $DOMAIN/
+echo "Creating backup of ${DOMAIN}"
+tar -czf "${APP}_current.tar.gz" "$DOMAIN/"
+
+cp -r ${DOMAIN}/public_html ${NEW_PATH}/
+cp -r ${DOMAIN}/tmp ${NEW_PATH}/
+
 

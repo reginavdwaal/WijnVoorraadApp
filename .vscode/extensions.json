@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "ms-python.black-formatter",
+        "ryanluker.vscode-coverage-gutters",
+        "batisteo.vscode-django",
+        "shamanu4.django-intellisense",
+        "monosans.djlint",
+        "github.vscode-pull-request-github",
+        "ms-python.vscode-pylance",
+        "ms-python.pylint",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "donjayamanne.python-environment-manager",
+        "alexcvzz.vscode-sqlite",
+        "knisterpeter.vscode-commitizen"
+    ]
+}

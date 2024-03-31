@@ -1,15 +1,13 @@
-from django.shortcuts import get_object_or_404, render
+from datetime import datetime
+from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
-from django.views import generic
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import CreateView, FormMixin, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
-from django.forms import inlineformset_factory
-from django.db.models import Sum, F, Count, TextField, QuerySet
-from datetime import datetime
+from django.db.models import Sum, F
 from django.utils.html import escape
 from django.contrib.auth.models import User
 
@@ -20,7 +18,6 @@ from .models import (
     Locatie,
     Vak,
     Wijn,
-    WijnDruivensoort,
 )
 from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
 
@@ -229,7 +226,6 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         set_session_context(self.request, "WijnVoorraad:voorraadvakken")
-        d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         vakken_list = Vak.objects.filter(locatie__in=l).annotate(
             aantal_gebruikt=Sum("wijnvoorraad__aantal")
@@ -321,7 +317,6 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
-
 class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
     model = Vak
     template_name = "WijnVoorraad/voorraad_verplaatsinvakken.html"
@@ -353,7 +348,7 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
         aantal_vakken = self.request.POST["aantal_vakken"]
         try:
             aantal_vakken_int = int(aantal_vakken)
-        except:
+        except ValueError:
             aantal_vakken_int = 0
         for i in range(1, aantal_vakken_int):
             v_nieuw_vak_id = self.request.POST["nieuw_vak_id" + str(i)]
@@ -1027,7 +1022,7 @@ def handlePopAdd(request, addForm, field):
             if newObject:
                 return HttpResponse(
                     '<script type="text/javascript">opener.dismissAddAnotherPopup(window, "%s", "%s");</script>'
-                    % (escape(newObject._get_pk_val()), escape(newObject))
+                    % (escape(newObject.pk), escape(newObject))
                 )
 
     else:

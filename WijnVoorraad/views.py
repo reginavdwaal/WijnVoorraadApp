@@ -1,29 +1,25 @@
+"""Main views module"""
+
 from datetime import datetime
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.db.models import Sum, F
-from django.utils.html import escape
-from django.contrib.auth.models import User
+
 
 from .models import (
-    WijnSoort,
-    DruivenSoort,
     Deelnemer,
     Locatie,
     Vak,
     Wijn,
 )
 from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
-
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
-from .forms import WijnForm, DruivenSoortForm, DeelnemerForm, GebruikerForm, LocatieForm
-from .forms import WijnSoortForm, VoorraadFilterForm, MutatieForm
+from .forms import WijnForm
+from .forms import VoorraadFilterForm, MutatieForm
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -283,7 +279,8 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
             v_vakken = Vak.objects.filter(locatie=v_nieuwe_locatie)
             if not v_vakken:
                 # Als de nieuwe locatie geen vakken heeft, valt er ook niets te kiezen.
-                # Als er geen nieuwe locatie is gekozen (maar behouden locatie), dan valt er niets te verplaatsen.
+                # Als er geen nieuwe locatie is gekozen (maar behouden locatie),
+                # dan valt er niets te verplaatsen.
                 if v_nieuwe_locatie != voorraad.locatie:
                     # Alsnog direct verplaatsen op de nieuwe locatie
                     v_nieuwe_vak = None
@@ -316,6 +313,7 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 )
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
+
 
 class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
     model = Vak
@@ -636,336 +634,6 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-@login_required
-def WijnCreatePopupView(request):
-    return handlePopAdd(request, WijnForm, "wijn")
-
-
-class DeelnemerListView(LoginRequiredMixin, ListView):
-    model = Deelnemer
-    context_object_name = "deelnemers"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Deelnemers"
-        return context
-
-
-class DeelnemerDetailView(LoginRequiredMixin, DetailView):
-    model = Deelnemer
-    context_object_name = "deelnemer"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Deelnemer"
-        return context
-
-
-class DeelnemerCreateView(LoginRequiredMixin, CreateView):
-    form_class = DeelnemerForm
-    model = Deelnemer
-    template_name = "WijnVoorraad/general_create_update.html"
-    success_url = reverse_lazy("WijnVoorraad:deelnemerlist")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Nieuwe deelnemer"
-        return context
-
-
-class DeelnemerUpdateView(LoginRequiredMixin, UpdateView):
-    form_class = DeelnemerForm
-    model = Deelnemer
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:deelnemerdetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update deelnemer"
-        return context
-
-
-@login_required
-def DeelnemerCreatePopupView(request):
-    return handlePopAdd(request, DeelnemerForm, "deelnemer")
-
-
-@login_required
-def DeelnemersCreatePopupView(request):
-    return handlePopAdd(request, DeelnemerForm, "deelnemers")
-
-
-class DruivenSoortListView(LoginRequiredMixin, ListView):
-    model = DruivenSoort
-    context_object_name = "druivensoorten"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Druivensoorten"
-        return context
-
-
-class DruivenSoortDetailView(LoginRequiredMixin, DetailView):
-    model = DruivenSoort
-    context_object_name = "druivensoort"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Druivensoort"
-        return context
-
-
-class DruivenSoortCreateView(LoginRequiredMixin, CreateView):
-    model = DruivenSoort
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-    success_url = reverse_lazy("WijnVoorraad:druivensoortlist")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Nieuwe druivensoort"
-        return context
-
-
-class DruivenSoortUpdateView(LoginRequiredMixin, UpdateView):
-    model = DruivenSoort
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:druivensoortdetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update druivensoort"
-        return context
-
-
-@login_required
-def DruivenSoortCreatePopupView(request):
-    return handlePopAdd(request, DruivenSoortForm, "druivensoort")
-
-
-@login_required
-def WijnDruivenSoortenCreatePopupView(request):
-    return handlePopAdd(request, DruivenSoortForm, "wijnDruivensoorten")
-
-
-class WijnSoortListView(LoginRequiredMixin, ListView):
-    model = WijnSoort
-    context_object_name = "wijnsoorten"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Wijnsoorten"
-        return context
-
-
-class WijnSoortDetailView(LoginRequiredMixin, DetailView):
-    model = WijnSoort
-    context_object_name = "wijnsoort"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Wijnsoort"
-        return context
-
-
-class WijnSoortCreateView(LoginRequiredMixin, CreateView):
-    model = WijnSoort
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-    success_url = reverse_lazy("WijnVoorraad/wijnsoortlist")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Nieuwe wijnsoort"
-        return context
-
-
-class WijnSoortUpdateView(LoginRequiredMixin, UpdateView):
-    model = WijnSoort
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:wijnsoortdetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update wijnsoort"
-        return context
-
-
-@login_required
-def WijnSoortCreatePopupView(request):
-    return handlePopAdd(request, WijnSoortForm, "wijnsoort")
-
-
-class LocatieListView(LoginRequiredMixin, ListView):
-    model = Locatie
-    context_object_name = "locaties"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Locaties"
-        return context
-
-
-class LocatieDetailView(LoginRequiredMixin, DetailView):
-    model = Locatie
-    context_object_name = "locatie"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["vakken"] = Vak.objects.filter(locatie=self.object)
-        context["title"] = "Locatie"
-        return context
-
-
-class LocatieCreateView(LoginRequiredMixin, CreateView):
-    model = Locatie
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-    success_url = reverse_lazy("WijnVoorraad:locatielist")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Nieuwe locatie"
-        return context
-
-
-class LocatieUpdateView(LoginRequiredMixin, UpdateView):
-    model = Locatie
-    fields = "__all__"
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:locatiedetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update locatie"
-        return context
-
-
-@login_required
-def LocatieCreatePopupView(request):
-    return handlePopAdd(request, LocatieForm, "locatie")
-
-
-@login_required
-def StandaardLocatieCreatePopupView(request):
-    return handlePopAdd(request, LocatieForm, "StandaardLocatie")
-
-
-class VakDetailView(LoginRequiredMixin, DetailView):
-    model = Vak
-    context_object_name = "vak"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Vakken"
-        return context
-
-
-class VakCreateView(LoginRequiredMixin, CreateView):
-    model = Vak
-    fields = ["code", "capaciteit"]
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-
-        return reverse_lazy(
-            "WijnVoorraad:locatiedetail",
-            kwargs={"pk": self.object.locatie_id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["locatie_id"] = self.kwargs.get("locatie_id")
-        context["title"] = "Nieuw vak"
-        return context
-
-    def form_valid(self, form, **kwargs):
-
-        self.object = form.save(commit=False)
-        self.object.locatie = Locatie.objects.get(pk=self.kwargs.get("locatie_id"))
-
-        super(VakCreateView, self).form_valid(form)
-        return HttpResponseRedirect(self.get_success_url())
-
-
-class VakUpdateView(LoginRequiredMixin, UpdateView):
-    model = Vak
-    fields = ["code", "capaciteit"]
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:vakdetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update vak"
-        return context
-
-
-class GebruikerDetailView(LoginRequiredMixin, DetailView):
-    model = User
-    template_name = "WijnVoorraad/gebruiker_detail.html"
-    context_object_name = "gebruiker"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Gebruiker"
-        return context
-
-
-class GebruikerUpdateView(LoginRequiredMixin, UpdateView):
-    form_class = GebruikerForm
-    model = User
-    template_name = "WijnVoorraad/general_create_update.html"
-
-    def get_success_url(self) -> str:
-        return reverse_lazy(
-            "WijnVoorraad:gebruikerdetail",
-            kwargs={"pk": self.object.id},
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Update gebruiker"
-        return context
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["deelnemers"] = self.request.user.deelnemers.all()
-        return initial
-
-    def form_valid(self, form):
-        deelnemers = form.cleaned_data["deelnemers"]
-        self.request.user.deelnemers.clear()
-        self.request.user.deelnemers.add(*deelnemers)
-        return HttpResponseRedirect(self.get_success_url())
-
-
 def set_session_context(request, return_url):
     dc = request.session.get("deelnemer", None)
     if dc is None:
@@ -1009,23 +677,3 @@ def change_context(request):
     request.session["locatie_id"] = l_id
     request.session["locatie"] = l.omschrijving
     return HttpResponseRedirect(reverse(return_url))
-
-
-def handlePopAdd(request, addForm, field):
-    if request.method == "POST":
-        form = addForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                newObject = form.save()
-            except form.ValidationError:
-                newObject = None
-            if newObject:
-                return HttpResponse(
-                    '<script type="text/javascript">opener.dismissAddAnotherPopup(window, "%s", "%s");</script>'
-                    % (escape(newObject.pk), escape(newObject))
-                )
-
-    else:
-        form = addForm()
-    pageContext = {"form": form, "field": field}
-    return render(request, "WijnVoorraad/general_popupadd.html", pageContext)

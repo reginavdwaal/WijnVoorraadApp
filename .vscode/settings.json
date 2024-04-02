@@ -15,5 +15,8 @@
     "pylint.args": [
         "--django-settings-module=WijnProject.settings.dev",
         "--load-plugins=pylint_django"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }

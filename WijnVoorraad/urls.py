@@ -1,4 +1,7 @@
-from django.urls import path, re_path, include
+from django.urls import path
+
+import WijnVoorraad.views_basis
+import WijnVoorraad.views_popup
 
 from . import views
 
@@ -6,110 +9,154 @@ app_name = "WijnVoorraad"
 urlpatterns = [
     path(
         "gebruiker/<int:pk>/",
-        views.GebruikerDetailView.as_view(),
+        WijnVoorraad.views_basis.GebruikerDetailView.as_view(),
         name="gebruikerdetail",
     ),
     path(
         "gebruiker/update/<int:pk>/",
-        views.GebruikerUpdateView.as_view(),
+        WijnVoorraad.views_basis.GebruikerUpdateView.as_view(),
         name="gebruiker-update",
     ),
-    path("deelnemers/", views.DeelnemerListView.as_view(), name="deelnemerlist"),
+    path(
+        "deelnemers/",
+        WijnVoorraad.views_basis.DeelnemerListView.as_view(),
+        name="deelnemerlist",
+    ),
     path(
         "deelnemer/<int:pk>/",
-        views.DeelnemerDetailView.as_view(),
+        WijnVoorraad.views_basis.DeelnemerDetailView.as_view(),
         name="deelnemerdetail",
     ),
     path(
         "deelnemer/create/",
-        views.DeelnemerCreateView.as_view(),
+        WijnVoorraad.views_basis.DeelnemerCreateView.as_view(),
         name="deelnemer-create",
     ),
     path(
         "deelnemer/update/<int:pk>/",
-        views.DeelnemerUpdateView.as_view(),
+        WijnVoorraad.views_basis.DeelnemerUpdateView.as_view(),
         name="deelnemer-update",
     ),
     path(
-        "deelnemer/popupadd/", views.DeelnemerCreatePopupView, name="deelnemer-popupadd"
+        "deelnemer/popupadd/",
+        WijnVoorraad.views_popup.deelnemer_create_popup_view,
+        name="deelnemer-popupadd",
     ),
     path(
         "deelnemers/popupadd/",
-        views.DeelnemersCreatePopupView,
+        WijnVoorraad.views_popup.deelnemers_create_popup_view,
         name="deelnemers-popupadd",
     ),
     path(
-        "druivensoorten/", views.DruivenSoortListView.as_view(), name="druivensoortlist"
+        "druivensoorten/",
+        WijnVoorraad.views_basis.DruivenSoortListView.as_view(),
+        name="druivensoortlist",
     ),
     path(
         "druivensoort/<int:pk>/",
-        views.DruivenSoortDetailView.as_view(),
+        WijnVoorraad.views_basis.DruivenSoortDetailView.as_view(),
         name="druivensoortdetail",
     ),
     path(
         "druivensoort/create/",
-        views.DruivenSoortCreateView.as_view(),
+        WijnVoorraad.views_basis.DruivenSoortCreateView.as_view(),
         name="druivensoort-create",
     ),
     path(
         "druivensoort/update/<int:pk>/",
-        views.DruivenSoortUpdateView.as_view(),
+        WijnVoorraad.views_basis.DruivenSoortUpdateView.as_view(),
         name="druivensoort-update",
     ),
     path(
         "druivensoort/popupadd/",
-        views.DruivenSoortCreatePopupView,
+        WijnVoorraad.views_popup.druiven_soort_create_popup_view,
         name="druivensoort-popupadd",
     ),
     path(
         "wijnDruivensoorten/popupadd/",
-        views.WijnDruivenSoortenCreatePopupView,
+        WijnVoorraad.views_popup.wijn_druiven_soorten_create_popup_view,
         name="wijndruivensoort-popupadd",
     ),
-    path("wijnsoorten/", views.WijnSoortListView.as_view(), name="wijnsoortlist"),
+    path(
+        "wijnsoorten/",
+        WijnVoorraad.views_basis.WijnSoortListView.as_view(),
+        name="wijnsoortlist",
+    ),
     path(
         "wijnsoort/<int:pk>/",
-        views.WijnSoortDetailView.as_view(),
+        WijnVoorraad.views_basis.WijnSoortDetailView.as_view(),
         name="wijnsoortdetail",
     ),
     path(
         "wijnsoort/create/",
-        views.WijnSoortCreateView.as_view(),
+        WijnVoorraad.views_basis.WijnSoortCreateView.as_view(),
         name="wijnsoort-create",
     ),
     path(
         "wijnsoort/update/<int:pk>/",
-        views.WijnSoortUpdateView.as_view(),
+        WijnVoorraad.views_basis.WijnSoortUpdateView.as_view(),
         name="wijnsoort-update",
     ),
     path(
-        "wijnsoort/popupadd/", views.WijnSoortCreatePopupView, name="wijnsoort-popupadd"
+        "wijnsoort/popupadd/",
+        WijnVoorraad.views_popup.wijn_soort_create_popup_view,
+        name="wijnsoort-popupadd",
     ),
-    path("locaties/", views.LocatieListView.as_view(), name="locatielist"),
-    path("locatie/<int:pk>/", views.LocatieDetailView.as_view(), name="locatiedetail"),
-    path("locatie/create/", views.LocatieCreateView.as_view(), name="locatie-create"),
+    path(
+        "locaties/",
+        WijnVoorraad.views_basis.LocatieListView.as_view(),
+        name="locatielist",
+    ),
+    path(
+        "locatie/<int:pk>/",
+        WijnVoorraad.views_basis.LocatieDetailView.as_view(),
+        name="locatiedetail",
+    ),
+    path(
+        "locatie/create/",
+        WijnVoorraad.views_basis.LocatieCreateView.as_view(),
+        name="locatie-create",
+    ),
     path(
         "locatie/update/<int:pk>/",
-        views.LocatieUpdateView.as_view(),
+        WijnVoorraad.views_basis.LocatieUpdateView.as_view(),
         name="locatie-update",
     ),
-    path("locatie/popupadd/", views.LocatieCreatePopupView, name="locatie-popupadd"),
+    path(
+        "locatie/popupadd/",
+        WijnVoorraad.views_popup.locatie_create_popup_view,
+        name="locatie-popupadd",
+    ),
     path(
         "standaardLocatie/popupadd/",
-        views.StandaardLocatieCreatePopupView,
+        WijnVoorraad.views_popup.standaard_locatie_create_popup_view,
         name="standaardlocatie-popupadd",
     ),
-    path("vak/<int:pk>/", views.VakDetailView.as_view(), name="vakdetail"),
     path(
-        "vak/create/<int:locatie_id>/", views.VakCreateView.as_view(), name="vak-create"
+        "vak/<int:pk>/",
+        WijnVoorraad.views_basis.VakDetailView.as_view(),
+        name="vakdetail",
     ),
-    path("vak/update/<int:pk>/", views.VakUpdateView.as_view(), name="vak-update"),
+    path(
+        "vak/create/<int:locatie_id>/",
+        WijnVoorraad.views_basis.VakCreateView.as_view(),
+        name="vak-create",
+    ),
+    path(
+        "vak/update/<int:pk>/",
+        WijnVoorraad.views_basis.VakUpdateView.as_view(),
+        name="vak-update",
+    ),
     path("wijnen/", views.WijnListView.as_view(), name="wijnlist"),
     path("wijnen/<str:fuzzy_selectie>/", views.WijnListView.as_view(), name="wijnlist"),
     path("wijn/<int:pk>/", views.WijnDetailView.as_view(), name="wijndetail"),
     path("wijn/create/", views.WijnCreateView.as_view(), name="wijn-create"),
     path("wijn/update/<int:pk>/", views.WijnUpdateView.as_view(), name="wijn-update"),
-    path("wijn/popupadd/", views.WijnCreatePopupView, name="wijn-popupadd"),
+    path(
+        "wijn/popupadd/",
+        WijnVoorraad.views_popup.wijn_create_popup_view,
+        name="wijn-popupadd",
+    ),
     path("ontvangsten/", views.OntvangstListView.as_view(), name="ontvangstlist"),
     path(
         "ontvangst/<int:pk>/",

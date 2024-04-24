@@ -1,5 +1,7 @@
 Release
 Make sure new requirements.txt is made!
+Update version number in WijnProject/__init__.py
+Commit latest changes and push/pull to github
 
 -Tag repo in github
 -get release on server

@@ -32,7 +32,7 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         voorraad_list = (
-            WijnVoorraad.objects.filter(deelnemer__in=d, locatie__in=l)
+            WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
             .group_by("wijn", "ontvangst", "deelnemer", "locatie")
             .distinct()
             .order_by("wijn", "deelnemer", "locatie")
@@ -158,7 +158,7 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         w = self.kwargs["wijn_id"]
         o = self.kwargs["ontvangst_id"]
         voorraad_list = WijnVoorraad.objects.filter(
-            deelnemer__in=d, locatie__in=l, wijn=w, ontvangst=o
+            deelnemer=d, locatie=l, wijn=w, ontvangst=o
         )
         return voorraad_list
 
@@ -223,8 +223,9 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         set_session_context(self.request, "WijnVoorraad:voorraadvakken")
         l = get_session_context_locatie(self.request)
-        vakken_list = Vak.objects.filter(locatie__in=l).annotate(
-            aantal_gebruikt=Sum("wijnvoorraad__aantal")
+        vakken_list = (
+            Vak.objects.filter(locatie=l).order_by("code")
+            .annotate(aantal_gebruikt=Sum("wijnvoorraad__aantal"))
         )
         return vakken_list
 
@@ -234,8 +235,9 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         voorraad_list = WijnVoorraad.objects.filter(
-            deelnemer__in=d, locatie__in=l
+            deelnemer=d, locatie=l
         ).order_by("vak")
+        context["locatie"] = l
         context["voorraad_list"] = voorraad_list
         context["title"] = "Vakken"
         return context
@@ -336,8 +338,13 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
         context["voorraad"] = voorraad
         context["wijn"] = wijn
         context["aantal_verplaatsen_org"] = self.kwargs["aantal"]
-        context["nieuwe_locatie"] = Locatie.objects.get(pk=v_nieuwe_locatie_id)
+        l_nw = Locatie.objects.get(pk=v_nieuwe_locatie_id)
+        context["nieuwe_locatie"] = l_nw
         context["vakken_list"] = vakken_list
+        if vakken_list.count() > 10:
+            context["aantal_kolommen"] = l_nw.aantal_kolommen
+        else:
+            context["aantal_kolommen"] = 1
         return context
 
     def post(self, request, *args, **kwargs):
@@ -371,7 +378,7 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
-            ontvangst__deelnemer__in=d, locatie__in=l, in_uit="U"
+            ontvangst__deelnemer=d, locatie=l, in_uit="U"
         ).order_by("-datum")
         return mutatie_list
 
@@ -392,7 +399,7 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
-            ontvangst__deelnemer__in=d, locatie__in=l, in_uit="I"
+            ontvangst__deelnemer=d, locatie=l, in_uit="I"
         ).order_by("-datum")
         return mutatie_list
 
@@ -656,13 +663,13 @@ def set_context(context):
 
 def get_session_context_deelnemer(request):
     dc = request.session.get("deelnemer_id", None)
-    deelnemer = Deelnemer.objects.filter(pk=dc)
+    deelnemer = Deelnemer.objects.get(pk=dc)
     return deelnemer
 
 
 def get_session_context_locatie(request):
     lc = request.session.get("locatie_id", None)
-    locatie = Locatie.objects.filter(pk=lc)
+    locatie = Locatie.objects.get(pk=lc)
     return locatie
 
 

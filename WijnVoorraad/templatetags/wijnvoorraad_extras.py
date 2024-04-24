@@ -19,6 +19,17 @@ def sub(value, arg):
         except Exception:
             return ""
 
+@register.filter(name='range')
+def filter_range(start, end):
+    return range(start, end+1)
+
+@register.filter(is_safe=False)
+def kolomnr(recordnr, aantal_kolommen):
+    """Bereken het kolomnummer gebaseerd op recordnummer en aantal kolommen"""
+    try:
+        return int(recordnr) % int(aantal_kolommen)
+    except (ValueError, TypeError):
+        return ""
 
 @register.filter
 def env(key):

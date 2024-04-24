@@ -34,6 +34,7 @@ class DruivenSoort(models.Model):
 
 class Locatie(models.Model):
     omschrijving = models.CharField(max_length=200, unique=True)
+    aantal_kolommen = models.IntegerField(default=1)
 
     def __str__(self):
         return self.omschrijving

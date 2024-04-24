@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load i18n static %}
+{% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
@@ -7,6 +8,10 @@
         <div class="detail-row">
             <label class="detail-column-label">Omschrijving</label> 
             <label class="detail-column">{{ locatie.omschrijving }}</label>             
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Aantal kolommen</label> 
+            <label class="detail-column">{{ locatie.aantal_kolommen }}</label>             
         </div>
     </div>  <!-- end detail-block -->
 </div>  <!-- end content-main -->
@@ -23,27 +28,34 @@
             {% if v == vakken|first %}
                 <thead>
                     <tr>
-                        <th>
-                            Code
-                        </th>
-                        <th>
-                            Capaciteit
-                        </th>
+                        {% for i in 1|range:locatie.aantal_kolommen %}
+                            <th></th>
+                            <th>
+                                Vak
+                            </th>
+                            <th>
+                                Capaciteit
+                            </th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
+                <tr>
             {% endif %}
-            <tr>
+                <td></td>
                 <td>
                     <a href="{% url 'WijnVoorraad:vakdetail' v.id %}">{{ v.code }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:vakdetail' v.id %}">{{ v.capaciteit|default_if_none:"" }}</a>
                 </td>
-            </tr>
+            {% if forloop.counter|kolomnr:locatie.aantal_kolommen == 0 %}
+                </tr><tr>
+            {% endif %}
         {% empty %}
             <p>Locatie heeft geen vakken.</p>
         {% endfor %}
+        </tr>
         </tbody>
     </table>
     <br>

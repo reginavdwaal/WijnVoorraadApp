@@ -8,6 +8,7 @@
             {% if v == vakken_list|first %} 
                 <thead>
                     <tr>
+                        {% for i in 1|range:locatie.aantal_kolommen %}
                         <th>
                             Vak
                         </th>
@@ -17,31 +18,35 @@
                         <th>
                             Wijnen (aantal)
                         </th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
+                <tr>
             {% endif %}
-            <tr>
-                <td>
-                    {{ v.code}}
-                </td>
-                <td>
-                    {{ v.aantal_gebruikt|default_if_none:"-" }} / {{ v.capaciteit|default_if_none:"-" }}
-                </td>
-                <td>
-                    <table class="bgstd">
-                        {% for vrd in voorraad_list %}
-                            {% if vrd.vak.code == v.code %}
-                                <tr class="bgstd"><td class="bgstd">
-                                    <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
-                                    ( {{ vrd.aantal}} )
-                                </td></tr>
-                            {% endif %}
-                        {% endfor %}
-                    </table>
-                </td>
-           </tr>
+            <td>
+                {{ v.code}}
+            </td>
+            <td>
+                {{ v.aantal_gebruikt|default_if_none:"-" }} / {{ v.capaciteit|default_if_none:"-" }}
+            </td>
+            <td>
+                <table class="bgstd">
+                    {% for vrd in voorraad_list %}
+                        {% if vrd.vak.code == v.code %}
+                            <tr class="bgstd"><td class="bgstd">
+                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
+                                ( {{ vrd.aantal}} )
+                            </td></tr>
+                        {% endif %}
+                    {% endfor %}
+                </table>
+            </td>
+            {% if forloop.counter|kolomnr:locatie.aantal_kolommen == 0 %}
+                </tr><tr>
+            {% endif %}
         {% empty %}
+            </tr>
             <tbody>
             <p>Deze locatie heeft geen vakken.</p>
         {% endfor %}

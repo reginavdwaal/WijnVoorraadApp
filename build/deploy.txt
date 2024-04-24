@@ -1,0 +1,105 @@
+  895  cd domains/
+  896  ls
+  897  ./install.sh 
+  898  ./install.sh v0.2.0
+  899  ls -lrt
+  900  cd v0.2.0/
+  901  ls -lrt
+  902  cd ..
+  903  find . -name "*.tar.gz"
+  904  ls -la
+  905  mv .tar.gz vino.vdwaal.net.tar.gz
+  906  ls -la
+  907  vi install.sh 
+  908  ./install.sh 
+  909  rm -rf  v0.2.0/
+  910  rm vino.vdwaal.net.tar.gz 
+  911  ./install.sh v0.2.0
+  912  ls -lrt
+  913  ls -la
+  914  vi install.sh 
+  915  rm  -rf .tar.gz v0.2.0/
+  916  ./install.sh v0.2.0
+  917  ls -la
+  918  diff -r vino-v0.2.0 vino.vdwaal.net
+  919  diff -r vino-v0.2.0 vino.vdwaal.net | grep diff
+  920  diff -r vino-v0.2.0 vino.vdwaal.net | grep Only
+  921  ls la
+  922  ls -la
+  923  vi install.sh 
+  924  rm -rf vino-source-v0.2.0 vino-v0.2.0/
+  925  ./install.sh v0.2.0
+  926  ls -lrr
+  927  ls -lrt
+  928  diff -r vino-v0.2.0 vino.vdwaal.net | grep Only
+  929  diff -r vino_v0.2.0 vino.vdwaal.net | grep Only
+  930  vi install.sh 
+  931  ls -la
+  932  rm -rf vino_current.tar.gz .tar.gz vino_source_v0.2.0 vino_v0
+  933  ls -la
+  934  rm vino_v0.2.0/
+  935  rm -rf vino_v0.2.0/
+  936  ./install.sh v0.2.0
+  937  ls -la
+  938  diff -r vino_v0.2.0 vino.vdwaal.net | grep diff 
+  939  diff -r vino_v0.2.0 vino.vdwaal.net | grep Only
+  940  ls -la
+  941  diff -r vino_v0.2.0 vino.vdwaal.net | grep diff 
+  942  diff -r vino_v0.2.0/passenger_wsgi.py vino.vdwaal.net/passenger_wsgi.py
+  943  diff -r vino_v0.2.0 vino.vdwaal.net | grep diff 
+  944  diff -r vino_v0.2.0 vino.vdwaal.net | grep Only
+  945  cloudlinux-selector stop --json --interpreter python --app-root
+  946  cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
+  947  source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate
+  948  source setenv.sh
+  949  cp vino.vdwaal.net/db.sqlite3 vino_v0.2.0/
+  950  mv vino.vdwaal.net vino_v0.1.0
+  951  mv vino_v0.2.0 vino.vdwaal.net
+  952  cd vino.vdwaal.net/
+  953  pip install -r requirements.txt 
+  954  python manage.py migrate
+  955  python manage.py collectstatic
+  956  cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
+  957  cd ..
+  958  ls -lrt
+  959  cd \"
+  960  ls
+  961  cd home
+  962  ls
+  963  cd vdwanet/
+  964  ls
+  965  cd domains/
+  966  ls
+  967  cd vdwaal.net/
+  968  ls
+  969  cd public_html\"/
+  970  ls
+  971  cd
+  972  pwd
+  973  ls -la
+  974  cd \"
+  975  ls -la
+  976  rm -rf home
+  977  cd ..
+  978  rm \"
+  979  rmdir  \"
+  980  ls -la
+  981  cd domains/
+  982  ls -la
+  983  rm vino_current.tar.gz 
+  984  ./install.sh v0.2.1
+  985  ls -la
+  986  diff -r vino_v0.2.1 vino.vdwaal.net | grep diff
+  987  diff -r vino_v0.2.1 vino.vdwaal.net | grep Only
+  988  cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
+  989  mv vino.vdwaal.net vino_v0.2.0
+  990  mv vino_v0.2.1 vino.vdwaal.net
+  991  cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
+  992  cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
+  993  cp vino_v0.2.0/db.sqlite3 vino.vdwaal.net/
+  994  cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
+  995  exit
+  996  ls
+  997  exit
+  998  history
+  999  history > deploy.txt

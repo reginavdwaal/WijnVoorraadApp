@@ -34,8 +34,9 @@
                 <table class="bgstd">
                     {% for vrd in voorraad_list %}
                         {% if vrd.vak.code == v.code %}
-                            <tr class="bgstd"><td class="bgstd">
-                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.naam }} - {{ vrd.wijn.domein }} </a>
+                            <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
+                                <td class="bgstd">
+                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.domein }} - {{ vrd.wijn.naam }} </a>
                                 ( {{ vrd.aantal}} )
                             </td></tr>
                         {% endif %}

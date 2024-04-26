@@ -92,8 +92,8 @@
   986  diff -r vino_v0.2.1 vino.vdwaal.net | grep diff
   987  diff -r vino_v0.2.1 vino.vdwaal.net | grep Only
   988  cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
-  989  mv vino.vdwaal.net vino_v0.2.0
-  990  mv vino_v0.2.1 vino.vdwaal.net
+  989  mv vino.vdwaal.net vino_v0.2.1
+  990  mv vino_v0.2.2 vino.vdwaal.net
   991  cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
   992  cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
   993  cp vino_v0.2.0/db.sqlite3 vino.vdwaal.net/

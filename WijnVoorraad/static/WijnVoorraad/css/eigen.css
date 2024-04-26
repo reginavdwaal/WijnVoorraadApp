@@ -75,7 +75,15 @@ tr.wijnsoort_rodeport {
     background-color: var(--wijnsoort_rodeport);
 }
 
+tr.wijnsoort_portrood {
+    background-color: var(--wijnsoort_rodeport);
+}
+
 tr.wijnsoort_witteport {
+    background-color: var(--wijnsoort_witteport);
+}
+
+tr.wijnsoort_portwit {
     background-color: var(--wijnsoort_witteport);
 }
 
@@ -123,7 +131,6 @@ table.metkader {
 }
 
 .bgstd {
-    background-color: var(--body-bg);
     padding: 0px;
 }
 

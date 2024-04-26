@@ -19,10 +19,10 @@
             <thead>
             <tr>
                 <th>
-                    Wijnnaam
+                    Domein
                 </th>
                 <th>
-                    Domein
+                    Wijnnaam
                 </th>
                 <th>
                     Wijnsoort
@@ -54,10 +54,10 @@
             {% endif %}
             <tr>
                 <td>
-                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.naam }}</a>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.domein}}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.domein}}</a>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.naam }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.wijnsoort.omschrijving }}</a>

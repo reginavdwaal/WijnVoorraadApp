@@ -4,7 +4,7 @@
 <form action="{% url 'WijnVoorraad:detail' wijn.id %}" method="post">
     {% csrf_token %}
     <fieldset>
-        <legend><h1>{{ wijn.naam }} - {{ wijn.domein}}</h1></legend>
+        <legend><h1>{{ wijn.domein }} - {{ wijn.naam}}</h1></legend>
         {{ wijn.wijnsoort.omschrijving }},
         {{ wijn.jaar }},
         {{ wijn.land }}<br>

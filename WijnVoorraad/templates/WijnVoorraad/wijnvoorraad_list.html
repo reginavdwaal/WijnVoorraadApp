@@ -1,5 +1,7 @@
 {% extends "./base.html" %}
 {% load i18n static %}
+{% load wijnvoorraad_extras %}
+
 {% block content %}
   <div id="content-main">
     <form method="post">
@@ -34,10 +36,10 @@
     </form>
     <table class="wijnvoorraad">
       {% for v in voorraad_list %}
-        <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|lower }}">
+        <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
           <td class="col-12 col-s-12">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
-              <b>{{ v.wijn.naam }} - {{ v.wijn.domein }}</b>
+              <b>{{ v.wijn.domein }} - {{ v.wijn.naam }}</b>
             </a>
           </td>
           <td class="col-11 col-s-10">

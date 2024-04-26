@@ -113,7 +113,7 @@ class Wijn(models.Model):
         )
     
     def __str__(self):
-        return "%s - %s" % (self.naam, self.domein)
+        return "%s - %s" % (self.domein, self.naam)
 
     def jaar_str(jaar):
         return str(jaar)

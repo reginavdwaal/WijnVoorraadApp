@@ -1,9 +1,30 @@
 Release
-Make sure new requirements.txt is made!
-Update version number in WijnProject/__init__.py
-Commit latest changes and push/pull to github
 
--Tag repo in github
+VSCode:
+- Make sure new requirements.txt is made!
+- Update version number in WijnProject/__init__.py
+- Commit latest changes and push/pull to github
+- Commandline: git tag v<versienummer bijv. v0.2.2>
+- Commandline: git push --tags
+
+Dan naar server met putty:
+- cd domains
+- ./install.sh	-- Geeft alle tags weer die er zijn.
+- ./install.sh <gewenste tag>  -- backup gemaakt en repository uit github opgehaald en klaargezet.
+-- vino_<tag> bevat de nieuwe versie.
+- Stop de applicatie : cloudlinux-selector stop --json --interpreter python --app-root domains/vino.vdwaal.net
+- Verplaats de oude: mv vino.vdwaal.net vino_<oude tagversie>
+- Kopieer de nieuwe: mv vino_<tag> vino.vdwaal.net
+- Kopieer de database van oud naar nieuw: cp vino_<oude tag>/db.sqlite3 vino.vdwaal.net
+- Zet virtual env python: source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate 
+- Zet virtual env: source setenv.sh -- je staat al in de domains directory
+- cd vino.vdwaal.net
+- python manage.py migrate
+- python manage.py collectstatic bevestig met yes
+- Start server: cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
+
+
+- Tag repo in github
 -get release on server
 	- ssh to server
 	- make tmp dir in /domains/vdwaal.net

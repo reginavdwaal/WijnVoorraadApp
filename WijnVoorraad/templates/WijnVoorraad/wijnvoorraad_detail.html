@@ -55,9 +55,9 @@
         <div class="col-6 col-s-8">
             <div class="detail-block">
                 <div class="detail-row">
-                    <label class="detail-column-label">Wijnnaam</label> 
+                    <label class="detail-column-label">Domein</label>
                     <label class="detail-column">
-                        {{ wijn.naam }}
+                        {{ wijn.domein }}
                         &nbsp;
                         <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}"
                             title="Details bekijken">
@@ -66,8 +66,8 @@
                     </label>
                 </div>
                 <div class="detail-row">
-                    <label class="detail-column-label">Domein</label>
-                    <label class="detail-column">{{ wijn.domein}}</label>
+                    <label class="detail-column-label">Wijnnaam</label> 
+                    <label class="detail-column">{{ wijn.naam}}</label>
                 </div>
                 <div class="detail-row">
                     <label class="detail-column-label">Wijnsoort</label>
@@ -102,12 +102,6 @@
                     <div class="detail-row">
                         <label class="detail-column-label">Classificatie</label>
                         <label class="detail-column">{{ wijn.classificatie }}</label>            
-                    </div>
-                {% endif %}
-                {% if wijn.leverancier %}
-                    <div class="detail-row">
-                        <label class="detail-column-label">Leverancier</label>
-                        <label class="detail-column">{{ wijn.leverancier }}</label>            
                     </div>
                 {% endif %}
                 {% if wijn.website %}
@@ -156,7 +150,7 @@
                         <label class="detail-column">{{ ontvangst.prijs|default_if_none:"" }}</label>
                     </div>
                 {% endif %}
-                {% if ontvangst.prijs %}
+                {% if ontvangst.opmerking %}
                     <div class="detail-row">
                         <label class="detail-column-label">Opmerking</label>
                         <label class="detail-column">{{ ontvangst.opmerking }}</label>

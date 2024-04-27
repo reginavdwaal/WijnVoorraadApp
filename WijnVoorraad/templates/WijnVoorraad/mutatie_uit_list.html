@@ -1,7 +1,17 @@
 {% extends "./base_context.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
+    <form method="post">{% csrf_token %}
+        <div class="form-row">
+          <input type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ fuzzy_selectie | default_if_none:'' }}"/>
+          <button class="clear_style" type="submit">
+            <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
+          </button>
+        </div>
+    </form>
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 
@@ -43,7 +53,7 @@
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.aantal }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.ontvangst.wijn.naam }} - {{ m.ontvangst.wijn.domein }}</a>
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}" class = "wijnsoort_{{ m.ontvangst.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">{{ m.ontvangst.wijn.volle_naam }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.omschrijving }}</a>

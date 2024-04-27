@@ -1,10 +1,22 @@
 {% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
+    <form method="post">{% csrf_token %}
+        <div class="form-row">
+          <input type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ fuzzy_selectie | default_if_none:'' }}"/>
+          <button class="clear_style" type="submit">
+            <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
+          </button>
+          <a class="clear_style" href="{% url 'WijnVoorraad:ontvangst-create' %}">
+            <img src="{% static '/WijnVoorraad/img/Addicon.png' %}" width="30" height="30" alt="Toevoegen"/></a>
+        </div>
+    </form>
     <table>
-        {% for o in ontvangsten %}
-            {% if o == ontvangsten|first %} 
+        {% for o in ontvangst_list %}
+            {% if o == ontvangst_list|first %} 
             <thead>
             <tr>
                 <th>
@@ -28,7 +40,8 @@
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.deelnemer.naam }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.wijn.naam }}</a>
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}"
+                     class = "wijnsoort_{{ o.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">{{ o.wijn.volle_naam }}</a>
                 </td>
             </tr>
         {% empty %}

@@ -59,6 +59,38 @@
   --dropmenu-btn-bg-hover: #79aec8;
 }
 
+.wijnsoort_rood {
+    background-color: var(--wijnsoort_rood);
+}
+
+.wijnsoort_wit {
+    background-color: var(--wijnsoort_wit);
+}
+
+.wijnsoort_rose {
+    background-color: var(--wijnsoort_rose);
+}
+
+.wijnsoort_rodeport {
+    background-color: var(--wijnsoort_rodeport);
+}
+
+.wijnsoort_portrood {
+    background-color: var(--wijnsoort_rodeport);
+}
+
+.wijnsoort_witteport {
+    background-color: var(--wijnsoort_witteport);
+}
+
+.wijnsoort_portwit {
+    background-color: var(--wijnsoort_witteport);
+}
+
+.wijnsoort_mousserend {
+    background-image: url(../img/mousserend.png);
+}
+
 tr.wijnsoort_rood {
     background-color: var(--wijnsoort_rood);
 }
@@ -89,6 +121,36 @@ tr.wijnsoort_portwit {
 
 tr.wijnsoort_mousserend {
     background-image: url(../img/mousserend.png);
+}
+
+input[type=submit].wijnsoort_rood {
+    color: var(--body-fg);
+    background-color: var(--wijnsoort_rood);
+    padding: 10px 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+input[type=submit].wijnsoort_wit {
+    color: var(--body-fg);
+    background-color: var(--wijnsoort_wit);
+    padding: 10px 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+input[type=submit].wijnsoort_rose {
+    color: var(--body-fg);
+    background-color: var(--wijnsoort_rose);
+    padding: 10px 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 table.wijnvoorraad {

@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load i18n static %}
+{% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
@@ -49,7 +50,7 @@
         <div class="detail-row">
             <label class="detail-column-label">Wijn</label>
             <label class="detail-column">
-                {{  mutatie.ontvangst.wijn.naam }} - {{ mutatie.ontvangst.wijn.domein }}
+                {{  mutatie.ontvangst.wijn.volle_naam }}
                 &nbsp;
                 <a href="{% url 'WijnVoorraad:wijndetail' mutatie.ontvangst.wijn.id %}"
                     title="Details bekijken">

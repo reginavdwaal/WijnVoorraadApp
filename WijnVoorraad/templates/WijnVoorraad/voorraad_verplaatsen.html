@@ -1,5 +1,6 @@
 {% extends "./base_form.html" %}
 {% load i18n static %}
+{% load wijnvoorraad_extras %}
 
 {% block content %}
 <form method="post" {% block form_actions %} {% endblock %}>
@@ -9,7 +10,7 @@
         <div class="form-row">
             <label class="detail-column-label">Wijn</label>
             <label>
-                {{  wijn.naam }}
+                {{  wijn.volle_naam }}
                 &nbsp;
                 <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}"
                     title="Details bekijken">

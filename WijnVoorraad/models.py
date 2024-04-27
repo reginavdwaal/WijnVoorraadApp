@@ -112,17 +112,24 @@ class Wijn(models.Model):
         null=True, blank=True
         )
     
+    @property
+    def volle_naam(self):
+        return "%s - %s" % (self.domein, self.naam)
+
     def __str__(self):
         return "%s - %s" % (self.domein, self.naam)
 
     def jaar_str(jaar):
         return str(jaar)
-    
+
     def check_afsluiten(self):
         vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(aantal=Sum('aantal'))
         if vrd_aantal['aantal'] is None:
-           self.datumAfgesloten = datetime.now()
-           self.save()
+            self.datumAfgesloten = datetime.now()
+            self.save()
+        elif self.datumAfgesloten:
+            self.datumAfgesloten = None
+            self.save()
 
     class Meta:
         ordering = ["naam"]
@@ -140,7 +147,7 @@ class WijnDruivensoort(models.Model):
     druivensoort = models.ForeignKey(DruivenSoort, on_delete=models.PROTECT)
 
     def __str__(self):
-        return "%s - %s" % (self.wijn.naam, self.druivensoort.omschrijving)
+        return "%s - %s" % (self.wijn.volle_naam, self.druivensoort.omschrijving)
 
     class Meta:
         ordering = ["wijn", "druivensoort"]
@@ -163,7 +170,7 @@ class Ontvangst(models.Model):
     opmerking = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s " % (self.deelnemer.naam, self.wijn.naam, self.datumOntvangst.strftime("%d-%m-%Y"))
+        return "%s - %s - %s " % (self.deelnemer.naam, self.wijn.volle_naam, self.datumOntvangst.strftime("%d-%m-%Y"))
 
     class Meta:
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
@@ -200,7 +207,7 @@ class VoorraadMutatie(models.Model):
 
     def __str__(self):
         return "%s - %s - %s - %s" % (
-            self.ontvangst.wijn.naam,
+            self.ontvangst.wijn.volle_naam,
             self.ontvangst.deelnemer.naam,
             self.in_uit,
             self.datum.strftime("%d-%m-%Y"),
@@ -278,14 +285,14 @@ class WijnVoorraad(models.Model):
     def __str__(self):
         if self.vak:
             return "%s - %s - %s (%s)" % (
-                self.wijn.naam,
+                self.wijn.volle_naam,
                 self.deelnemer.naam,
                 self.locatie.omschrijving,
                 self.vak.code,
             )
         else:
             return "%s - %s - %s" % (
-                self.wijn.naam,
+                self.wijn.volle_naam,
                 self.deelnemer.naam,
                 self.locatie.omschrijving,
             )
@@ -315,7 +322,6 @@ class WijnVoorraad(models.Model):
                                             , locatie=VoorraadMutatie.locatie
                                             , vak=VoorraadMutatie.vak)
             vrd.aantal=F('aantal') + VoorraadMutatie.aantal
-            vrd.save()
         except WijnVoorraad.DoesNotExist:
             vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
                                , deelnemer=VoorraadMutatie.ontvangst.deelnemer
@@ -323,19 +329,31 @@ class WijnVoorraad(models.Model):
                                , locatie = VoorraadMutatie.locatie
                                , vak=VoorraadMutatie.vak
                                , aantal=VoorraadMutatie.aantal)
-            vrd.save()
+        vrd.save()
+        vrd.refresh_from_db()
+        wijn = vrd.wijn
+        wijn.check_afsluiten()
 
     def Bijwerken_mutatie_UIT (VoorraadMutatie):
-        vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
-                                       , locatie=VoorraadMutatie.locatie
-                                       , vak=VoorraadMutatie.vak)
-        vrd.aantal=F('aantal') - VoorraadMutatie.aantal
+        try:
+            vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
+                                           , locatie=VoorraadMutatie.locatie
+                                           , vak=VoorraadMutatie.vak)
+            vrd.aantal=F('aantal') - VoorraadMutatie.aantal
+        except WijnVoorraad.DoesNotExist:
+            vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
+                               , deelnemer=VoorraadMutatie.ontvangst.deelnemer
+                               , ontvangst=VoorraadMutatie.ontvangst
+                               , locatie = VoorraadMutatie.locatie
+                               , vak=VoorraadMutatie.vak
+                               , aantal=-VoorraadMutatie.aantal)
+
         vrd.save()
         vrd.refresh_from_db()
         wijn = vrd.wijn
         if vrd.aantal == 0:
             vrd.delete()
-            wijn.check_afsluiten()
+        wijn.check_afsluiten()
 
     def verplaatsen (WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
         VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)

@@ -1,4 +1,5 @@
 {% extends "./base_context.html" %}
+{% load i18n static %}
 {% load wijnvoorraad_extras %}
 
 {% block content %}
@@ -36,7 +37,7 @@
                         {% if vrd.vak.code == v.code %}
                             <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
                                 <td class="bgstd">
-                                <a href="{% url 'WijnVoorraad:ontvangstdetail' vrd.ontvangst.id %}">{{ vrd.wijn.domein }} - {{ vrd.wijn.naam }} </a>
+                                <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
                                 ( {{ vrd.aantal}} )
                             </td></tr>
                         {% endif %}

@@ -158,6 +158,7 @@ urlpatterns = [
         name="wijn-popupadd",
     ),
     path("ontvangsten/", views.OntvangstListView.as_view(), name="ontvangstlist"),
+    path("ontvangsten/<str:fuzzy_selectie>/", views.OntvangstListView.as_view(), name="ontvangstlist"),
     path(
         "ontvangst/<int:pk>/",
         views.OntvangstDetailView.as_view(),
@@ -172,7 +173,9 @@ urlpatterns = [
         name="ontvangst-update",
     ),
     path("mutaties_uit/", views.MutatiesUitListView.as_view(), name="mutaties_uit"),
+    path("mutaties_uit/<str:fuzzy_selectie>/", views.MutatiesUitListView.as_view(), name="mutaties_uit"),
     path("mutaties_in/", views.MutatiesInListView.as_view(), name="mutaties_in"),
+    path("mutaties_in/<str:fuzzy_selectie>/", views.MutatiesInListView.as_view(), name="mutaties_in"),
     path("mutatie/<int:pk>/", views.MutatieDetailView.as_view(), name="mutatiedetail"),
     path(
         "mutatie/update/<int:pk>/",

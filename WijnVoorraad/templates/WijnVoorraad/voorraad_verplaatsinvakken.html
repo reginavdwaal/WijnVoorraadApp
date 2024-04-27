@@ -1,4 +1,5 @@
 {% extends "./base.html" %}
+{% load i18n static %}
 {% load wijnvoorraad_extras %}
 
 {% block content %}
@@ -22,7 +23,7 @@
         }
     }
 </script>
-<h1>{{ aantal_verplaatsen_org }} flessen {{wijn.naam}} verplaatsen naar {{ nieuwe_locatie.omschrijving }}</h1>
+<h1>{{ aantal_verplaatsen_org }} flessen {{wijn.volle_naam}} verplaatsen naar {{ nieuwe_locatie.omschrijving }}</h1>
 <h2>Beschikbare vakken:</h2>
 <form method="post">{% csrf_token %}
     <input type="hidden" name='voorraad_id' id="voorraad_id" value="{{voorraad.id}}">

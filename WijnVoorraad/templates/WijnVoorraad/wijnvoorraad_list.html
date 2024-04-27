@@ -32,6 +32,21 @@
                height="30"
                alt="Toevoegen" />
         </a>
+        <input type="submit" class="wijnsoort_rood" 
+        name='ws_rood'
+        id="ws_rood"
+        value="R"
+        />
+        <input type="submit" class="wijnsoort_wit" 
+        name='ws_wit'
+        id="ws_wit"
+        value="W"
+        />
+        <input type="submit" class="wijnsoort_rose" 
+        name='ws_rose'
+        id="ws_rose"
+        value="Rs"
+        />
       </div>
     </form>
     <table class="wijnvoorraad">
@@ -39,7 +54,7 @@
         <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
           <td class="col-12 col-s-12">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
-              <b>{{ v.wijn.domein }} - {{ v.wijn.naam }}</b>
+              <b>{{ v.wijn.volle_naam }}</b>
             </a>
           </td>
           <td class="col-11 col-s-10">

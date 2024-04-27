@@ -16,7 +16,7 @@ from .models import (
     Vak,
     Wijn,
 )
-from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
+from .models import WijnVoorraad, VoorraadMutatie, Ontvangst, WijnSoort
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
 from .forms import VoorraadFilterForm, MutatieForm
@@ -83,15 +83,26 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy = self.request.POST["fuzzy_selectie"]
         my_kwargs = {}
+        fuzzy = self.request.POST["fuzzy_selectie"]
         if fuzzy:
             try:
                 int(fuzzy)
                 my_kwargs["fuzzy_selectie"] = fuzzy + "num"
             except ValueError:
                 my_kwargs["fuzzy_selectie"] = fuzzy
-
+        ws = None
+        ws_rood = self.request.POST.get("ws_rood")
+        if ws_rood:
+            ws = WijnSoort.objects.get (omschrijving='Rood')
+        ws_wit = self.request.POST.get("ws_wit")
+        if ws_wit:
+            ws = WijnSoort.objects.get (omschrijving='Wit')
+        ws_rose = self.request.POST.get("ws_rose")
+        if ws_rose:
+            ws = WijnSoort.objects.get (omschrijving='Rose')
+        if ws:
+            my_kwargs["wijnsoort_id_selectie"] = ws.id
         url = reverse("WijnVoorraad:voorraadlist", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
 
@@ -380,14 +391,61 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="U"
         ).order_by("-datum")
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    fuzzy = str(num)
+                except ValueError:
+                    pass
+
+            mutatie_list = (
+                mutatie_list.filter(omschrijving__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__leverancier__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__opmerking__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__naam__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__domein__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__wijnsoort__omschrijving__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__jaar__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__land__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__streek__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__classificatie__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__leverancier__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
+            )
         return mutatie_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         set_context(context)
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    context["fuzzy_selectie"] = str(num)
+                except ValueError:
+                    context["fuzzy_selectie"] = fuzzy
+            else:
+                context["fuzzy_selectie"] = fuzzy
+
         context["title"] = "Uitgaande mutaties"
         return context
 
+    def post(self, request, *args, **kwargs):
+        fuzzy = self.request.POST["fuzzy_selectie"]
+        my_kwargs = {}
+        if fuzzy:
+            try:
+                int(fuzzy)
+                my_kwargs["fuzzy_selectie"] = fuzzy + "num"
+            except ValueError:
+                my_kwargs["fuzzy_selectie"] = fuzzy
+
+        url = reverse("WijnVoorraad:mutaties_uit", kwargs=my_kwargs)
+        return HttpResponseRedirect(url)
 
 class MutatiesInListView(LoginRequiredMixin, ListView):
     model = VoorraadMutatie
@@ -401,14 +459,61 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="I"
         ).order_by("-datum")
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    fuzzy = str(num)
+                except ValueError:
+                    pass
+
+            mutatie_list = (
+                mutatie_list.filter(omschrijving__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__leverancier__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__opmerking__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__naam__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__domein__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__wijnsoort__omschrijving__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__jaar__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__land__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__streek__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__classificatie__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__leverancier__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy)
+                | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
+            )
         return mutatie_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         set_context(context)
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    context["fuzzy_selectie"] = str(num)
+                except ValueError:
+                    context["fuzzy_selectie"] = fuzzy
+            else:
+                context["fuzzy_selectie"] = fuzzy
+
         context["title"] = "Inkomende mutaties"
         return context
 
+    def post(self, request, *args, **kwargs):
+        fuzzy = self.request.POST["fuzzy_selectie"]
+        my_kwargs = {}
+        if fuzzy:
+            try:
+                int(fuzzy)
+                my_kwargs["fuzzy_selectie"] = fuzzy + "num"
+            except ValueError:
+                my_kwargs["fuzzy_selectie"] = fuzzy
+
+        url = reverse("WijnVoorraad:mutaties_in", kwargs=my_kwargs)
+        return HttpResponseRedirect(url)
 
 class MutatieDetailView(LoginRequiredMixin, DetailView):
     model = VoorraadMutatie
@@ -440,13 +545,63 @@ class MutatieUpdateView(LoginRequiredMixin, UpdateView):
 
 class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
-    context_object_name = "ontvangsten"
+    context_object_name = "ontvangst_list"
+
+    def get_queryset(self):
+        ontvangst_list = Ontvangst.objects.all()
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    fuzzy = str(num)
+                except ValueError:
+                    pass
+
+            ontvangst_list = (
+                ontvangst_list.filter(leverancier__icontains=fuzzy)
+                | ontvangst_list.filter(opmerking__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__naam__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__domein__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__wijnsoort__omschrijving__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__jaar__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__land__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__streek__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__classificatie__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__leverancier__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__opmerking__icontains=fuzzy)
+                | ontvangst_list.filter(wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
+            )
+        return ontvangst_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        fuzzy = self.kwargs.get("fuzzy_selectie")
+        if fuzzy is not None:
+            if "num" in fuzzy:
+                try:
+                    num = int(fuzzy[0:-3])
+                    context["fuzzy_selectie"] = str(num)
+                except ValueError:
+                    context["fuzzy_selectie"] = fuzzy
+            else:
+                context["fuzzy_selectie"] = fuzzy
+
         context["title"] = "Ontvangsten"
         return context
 
+    def post(self, request, *args, **kwargs):
+        fuzzy = self.request.POST["fuzzy_selectie"]
+        my_kwargs = {}
+        if fuzzy:
+            try:
+                int(fuzzy)
+                my_kwargs["fuzzy_selectie"] = fuzzy + "num"
+            except ValueError:
+                my_kwargs["fuzzy_selectie"] = fuzzy
+
+        url = reverse("WijnVoorraad:ontvangstlist", kwargs=my_kwargs)
+        return HttpResponseRedirect(url)
 
 class OntvangstDetailView(LoginRequiredMixin, DetailView):
     model = Ontvangst
@@ -657,9 +812,9 @@ def set_session_context(request, return_url):
 def set_context(context):
     d = Deelnemer.objects.all()
     l = Locatie.objects.all
+    ws = WijnSoort.objects.all
     context["deelnemer_list"] = d
     context["locatie_list"] = l
-
 
 def get_session_context_deelnemer(request):
     dc = request.session.get("deelnemer_id", None)

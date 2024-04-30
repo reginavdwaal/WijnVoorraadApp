@@ -66,4 +66,11 @@
         </tbody>
     </table>
 </div>
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:mutatie-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+</div>
 {% endblock content %}

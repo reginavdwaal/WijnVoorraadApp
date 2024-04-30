@@ -23,7 +23,7 @@ Dan naar server met putty:
 - python manage.py collectstatic bevestig met yes
 - Start server: cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
 
-
+------
 - Tag repo in github
 -get release on server
 	- ssh to server

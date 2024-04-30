@@ -178,6 +178,11 @@ urlpatterns = [
     path("mutaties_in/<str:fuzzy_selectie>/", views.MutatiesInListView.as_view(), name="mutaties_in"),
     path("mutatie/<int:pk>/", views.MutatieDetailView.as_view(), name="mutatiedetail"),
     path(
+        "mutatie/create/",
+        views.MutatieCreateView.as_view(),
+        name="mutatie-create",
+    ),
+    path(
         "mutatie/update/<int:pk>/",
         views.MutatieUpdateView.as_view(),
         name="mutatie-update",

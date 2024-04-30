@@ -7,14 +7,7 @@
     <div class="detail-block">
         <div class="detail-row">
             <label class="detail-column-label">Deelnemer</label> 
-            <label class="detail-column">
-                {{  ontvangst.deelnemer.naam }}
-                &nbsp;
-                <a href="{% url 'WijnVoorraad:deelnemerdetail' ontvangst.deelnemer.id %}"
-                    title="Details bekijken">
-                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
-                </a>
-            </label>
+            <label class="detail-column">{{  ontvangst.deelnemer.naam }}</label>
         </div>
         <div class="detail-row">
             <label class="detail-column-label">Ontvangstdatum</label>
@@ -53,19 +46,40 @@
         </div>
         <div class="detail-row">
             <label class="detail-column-label">Actuele voorraad</label>
-            <a class="detail-column" href="{% url 'WijnVoorraad:voorraadontvangst' ontvangst.id %}">
+            <label class="detail-column">
                 {{ voorraad_aantal.aantal|default_if_none:"-" }}
-            </a>
+                &nbsp;
+                <a href="{% url 'WijnVoorraad:voorraadontvangst' ontvangst.id %}"
+                    title="Details bekijken">
+                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                </a>
+            </label>
         </div>
     </div>  <!-- end detail-block -->
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">
-    <form id="update-form" method="get" action="{% url 'WijnVoorraad:ontvangst-update' object.id  %}">
-        {% csrf_token %}
-        <input type="submit" name="Update" value="Wijzigen"></input>
-    </form>
-
+    <div class="buttons-block">
+        <form id="update-form" method="get" action="{% url 'WijnVoorraad:ontvangst-update' object.id  %}">
+            {% csrf_token %}
+            <input type="submit" name="Update" value="Wijzigen"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form id="VoorraadPlus1" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='ontvangst_id' id="ontvangst_id" value="{{ object.id }}">
+            <input type="submit" name="VoorraadPlus1" value="Plus 1"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form id="create-form" method="get" action="{% url 'WijnVoorraad:mutatie-create' %}">
+            {% csrf_token %}
+            <input type="submit" name="Insert" value="Mutatie toevoegen"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+</div>  <!-- end content-footer -->
+<br class="clear">
     <h2>Voorraadmutaties</h2>
     <table>
         {% for m in mutaties %}
@@ -108,7 +122,7 @@
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.aantal }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.omschrijving }}</a>
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.locatie.omschrijving }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.vak.code|default:"---" }} </a>

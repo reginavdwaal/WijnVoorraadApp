@@ -132,7 +132,7 @@ class Wijn(models.Model):
             self.save()
 
     class Meta:
-        ordering = ["naam"]
+        ordering = ["domein", "naam"]
         verbose_name_plural = "wijnen"
         constraints = [
             models.UniqueConstraint(
@@ -243,6 +243,16 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = 1
         mutatie.save()
         
+    def voorraad_plus_1 (ontvangst, locatie):
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie
+        mutatie.in_uit = 'I'
+        mutatie.actie = 'K'
+        mutatie.datum = datetime.now()
+        mutatie.aantal = 1
+        mutatie.save()
+
     def verplaatsen (ontvangst, locatie_oud, vak_oud, locatie_nieuw, vak_nieuw, aantal):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst

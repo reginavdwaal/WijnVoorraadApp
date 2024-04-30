@@ -68,14 +68,7 @@
                 </div>
                 <div class="detail-row">
                     <label class="detail-column-label">Wijnsoort</label>
-                    <label class="detail-column">
-                        {{ wijn.wijnsoort.omschrijving }}
-                        &nbsp;
-                        <a href="{% url 'WijnVoorraad:wijnsoortdetail' wijn.wijnsoort.id %}"
-                            title="Details bekijken">
-                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
-                        </a>
-                    </label>            
+                    <label class="detail-column">{{ wijn.wijnsoort.omschrijving }}</label>            
                 </div>
                 {% if wijn.jaar %}
                     <div class="detail-row">

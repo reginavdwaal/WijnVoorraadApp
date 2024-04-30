@@ -8,7 +8,8 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.db.models import Sum, F
-
+from django.db.models.functions import Lower
+from django.core.exceptions import ValidationError
 
 from .models import (
     Deelnemer,
@@ -21,7 +22,6 @@ from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
 from .forms import VoorraadFilterForm, MutatieForm
 
-
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
     context_object_name = "voorraad_list"
@@ -31,11 +31,18 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         set_session_context(self.request, "WijnVoorraad:voorraadlist")
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
+        # voorraad_list = (
+        #     WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
+        #     .group_by("wijn", "ontvangst", "deelnemer", "locatie")
+        #     .distinct()
+        #     .order_by("wijn__volle_naam", "ontvangst__datumOntvangst")
+        #     .annotate(aantal=Sum("aantal"))
+        # )
         voorraad_list = (
             WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
             .group_by("wijn", "ontvangst", "deelnemer", "locatie")
             .distinct()
-            .order_by("wijn", "deelnemer", "locatie")
+            .order_by(Lower("wijn__domein"), Lower("wijn__naam"), "ontvangst__datumOntvangst")
             .annotate(aantal=Sum("aantal"))
         )
 
@@ -106,7 +113,6 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         url = reverse("WijnVoorraad:voorraadlist", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
 
-
 class VoorraadFilterView(LoginRequiredMixin, FormView):
     form_class = VoorraadFilterForm
     template_name = "WijnVoorraad/wijnvoorraad_filter.html"
@@ -154,7 +160,6 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
-
 class VoorraadDetailView(LoginRequiredMixin, ListView):
     """Detail view voorraad"""
 
@@ -195,7 +200,6 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         else:
             return super().get(request, *args, **kwargs)
 
-
 class VoorraadOntvangstView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
     context_object_name = "voorraad_list"
@@ -225,7 +229,6 @@ class VoorraadOntvangstView(LoginRequiredMixin, ListView):
         else:
             return super().get(request, *args, **kwargs)
 
-
 class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     model = Vak
     context_object_name = "vakken_list"
@@ -252,7 +255,6 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         context["voorraad_list"] = voorraad_list
         context["title"] = "Vakken"
         return context
-
 
 class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
     model = WijnVoorraad
@@ -327,7 +329,6 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
-
 class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
     model = Vak
     template_name = "WijnVoorraad/voorraad_verplaatsinvakken.html"
@@ -377,7 +378,6 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
                 )
 
         return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
-
 
 class MutatiesUitListView(LoginRequiredMixin, ListView):
     model = VoorraadMutatie
@@ -525,6 +525,21 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
         context["title"] = "Mutatie"
         return context
 
+class MutatieCreateView(LoginRequiredMixin, CreateView):
+    form_class = MutatieForm
+    model = VoorraadMutatie
+    template_name = "WijnVoorraad/general_create_update.html"
+
+    def get_success_url(self) -> str:
+        return reverse_lazy(
+            "WijnVoorraad:mutatiedetail",
+            kwargs={"pk": self.object.id},
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Nieuwe mutatie"
+        return context
 
 class MutatieUpdateView(LoginRequiredMixin, UpdateView):
     form_class = MutatieForm
@@ -541,7 +556,6 @@ class MutatieUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update mutatie"
         return context
-
 
 class OntvangstListView(LoginRequiredMixin, ListView):
     model = Ontvangst
@@ -616,6 +630,19 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
         context["title"] = "Ontvangst"
         return context
 
+    def post(self, request, *args, **kwargs):
+        o_id = self.request.POST["ontvangst_id"]
+        ontvangst = Ontvangst.objects.get(pk=o_id)
+        if "VoorraadPlus1" in self.request.POST:
+            if ontvangst.deelnemer == get_session_context_deelnemer(request):
+                locatie = get_session_context_locatie(request)
+                VoorraadMutatie.voorraad_plus_1(ontvangst, locatie)
+                url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+                return HttpResponseRedirect(url)
+            else:
+                raise ValidationError('Onbekende context locatie bij deelnemer', code='UnknownLocatie',)
+        else:
+            return super().get(request, *args, **kwargs)
 
 class OntvangstCreateView(LoginRequiredMixin, CreateView):
     form_class = OntvangstCreateForm
@@ -675,7 +702,6 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
-
 class OntvangstUpdateView(LoginRequiredMixin, UpdateView):
     form_class = OntvangstUpdateForm
     model = Ontvangst
@@ -692,7 +718,6 @@ class OntvangstUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update ontvangst"
         return context
-
 
 class WijnListView(LoginRequiredMixin, ListView):
     model = Wijn
@@ -752,7 +777,6 @@ class WijnListView(LoginRequiredMixin, ListView):
         url = reverse("WijnVoorraad:wijnlist", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
 
-
 class WijnDetailView(LoginRequiredMixin, DetailView):
     model = Wijn
     context_object_name = "wijn"
@@ -766,7 +790,6 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
         context["title"] = "Wijn"
         return context
 
-
 class WijnCreateView(LoginRequiredMixin, CreateView):
     form_class = WijnForm
     model = Wijn
@@ -777,7 +800,6 @@ class WijnCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe wijn"
         return context
-
 
 class WijnUpdateView(LoginRequiredMixin, UpdateView):
     form_class = WijnForm
@@ -795,7 +817,6 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update wijn"
         return context
 
-
 def set_session_context(request, return_url):
     dc = request.session.get("deelnemer", None)
     if dc is None:
@@ -807,7 +828,6 @@ def set_session_context(request, return_url):
             request.session["locatie_id"] = l.id
             request.session["locatie"] = l.omschrijving
     request.session["return_url"] = return_url
-
 
 def set_context(context):
     d = Deelnemer.objects.all()
@@ -821,12 +841,10 @@ def get_session_context_deelnemer(request):
     deelnemer = Deelnemer.objects.get(pk=dc)
     return deelnemer
 
-
 def get_session_context_locatie(request):
     lc = request.session.get("locatie_id", None)
     locatie = Locatie.objects.get(pk=lc)
     return locatie
-
 
 def change_context(request):
     d_id = request.POST["deelnemer_id"]

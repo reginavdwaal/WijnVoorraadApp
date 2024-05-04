@@ -79,8 +79,8 @@ class Deelnemer(models.Model):
         ordering = ["naam"]
 
 class Wijn(models.Model):
-    naam = models.CharField(max_length=200)
     domein = models.CharField(max_length=200)
+    naam = models.CharField(max_length=200)
     wijnsoort = models.ForeignKey(WijnSoort, on_delete=models.PROTECT)
 
     def validate_jaartal(jaartal):
@@ -98,7 +98,6 @@ class Wijn(models.Model):
     land = models.CharField(max_length=200, blank=True)
     streek = models.CharField(max_length=200, blank=True)
     classificatie = models.CharField(max_length=200, blank=True)
-    leverancier = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
     opmerking = models.CharField(max_length=200, blank=True)
     foto = models.ImageField(upload_to='images/', null=True, blank=True)
@@ -206,11 +205,12 @@ class VoorraadMutatie(models.Model):
     omschrijving = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s - %s" % (
+        return "%s - %s - %s - %s - %s" % (
             self.ontvangst.wijn.volle_naam,
             self.ontvangst.deelnemer.naam,
             self.in_uit,
             self.datum.strftime("%d-%m-%Y"),
+            self.pk
         )
     
     def save(self, *args, **kwargs):

@@ -41,9 +41,6 @@
                     Classificatie
                 </th>
                 <th>
-                    Leverancier
-                </th>
-                <th>
                     Datum aangemaakt
                 </th>
                 <th>
@@ -74,9 +71,6 @@
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.classificatie }}</a>
-                </td>
-                <td>
-                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.leverancier }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.datumAangemaakt|date }}</a>

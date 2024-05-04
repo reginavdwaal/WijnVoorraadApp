@@ -97,8 +97,8 @@ class LocatieForm(forms.ModelForm):
       fields = '__all__'
 
 class WijnForm(forms.ModelForm):
-   naam = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': '40'}))
    domein = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': '40'}))
+   naam = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': '40'}))
    wijnsoort = forms.ModelChoiceField(WijnSoort.objects, widget=SelectWithPop)
    wijnDruivensoorten = forms.ModelMultipleChoiceField(DruivenSoort.objects, required=False, widget=MultipleSelectWithPop)
    website = forms.CharField(max_length=200, required=False)
@@ -109,7 +109,42 @@ class WijnForm(forms.ModelForm):
       model = Wijn
       fields = '__all__'
 
-class MutatieForm(forms.ModelForm):
+class MutatieCreateForm(forms.ModelForm):
+   ontvangst = forms.ModelChoiceField(Ontvangst.objects, required=True, widget=SelectWithPop)
+   locatie = forms.ModelChoiceField(Locatie.objects, required=True, widget=SelectWithPop)
+   IN = "I"
+   UIT = "U"
+   in_uit_choices = [
+        (IN, "In"),
+        (UIT, "Uit"),
+   ]
+   in_uit = forms.ChoiceField(choices=in_uit_choices)
+   datum = forms.DateField()
+   aantal = forms.IntegerField()
+   omschrijving = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'size': '40'}))
+   KOOP = "K"
+   ONTVANGST = "O"
+   VERPLAATSING = "V"
+   DRINK = "D"
+   actie_choices = [
+        (KOOP, "Koop"),
+        (ONTVANGST, "Ontvangst"),
+        (VERPLAATSING, "Verplaatsing"),
+        (DRINK, "Drink")
+   ]
+   actie = forms.ChoiceField(choices=actie_choices)
+
+   def __init__(self, *args, **kwargs):
+      #   instance = kwargs.get('instance')
+      defaults = kwargs.pop('defaults')
+      super(MutatieCreateForm, self).__init__(*args, **kwargs)
+      self.initial['locatie'] = defaults ['locatie_id']
+
+   class Meta:
+      model = VoorraadMutatie
+      fields = '__all__'
+
+class MutatieUpdateForm(forms.ModelForm):
    ontvangst = forms.ModelChoiceField(Ontvangst.objects, required=True, widget=SelectWithPop)
    locatie = forms.ModelChoiceField(Locatie.objects, required=True, widget=SelectWithPop)
    IN = "I"

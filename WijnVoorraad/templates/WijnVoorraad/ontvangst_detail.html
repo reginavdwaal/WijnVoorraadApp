@@ -80,7 +80,15 @@
     </div>  <!-- end buttons-block -->
 </div>  <!-- end content-footer -->
 <br class="clear">
-    <h2>Voorraadmutaties</h2>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    <br class="clear">
+{% endif %}
+<h2>Voorraadmutaties</h2>
     <table>
         {% for m in mutaties %}
             {% if m == mutaties|first %} 

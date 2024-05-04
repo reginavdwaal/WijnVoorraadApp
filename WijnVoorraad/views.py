@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.db.models import Sum, F
 from django.db.models.functions import Lower
-from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 from .models import (
     Deelnemer,
@@ -20,7 +20,7 @@ from .models import (
 from .models import WijnVoorraad, VoorraadMutatie, Ontvangst, WijnSoort
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
-from .forms import VoorraadFilterForm, MutatieForm
+from .forms import VoorraadFilterForm, MutatieCreateForm, MutatieUpdateForm
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -31,13 +31,6 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         set_session_context(self.request, "WijnVoorraad:voorraadlist")
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
-        # voorraad_list = (
-        #     WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
-        #     .group_by("wijn", "ontvangst", "deelnemer", "locatie")
-        #     .distinct()
-        #     .order_by("wijn__volle_naam", "ontvangst__datumOntvangst")
-        #     .annotate(aantal=Sum("aantal"))
-        # )
         voorraad_list = (
             WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
             .group_by("wijn", "ontvangst", "deelnemer", "locatie")
@@ -66,8 +59,9 @@ class VoorraadListView(LoginRequiredMixin, ListView):
                 | voorraad_list.filter(wijn__land__icontains=fuzzy)
                 | voorraad_list.filter(wijn__streek__icontains=fuzzy)
                 | voorraad_list.filter(wijn__classificatie__icontains=fuzzy)
-                | voorraad_list.filter(wijn__leverancier__icontains=fuzzy)
                 | voorraad_list.filter(wijn__opmerking__icontains=fuzzy)
+                | voorraad_list.filter(ontvangst__leverancier__icontains=fuzzy)
+                | voorraad_list.filter(ontvangst__opmerking__icontains=fuzzy)
                 | voorraad_list.filter(
                     wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy
                 )
@@ -411,7 +405,6 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
                 | mutatie_list.filter(ontvangst__wijn__land__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__streek__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__classificatie__icontains=fuzzy)
-                | mutatie_list.filter(ontvangst__wijn__leverancier__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
             )
@@ -479,7 +472,6 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
                 | mutatie_list.filter(ontvangst__wijn__land__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__streek__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__classificatie__icontains=fuzzy)
-                | mutatie_list.filter(ontvangst__wijn__leverancier__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy)
                 | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
             )
@@ -526,7 +518,7 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
         return context
 
 class MutatieCreateView(LoginRequiredMixin, CreateView):
-    form_class = MutatieForm
+    form_class = MutatieCreateForm
     model = VoorraadMutatie
     template_name = "WijnVoorraad/general_create_update.html"
 
@@ -541,8 +533,16 @@ class MutatieCreateView(LoginRequiredMixin, CreateView):
         context["title"] = "Nieuwe mutatie"
         return context
 
+    def get_form_kwargs(self):
+        kwargs = super(MutatieCreateView, self).get_form_kwargs()
+        set_session_context(self.request, "WijnVoorraad:ontvangst-create")
+        my_defaults = {}
+        my_defaults["locatie_id"] = self.request.session.get("locatie_id", None)
+        kwargs.update({"defaults": my_defaults})
+        return kwargs
+
 class MutatieUpdateView(LoginRequiredMixin, UpdateView):
-    form_class = MutatieForm
+    form_class = MutatieUpdateForm
     model = VoorraadMutatie
     template_name = "WijnVoorraad/general_create_update.html"
 
@@ -582,7 +582,6 @@ class OntvangstListView(LoginRequiredMixin, ListView):
                 | ontvangst_list.filter(wijn__land__icontains=fuzzy)
                 | ontvangst_list.filter(wijn__streek__icontains=fuzzy)
                 | ontvangst_list.filter(wijn__classificatie__icontains=fuzzy)
-                | ontvangst_list.filter(wijn__leverancier__icontains=fuzzy)
                 | ontvangst_list.filter(wijn__opmerking__icontains=fuzzy)
                 | ontvangst_list.filter(wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy)
             )
@@ -627,6 +626,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
             ontvangst=self.object
         ).aggregate(aantal=Sum("aantal"))
         context["mutaties"] = VoorraadMutatie.objects.filter(ontvangst=self.object)
+        context["error_message"] = None
         context["title"] = "Ontvangst"
         return context
 
@@ -634,13 +634,12 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
         o_id = self.request.POST["ontvangst_id"]
         ontvangst = Ontvangst.objects.get(pk=o_id)
         if "VoorraadPlus1" in self.request.POST:
-            if ontvangst.deelnemer == get_session_context_deelnemer(request):
-                locatie = get_session_context_locatie(request)
-                VoorraadMutatie.voorraad_plus_1(ontvangst, locatie)
-                url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
-                return HttpResponseRedirect(url)
-            else:
-                raise ValidationError('Onbekende context locatie bij deelnemer', code='UnknownLocatie',)
+            VoorraadMutatie.voorraad_plus_1(ontvangst, ontvangst.deelnemer.standaardLocatie)
+            messages.success(request, "Mutatie op standaardlocatie %s toegevoegd" % (
+               ontvangst.deelnemer.standaardLocatie.omschrijving,
+               ))
+            url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+            return HttpResponseRedirect(url)
         else:
             return super().get(request, *args, **kwargs)
 
@@ -742,7 +741,6 @@ class WijnListView(LoginRequiredMixin, ListView):
                 | wijn_list.filter(land__icontains=fuzzy)
                 | wijn_list.filter(streek__icontains=fuzzy)
                 | wijn_list.filter(classificatie__icontains=fuzzy)
-                | wijn_list.filter(leverancier__icontains=fuzzy)
                 | wijn_list.filter(opmerking__icontains=fuzzy)
                 | wijn_list.filter(wijnDruivensoorten__omschrijving__icontains=fuzzy)
             )

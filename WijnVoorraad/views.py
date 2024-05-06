@@ -275,11 +275,13 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
     def post(self, request, *args, **kwargs):
         v_id = self.request.POST["voorraad_id"]
         voorraad = WijnVoorraad.objects.get(pk=v_id)
-        v_nieuwe_locatie = self.request.POST["nieuwe_locatie"]
+        v_nieuwe_locatie_id = self.request.POST["nieuwe_locatie"]
         v_aantal_verplaatsen = self.request.POST["aantal_verplaatsen"]
-        if not v_nieuwe_locatie:
+        if not v_nieuwe_locatie_id:
             # Behouden van dezelfde locatie
             v_nieuwe_locatie = voorraad.locatie
+        else:
+            v_nieuwe_locatie = Locatie.objects.get(pk=v_nieuwe_locatie_id)
 
         if "SaveAndPlace" in self.request.POST:
             #

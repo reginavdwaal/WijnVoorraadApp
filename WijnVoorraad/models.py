@@ -113,10 +113,13 @@ class Wijn(models.Model):
     
     @property
     def volle_naam(self):
-        return "%s - %s" % (self.domein, self.naam)
+        if self.jaar:
+            return "%s %s - %s" % (self.jaar, self.domein, self.naam)
+        else:
+            return "%s - %s" % (self.domein, self.naam)
 
     def __str__(self):
-        return "%s - %s" % (self.domein, self.naam)
+        return self.volle_naam
 
     def jaar_str(jaar):
         return str(jaar)
@@ -136,7 +139,7 @@ class Wijn(models.Model):
         constraints = [
             models.UniqueConstraint(
                 name="unique_wijn",
-                fields=["naam", "domein"],
+                fields=["naam", "domein", "jaar"],
                 deferrable=Deferrable.DEFERRED,
             )
         ]

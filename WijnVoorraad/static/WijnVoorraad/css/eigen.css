@@ -59,93 +59,34 @@
   --dropmenu-btn-bg-hover: #79aec8;
 }
 
-.wijnsoort_rood {
+.wijnsoort_rood, tr.wijnsoort_rood, input[type=submit].wijnsoort_rood {
     background-color: var(--wijnsoort_rood);
 }
 
-.wijnsoort_wit {
+.wijnsoort_wit, tr.wijnsoort_wit, input[type=submit].wijnsoort_wit {
     background-color: var(--wijnsoort_wit);
 }
 
-.wijnsoort_rose {
+.wijnsoort_rose, tr.wijnsoort_rose, input[type=submit].wijnsoort_rose {
     background-color: var(--wijnsoort_rose);
 }
 
-.wijnsoort_rodeport {
+.wijnsoort_rodeport, tr.wijnsoort_rodeport, input[type=submit].wijnsoort_rodeport
+.wijnsoort_portrood, tr.wijnsoort_portrood, input[type=submit].wijnsoort_portrood {
     background-color: var(--wijnsoort_rodeport);
 }
 
-.wijnsoort_portrood {
-    background-color: var(--wijnsoort_rodeport);
-}
-
-.wijnsoort_witteport {
+.wijnsoort_witteport, tr.wijnsoort_witteport, input[type=submit].wijnsoort_witteport
+.wijnsoort_portwit, tr.wijnsoort_portwit, input[type=submit].wijnsoort_portwit {
     background-color: var(--wijnsoort_witteport);
 }
 
-.wijnsoort_portwit {
-    background-color: var(--wijnsoort_witteport);
-}
-
-.wijnsoort_mousserend {
+.wijnsoort_mousserend, tr.wijnsoort_mousserend, input[type=submit].wijnsoort_mousserend {
     background-image: url(../img/mousserend.png);
 }
 
-tr.wijnsoort_rood {
-    background-color: var(--wijnsoort_rood);
-}
-
-tr.wijnsoort_wit {
-    background-color: var(--wijnsoort_wit);
-}
-
-tr.wijnsoort_rose {
-    background-color: var(--wijnsoort_rose);
-}
-
-tr.wijnsoort_rodeport {
-    background-color: var(--wijnsoort_rodeport);
-}
-
-tr.wijnsoort_portrood {
-    background-color: var(--wijnsoort_rodeport);
-}
-
-tr.wijnsoort_witteport {
-    background-color: var(--wijnsoort_witteport);
-}
-
-tr.wijnsoort_portwit {
-    background-color: var(--wijnsoort_witteport);
-}
-
-tr.wijnsoort_mousserend {
-    background-image: url(../img/mousserend.png);
-}
-
-input[type=submit].wijnsoort_rood {
+input[type=submit].wijnsoort {
     color: var(--body-fg);
-    background-color: var(--wijnsoort_rood);
-    padding: 10px 10px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-input[type=submit].wijnsoort_wit {
-    color: var(--body-fg);
-    background-color: var(--wijnsoort_wit);
-    padding: 10px 10px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-input[type=submit].wijnsoort_rose {
-    color: var(--body-fg);
-    background-color: var(--wijnsoort_rose);
     padding: 10px 10px;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;

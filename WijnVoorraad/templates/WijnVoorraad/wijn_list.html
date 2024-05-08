@@ -50,7 +50,7 @@
             </thead>
             <tbody>
             {% endif %}
-            <tr>
+            <tr class="wijnsoort_{{ wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.domein}}</a>
                 </td>

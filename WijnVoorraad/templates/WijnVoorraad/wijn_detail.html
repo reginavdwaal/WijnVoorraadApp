@@ -101,6 +101,11 @@
         {% csrf_token %}
         <input type="submit" name="Update" value="Wijzigen"></input>
     </form>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name='wijn_id' id="wijn_id" value="{{wijn.id}}"></input>
+        <input type="submit" name="Kopieer" value="Kopieer"></input>
+    </form>
 
     {% if ontvangst_list  %}
     <h2>Ontvangsten</h2>

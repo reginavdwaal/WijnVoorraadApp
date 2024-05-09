@@ -133,6 +133,44 @@ class Wijn(models.Model):
             self.datumAfgesloten = None
             self.save()
 
+    def check_unique(self):
+        o = Wijn.objects.filter(naam = self.naam, domein = self.domein, jaar = self.jaar)
+        if o:
+            return False
+        else:
+            return True
+
+    def create_copy(self):
+        orig_wijn_id = self.id
+        nieuwe_wijn = self
+        nieuwe_wijn.pk = None
+        nieuwe_wijn.datumAangemaakt = datetime.now()
+        nieuwe_wijn.datumAfgesloten = None
+        nieuwe_wijn.foto = None
+        orig_naam = nieuwe_wijn.naam
+        nieuwe_wijn.naam = orig_naam + ' - Copy'
+        copy_number = 0
+
+        save_success = False
+        while not save_success or copy_number > 15:
+            if nieuwe_wijn.check_unique():
+                nieuwe_wijn.save()
+                save_success = True
+            else:
+                copy_number += 1
+                nieuwe_wijn.naam = orig_naam + ' - Copy' + str(copy_number)
+
+        if  save_success:
+            orig_wijn = Wijn.objects.get(pk=orig_wijn_id)
+            for i in orig_wijn.wijnDruivensoorten.all():
+                s = WijnDruivensoort()
+                s.wijn = nieuwe_wijn
+                s.druivensoort = i
+                s.save()
+            return nieuwe_wijn.id
+        else:
+            raise ValidationError('Teveel kopieën reeds aanwezig')
+
     class Meta:
         ordering = ["domein", "naam"]
         verbose_name_plural = "wijnen"

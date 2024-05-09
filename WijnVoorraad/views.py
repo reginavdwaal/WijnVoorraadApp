@@ -789,7 +789,20 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
         context["ontvangst_list"] = Ontvangst.objects.filter(wijn=self.object)
         context["title"] = "Wijn"
         return context
-
+    
+    def post(self, request, *args, **kwargs):
+        wijn_id = self.request.POST["wijn_id"]
+        if wijn_id:
+            wijn = Wijn.objects.get(pk=wijn_id)
+            try:
+                nieuwe_wijn_id = wijn.create_copy()
+                my_kwargs = {}
+                my_kwargs["pk"] = nieuwe_wijn_id
+                url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
+            except:
+                url = reverse("WijnVoorraad:wijn-create")
+        return HttpResponseRedirect(url)
+    
 class WijnCreateView(LoginRequiredMixin, CreateView):
     form_class = WijnForm
     model = Wijn
@@ -816,7 +829,7 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update wijn"
         return context
-
+    
 def set_session_context(request, return_url):
     dc = request.session.get("deelnemer", None)
     if dc is None:

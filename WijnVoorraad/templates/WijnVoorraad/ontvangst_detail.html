@@ -68,7 +68,7 @@
     <div class="buttons-block">
         <form id="VoorraadPlus1" method="post">
             {% csrf_token %}
-            <input type="hidden" name='ontvangst_id' id="ontvangst_id" value="{{ object.id }}">
+            <input type="hidden" name='object_id' id="object_id" value="{{ object.id }}">
             <input type="submit" name="VoorraadPlus1" value="Plus 1"></input>
         </form>
     </div>  <!-- end buttons-block -->
@@ -78,17 +78,17 @@
             <input type="submit" name="Insert" value="Mutatie toevoegen"></input>
         </form>
     </div>  <!-- end buttons-block -->
-</div>  <!-- end content-footer -->
-<br class="clear">
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
+    <div class="buttons-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name='object_id' id="wijn_id" value="{{object.id}}"></input>
+            <input type="submit" name="Verwijder" value="Verwijder"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+
     <br class="clear">
-{% endif %}
-<h2>Voorraadmutaties</h2>
+
+    <h2>Voorraadmutaties</h2>
     <table>
         {% for m in mutaties %}
             {% if m == mutaties|first %} 
@@ -148,5 +148,5 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
+</div>  <!-- end content-footer -->
 {% endblock %}

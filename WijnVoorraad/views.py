@@ -381,7 +381,7 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_uit_list.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:mutaties_uit")
+        set_session_context(self.request, "WijnVoorraad:mutatielist_uit")
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
@@ -439,7 +439,7 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
             except ValueError:
                 my_kwargs["fuzzy_selectie"] = fuzzy
 
-        url = reverse("WijnVoorraad:mutaties_uit", kwargs=my_kwargs)
+        url = reverse("WijnVoorraad:mutatielist_uit", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
 
 class MutatiesInListView(LoginRequiredMixin, ListView):
@@ -448,7 +448,7 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_in_list.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:mutaties_in")
+        set_session_context(self.request, "WijnVoorraad:mutatielist_in")
         d = get_session_context_deelnemer(self.request)
         l = get_session_context_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
@@ -506,7 +506,7 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
             except ValueError:
                 my_kwargs["fuzzy_selectie"] = fuzzy
 
-        url = reverse("WijnVoorraad:mutaties_in", kwargs=my_kwargs)
+        url = reverse("WijnVoorraad:mutatielist_in", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
 
 class MutatieDetailView(LoginRequiredMixin, DetailView):
@@ -519,6 +519,25 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
         context["title"] = "Mutatie"
         return context
 
+    def post(self, request, *args, **kwargs):
+        mutatie_id = self.request.POST["object_id"]
+        if mutatie_id:
+            mutatie = VoorraadMutatie.objects.get(pk=mutatie_id)
+            in_out = mutatie.in_uit
+            if 'Verwijder' in self.request.POST:
+                try:
+                    mutatie.delete()
+                    if in_out == "I":
+                        url = reverse("WijnVoorraad:mutatielist_in")
+                    else:
+                        url = reverse("WijnVoorraad:mutatielist_uit")
+                except:
+                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
+                    url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id))
+            else:
+                url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id))
+            return HttpResponseRedirect(url)
+    
 class MutatieCreateView(LoginRequiredMixin, CreateView):
     form_class = MutatieCreateForm
     model = VoorraadMutatie
@@ -633,14 +652,25 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        o_id = self.request.POST["ontvangst_id"]
-        ontvangst = Ontvangst.objects.get(pk=o_id)
-        if "VoorraadPlus1" in self.request.POST:
-            VoorraadMutatie.voorraad_plus_1(ontvangst, ontvangst.deelnemer.standaardLocatie)
-            messages.success(request, "Mutatie op standaardlocatie %s toegevoegd" % (
-               ontvangst.deelnemer.standaardLocatie.omschrijving,
-               ))
-            url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+        o_id = self.request.POST["object_id"]
+        if o_id:
+            ontvangst = Ontvangst.objects.get(pk=o_id)
+            if "VoorraadPlus1" in self.request.POST:
+                VoorraadMutatie.voorraad_plus_1(ontvangst, ontvangst.deelnemer.standaardLocatie)
+                messages.success(request, "Mutatie op standaardlocatie %s toegevoegd" % (
+                   ontvangst.deelnemer.standaardLocatie.omschrijving,
+                   ))
+                url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+                return HttpResponseRedirect(url)
+            if 'Verwijder' in self.request.POST:
+                try:
+                    ontvangst.delete()
+                    url = reverse("WijnVoorraad:ontvangstlist_in")
+                except:
+                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
+                    url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+            else:
+                url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=o_id))
             return HttpResponseRedirect(url)
         else:
             return super().get(request, *args, **kwargs)
@@ -791,18 +821,31 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
         return context
     
     def post(self, request, *args, **kwargs):
-        wijn_id = self.request.POST["wijn_id"]
+        wijn_id = self.request.POST["object_id"]
         if wijn_id:
             wijn = Wijn.objects.get(pk=wijn_id)
-            try:
-                nieuwe_wijn_id = wijn.create_copy()
-                my_kwargs = {}
-                my_kwargs["pk"] = nieuwe_wijn_id
-                url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
-            except:
-                url = reverse("WijnVoorraad:wijn-create")
+            if "Kopieer" in self.request.POST:
+                try:
+                    nieuwe_wijn_id = wijn.create_copy()
+                    my_kwargs = {}
+                    my_kwargs["pk"] = nieuwe_wijn_id
+                    url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
+                except:
+                    messages.error(request, "Kopiëren is niet gelukt. Al teveel kopieën?")
+                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+            if 'Verwijder' in self.request.POST:
+                try:
+                    wijn.delete()
+                    url = reverse("WijnVoorraad:wijnlist")
+                except:
+                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
+                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+            else:
+                url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+        else:
+            url = reverse("WijnVoorraad:wijnlist")
         return HttpResponseRedirect(url)
-    
+
 class WijnCreateView(LoginRequiredMixin, CreateView):
     form_class = WijnForm
     model = Wijn

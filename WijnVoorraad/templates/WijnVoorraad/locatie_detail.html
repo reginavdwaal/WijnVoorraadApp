@@ -17,10 +17,21 @@
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">
-    <form id="update-form" method="get" action="{% url 'WijnVoorraad:locatie-update' object.id  %}">
-        {% csrf_token %}
-        <input type="submit" name="Update" value="Wijzigen"></input>
-    </form>
+    <div class="buttons-block">
+        <form id="update-form" method="get" action="{% url 'WijnVoorraad:locatie-update' object.id  %}">
+            {% csrf_token %}
+            <input type="submit" name="Update" value="Wijzigen"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name='object_id' id="wijn_id" value="{{object.id}}"></input>
+            <input type="submit" name="Verwijder" value="Verwijder"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+
+    <br class="clear">
 
     <h2>Vakken</h2>
     <table>

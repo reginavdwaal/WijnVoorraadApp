@@ -37,11 +37,15 @@
   --table-kader-color: #000000; /* border tables met class "metkader" */ 
 
   --error-fg: #ba2121;
-
+  --error-bg: #ffefef;
+  --warning-fg: #e95252;
+  --warning-bg: #ffc;
+  --errorlist_bg: #ffefef;
+ 
   --message-success-bg: #dfd;
   --message-warning-bg: #ffc;
   --message-error-bg: #ffefef;
-
+  
   --button-fg: #fff;
   --button-bg: #79aec8;
   --button-hover-bg: #609ab6;
@@ -291,4 +295,19 @@ table.metkader {
 
 .wijn_invoer {
     width: 40%
+}
+
+.errorlist {
+    color: var(--error-fg);
+    background-color: var(--errorlist_bg);
+}
+
+ul.messagelist li.error {
+    color: var(--error-fg);
+    background-color: var(--error_bg);
+}
+
+ul.messagelist li.warning {
+    color: var(--warning-fg);
+    background-color: var(--warning_bg);
 }

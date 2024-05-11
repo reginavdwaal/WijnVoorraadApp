@@ -183,7 +183,7 @@ class Wijn(models.Model):
         ]
 
 class WijnDruivensoort(models.Model):
-    wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
+    wijn = models.ForeignKey(Wijn, on_delete=models.CASCADE)
     druivensoort = models.ForeignKey(DruivenSoort, on_delete=models.PROTECT)
 
     def __str__(self):
@@ -217,7 +217,7 @@ class Ontvangst(models.Model):
         verbose_name_plural = "ontvangsten"
 
 class VoorraadMutatie(models.Model):
-    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.CASCADE)
+    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
     locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
     vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
 

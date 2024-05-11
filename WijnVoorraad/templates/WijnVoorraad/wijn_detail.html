@@ -97,15 +97,28 @@
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">
-    <form id="update-form" method="get" action="{% url 'WijnVoorraad:wijn-update' object.id  %}">
-        {% csrf_token %}
-        <input type="submit" name="Update" value="Wijzigen"></input>
-    </form>
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name='wijn_id' id="wijn_id" value="{{wijn.id}}"></input>
-        <input type="submit" name="Kopieer" value="Kopieer"></input>
-    </form>
+    <div class="buttons-block">
+        <form id="update-form" method="get" action="{% url 'WijnVoorraad:wijn-update' object.id  %}">
+            {% csrf_token %}
+            <input type="submit" name="Update" value="Wijzigen"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name='wijn_id' id="wijn_id" value="{{object.id}}"></input>
+            <input type="submit" name="Kopieer" value="Kopieer"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name='object_id' id="object_id" value="{{object.id}}"></input>
+            <input type="submit" name="Verwijder" value="Verwijder"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+
+    <br class="clear">
 
     {% if ontvangst_list  %}
     <h2>Ontvangsten</h2>
@@ -139,5 +152,5 @@
         </tbody>
     </table>
     {% endif %}
-</div>
+</div>  <!-- end content-footer -->
 {% endblock %}

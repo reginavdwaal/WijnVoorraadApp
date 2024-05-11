@@ -3,6 +3,21 @@
 {% load wijnvoorraad_extras %}
 
 {% block content %}
+
+{% if form.non_field_errors %}
+    <div class="errorlist">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
+{% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+       {% endfor %}
+    </ul>
+{% endif %}
+
 <form method="post" {% block form_actions %} {% endblock %}>
     {% csrf_token %}
     <input type="hidden" name='voorraad_id' id="voorraad_id" value="{{voorraad.id}}">
@@ -53,5 +68,6 @@
         <input type="submit" name="SaveAndPlace" value="Opslaan en vakken kiezen">
         {% endblock %}
 </form>
+
 {% endblock %}
 

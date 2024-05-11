@@ -138,14 +138,17 @@ input[type="submit"], button {
     ul.messagelist li {
         padding-left: 55px;
         background-position: 30px 12px;
+        background-color: var(--message-error-bg);
     }
 
     ul.messagelist li.error {
         background-position: 30px 12px;
+        background-color: var(--message-error-bg);
     }
 
     ul.messagelist li.warning {
         background-position: 30px 14px;
+        background-color: var(--message-error-bg);
     }
 
 /* Mobile */

@@ -59,7 +59,7 @@ class GebruikerUpdateView(LoginRequiredMixin, UpdateView):
         deelnemers = form.cleaned_data["deelnemers"]
         self.request.user.deelnemers.clear()
         self.request.user.deelnemers.add(*deelnemers)
-        return HttpResponseRedirect(self.get_success_url())
+        return super().form_valid(form)
 
 class VakUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor bijwerken Vak"""
@@ -126,6 +126,7 @@ class VakDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     vak.delete()
+                    messages.success(request, "Vak is verwijderd")
                     url = reverse("WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id))
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
@@ -197,6 +198,7 @@ class LocatieDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     locatie.delete()
+                    messages.success(request, "Locatie is verwijderd")
                     url = reverse("WijnVoorraad:locatielist")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
@@ -256,6 +258,7 @@ class WijnSoortDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     wijnsoort.delete()
+                    messages.success(request, "Wijnsoort is verwijderd")
                     url = reverse("WijnVoorraad:wijnsoortlist")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
@@ -396,6 +399,7 @@ class DeelnemerDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     deelnemer.delete()
+                    messages.success(request, "Deelnemer is verwijderd")
                     url = reverse("WijnVoorraad:deelnemerlist")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")

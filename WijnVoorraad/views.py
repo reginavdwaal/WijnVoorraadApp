@@ -686,7 +686,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                 try:
                     ontvangst.delete()
                     messages.success(request, "Ontvangst is verwijderd")
-                    url = reverse("WijnVoorraad:ontvangstlist_in")
+                    url = reverse("WijnVoorraad:ontvangstlist")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
                     url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
@@ -749,6 +749,10 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
             )
             return HttpResponseRedirect(url)
         else:
+            wijn = self.object.wijn
+            messages.success(self.request, "Voorraad van %s toegevoegd" % (
+                   wijn.volle_naam,
+            ))
             return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):

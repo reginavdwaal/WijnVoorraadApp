@@ -149,7 +149,6 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
             my_kwargs["fuzzy_selectie"] = fuzzy
         url = reverse("WijnVoorraad:voorraadlist", kwargs=my_kwargs)
         return HttpResponseRedirect(url)
-        # return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -186,7 +185,11 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         v_id = self.request.POST["voorraad_id"]
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
+            wijn = voorraad.wijn
             WijnVoorraad.drinken(voorraad)
+            messages.success(request, "Voorraad van %s verminderd met 1" % (
+                   wijn.volle_naam,
+            ))
             return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
         elif "Verplaatsen" in self.request.POST:
             url = reverse("WijnVoorraad:verplaatsen", kwargs=dict(pk=v_id))
@@ -215,7 +218,11 @@ class VoorraadOntvangstView(LoginRequiredMixin, ListView):
         v_id = self.request.POST["voorraad_id"]
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
+            wijn = voorraad.wijn
             WijnVoorraad.drinken(voorraad)
+            messages.success(request, "Voorraad van %s verminderd met 1" % (
+                   wijn.volle_naam,
+            ))
             return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
         elif "Verplaatsen" in self.request.POST:
             url = reverse("WijnVoorraad:verplaatsen", kwargs=dict(pk=v_id))
@@ -295,9 +302,13 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 if v_nieuwe_locatie != voorraad.locatie:
                     # Alsnog direct verplaatsen op de nieuwe locatie
                     v_nieuwe_vak = None
+                    wijn = voorraad.wijn
                     WijnVoorraad.verplaatsen(
                         voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                     )
+                    messages.success(request, "Voorraad van %s verplaatst" % (
+                           wijn.volle_naam,
+                    ))
                 url = reverse("WijnVoorraad:voorraadlist")
             else:
                 url = reverse(
@@ -319,9 +330,13 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 # Verplaatsen naar de nieuwe locatie zonder vak te kiezen
                 #
                 v_nieuwe_vak = None
+                wijn = voorraad.wijn
                 WijnVoorraad.verplaatsen(
                     voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
+                messages.success(request, "Voorraad van %s verplaatst" % (
+                       wijn.volle_naam,
+                ))
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
@@ -358,6 +373,7 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         v_id = self.request.POST["voorraad_id"]
         voorraad = WijnVoorraad.objects.get(pk=v_id)
+        wijn = voorraad.wijn
         aantal_vakken = self.request.POST["aantal_vakken"]
         try:
             aantal_vakken_int = int(aantal_vakken)
@@ -373,6 +389,9 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
                     voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
 
+        messages.success(request, "Voorraad van %s verplaatst" % (
+            wijn.volle_naam,
+        ))
         return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
 
 class MutatiesUitListView(LoginRequiredMixin, ListView):
@@ -527,6 +546,7 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     mutatie.delete()
+                    messages.success(request, "Mutatie is verwijderd")
                     if in_out == "I":
                         url = reverse("WijnVoorraad:mutatielist_in")
                     else:
@@ -665,6 +685,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     ontvangst.delete()
+                    messages.success(request, "Ontvangst is verwijderd")
                     url = reverse("WijnVoorraad:ontvangstlist_in")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
@@ -836,6 +857,7 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
             if 'Verwijder' in self.request.POST:
                 try:
                     wijn.delete()
+                    messages.success(request, "Wijn is verwijderd")
                     url = reverse("WijnVoorraad:wijnlist")
                 except:
                     messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")

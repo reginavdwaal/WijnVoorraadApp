@@ -57,6 +57,12 @@ echo "Copying the new application..."
 mv "domains/${newdir}" "domains/vino.vdwaal.net"
 
 # Copy the database
+if [ -f "domains/vino.vdwaal.net/db.sqlite3"]; then
+    echo "Moving existing database to filestamped copy of the database...
+    today=$(date +%Y%m%d%H%M%S) 
+    mv "domains/vino.vdwaal.net/db.sqlite3" "db.sqlite3.$today"
+fi
+	 
 echo "Copying the database..."
 cp "domains/vino_${old_version}/db.sqlite3" domains/vino.vdwaal.net
 

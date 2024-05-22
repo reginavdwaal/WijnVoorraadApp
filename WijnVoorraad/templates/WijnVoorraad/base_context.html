@@ -14,7 +14,7 @@
                 <select name="deelnemer_id" id="deelnemer_id">       
                     {% for d in deelnemer_list  %}
                         <option value="{{ d.id }}"
-                        {% if d.naam == request.session.deelnemer %}
+                        {% if d.naam == request.session.deelnemer_naam %}
                             selected
                         {% endif %}
                         >{{ d.naam }}</option>
@@ -28,7 +28,7 @@
                 <select name="locatie_id" id="locatie_id"">       
                     {% for l in locatie_list  %}
                         <option value="{{ l.id }}"
-                        {% if l.omschrijving == request.session.locatie %}
+                        {% if l.omschrijving == request.session.locatie_omschrijving %}
                             selected
                         {% endif %}
                         >{{ l.omschrijving }}</option>
@@ -36,7 +36,7 @@
                 </select>
             </td>
             <td>
-                <input type="hidden" name="return_url" id="return_url" value="{{ request.session.return_url }}">
+                <input type="hidden" name="return_url" id="return_url" value="{{ return_url }}">
                 <button type="submit">Wijzig</button>
             </td>
         </tr>

@@ -12,7 +12,6 @@ from django.db.models.functions import Lower
 from django.contrib import messages
 
 from .models import (
-    Deelnemer,
     Locatie,
     Vak,
     Wijn,
@@ -21,6 +20,7 @@ from .models import WijnVoorraad, VoorraadMutatie, Ontvangst, WijnSoort
 from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
 from .forms import VoorraadFilterForm, MutatieCreateForm, MutatieUpdateForm
+from . import wijnvars
 
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
@@ -28,9 +28,8 @@ class VoorraadListView(LoginRequiredMixin, ListView):
     # template_name = 'WijnVoorraad/index.html'
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:voorraadlist")
-        d = get_session_context_deelnemer(self.request)
-        l = get_session_context_locatie(self.request)
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         voorraad_list = (
             WijnVoorraad.objects.filter(deelnemer=d, locatie=l)
             .group_by("wijn", "ontvangst", "deelnemer", "locatie")
@@ -70,7 +69,6 @@ class VoorraadListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        set_context(context)
         fuzzy = self.kwargs.get("fuzzy_selectie")
         if fuzzy is not None:
             if "num" in fuzzy:
@@ -118,9 +116,8 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
 
     def get_initial(self):
         initial = super().get_initial()
-        set_session_context(self.request, "WijnVoorraad:voorraadlist_filter")
-        initial["deelnemer"] = self.request.session.get("deelnemer_id", None)
-        initial["locatie"] = self.request.session.get("locatie_id", None)
+        initial["deelnemer"] = wijnvars.get_session_deelnemer_id (self.request)
+        initial["locatie"] = wijnvars.get_session_locatie_id (self.request)
         return initial
 
     def post(self, request, *args, **kwargs):
@@ -134,12 +131,8 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         d_id = self.request.POST["deelnemer"]
         l_id = self.request.POST["locatie"]
-        d = Deelnemer.objects.get(pk=d_id)
-        l = Locatie.objects.get(pk=l_id)
-        self.request.session["deelnemer_id"] = d_id
-        self.request.session["deelnemer"] = d.naam
-        self.request.session["locatie_id"] = l_id
-        self.request.session["locatie"] = l.omschrijving
+        wijnvars.set_session_deelnemer (self.request, d_id)
+        wijnvars.set_session_locatie (self.request, l_id)
         ws_id = self.request.POST["wijnsoort"]
         fuzzy = self.request.POST["fuzzy_selectie"]
         my_kwargs = {}
@@ -161,9 +154,8 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/wijnvoorraad_detail.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:voorraadlist")
-        d = get_session_context_deelnemer(self.request)
-        l = get_session_context_locatie(self.request)
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         w = self.kwargs["wijn_id"]
         o = self.kwargs["ontvangst_id"]
         voorraad_list = WijnVoorraad.objects.filter(
@@ -173,7 +165,6 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        set_context(context)
         w = self.kwargs["wijn_id"]
         context["wijn"] = Wijn.objects.get(pk=w)
         o = self.kwargs["ontvangst_id"]
@@ -236,8 +227,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/voorraadvakken_list.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:voorraadvakken")
-        l = get_session_context_locatie(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         vakken_list = (
             Vak.objects.filter(locatie=l).order_by("code")
             .annotate(aantal_gebruikt=Sum("wijnvoorraad__aantal"))
@@ -246,9 +236,9 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        set_context(context)
-        d = get_session_context_deelnemer(self.request)
-        l = get_session_context_locatie(self.request)
+        wijnvars.set_context_default (context, 'WijnVoorraad:voorraadvakken')
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         voorraad_list = WijnVoorraad.objects.filter(
             deelnemer=d, locatie=l
         ).order_by("vak")
@@ -400,9 +390,8 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_uit_list.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:mutatielist_uit")
-        d = get_session_context_deelnemer(self.request)
-        l = get_session_context_locatie(self.request)
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="U"
         ).order_by("-datum")
@@ -433,7 +422,7 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        set_context(context)
+        wijnvars.set_context_default(context, 'WijnVoorraad:mutatielist_uit')
         fuzzy = self.kwargs.get("fuzzy_selectie")
         if fuzzy is not None:
             if "num" in fuzzy:
@@ -467,9 +456,8 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_in_list.html"
 
     def get_queryset(self):
-        set_session_context(self.request, "WijnVoorraad:mutatielist_in")
-        d = get_session_context_deelnemer(self.request)
-        l = get_session_context_locatie(self.request)
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="I"
         ).order_by("-datum")
@@ -500,7 +488,7 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        set_context(context)
+        wijnvars.set_context_default(context, 'WijnVoorraad:mutatielist_in')
         fuzzy = self.kwargs.get("fuzzy_selectie")
         if fuzzy is not None:
             if "num" in fuzzy:
@@ -576,9 +564,8 @@ class MutatieCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super(MutatieCreateView, self).get_form_kwargs()
-        set_session_context(self.request, "WijnVoorraad:ontvangst-create")
         my_defaults = {}
-        my_defaults["locatie_id"] = self.request.session.get("locatie_id", None)
+        my_defaults["locatie_id"] = wijnvars.get_session_locatie_id (self.request)
         kwargs.update({"defaults": my_defaults})
         return kwargs
 
@@ -709,10 +696,9 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super(OntvangstCreateView, self).get_form_kwargs()
-        set_session_context(self.request, "WijnVoorraad:ontvangst-create")
         my_defaults = {}
-        my_defaults["deelnemer_id"] = self.request.session.get("deelnemer_id", None)
-        my_defaults["locatie_id"] = self.request.session.get("locatie_id", None)
+        my_defaults["deelnemer_id"] = wijnvars.get_session_deelnemer_id (self.request)
+        my_defaults["locatie_id"] = wijnvars.get_session_locatie_id (self.request)
         kwargs.update({"defaults": my_defaults})
         return kwargs
 
@@ -898,44 +884,12 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update wijn"
         return context
-    
-def set_session_context(request, return_url):
-    dc = request.session.get("deelnemer", None)
-    if dc is None:
-        du = request.user.deelnemers.all()
-        if du.count() >= 1:
-            l = du[0].standaardLocatie
-            request.session["deelnemer_id"] = du[0].id
-            request.session["deelnemer"] = du[0].naam
-            request.session["locatie_id"] = l.id
-            request.session["locatie"] = l.omschrijving
-    request.session["return_url"] = return_url
-
-def set_context(context):
-    d = Deelnemer.objects.all()
-    l = Locatie.objects.all
-    ws = WijnSoort.objects.all
-    context["deelnemer_list"] = d
-    context["locatie_list"] = l
-
-def get_session_context_deelnemer(request):
-    dc = request.session.get("deelnemer_id", None)
-    deelnemer = Deelnemer.objects.get(pk=dc)
-    return deelnemer
-
-def get_session_context_locatie(request):
-    lc = request.session.get("locatie_id", None)
-    locatie = Locatie.objects.get(pk=lc)
-    return locatie
 
 def change_context(request):
     d_id = request.POST["deelnemer_id"]
     l_id = request.POST["locatie_id"]
     return_url = request.POST["return_url"]
-    d = Deelnemer.objects.get(pk=d_id)
-    l = Locatie.objects.get(pk=l_id)
-    request.session["deelnemer_id"] = d_id
-    request.session["deelnemer"] = d.naam
-    request.session["locatie_id"] = l_id
-    request.session["locatie"] = l.omschrijving
+    wijnvars.set_session_deelnemer (request, d_id)
+    wijnvars.set_session_locatie (request, l_id)
     return HttpResponseRedirect(reverse(return_url))
+

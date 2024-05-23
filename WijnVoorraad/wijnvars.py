@@ -1,7 +1,7 @@
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Deelnemer, Locatie
+from .models import Deelnemer, Locatie, WijnSoort
 
 
 def set_session_deelnemer (request, deelnemer_id):
@@ -64,6 +64,51 @@ def get_session_locatie_list (request):
     locatie_list = request.session.get("locatie_list", None)
     return locatie_list
 
+def set_session_wijnsoort_id (request, wijnsoort_id):
+    request.session["wijnsoort_id"] = wijnsoort_id
+    return request
+
+def set_session_wijnsoort_rood (request):
+    ws = WijnSoort.objects.get (omschrijving='Rood')
+    set_session_wijnsoort_id (request, ws.id)
+    return request
+
+def set_session_wijnsoort_wit (request):
+    ws = WijnSoort.objects.get (omschrijving='Wit')
+    set_session_wijnsoort_id (request, ws.id)
+    return request
+
+def set_session_wijnsoort_rose (request):
+    ws = WijnSoort.objects.get (omschrijving='Rose')
+    set_session_wijnsoort_id (request, ws.id)
+    return request
+
+def get_session_wijnsoort_id (request):
+    wijnsoort_id = request.session.get("wijnsoort_id", None)
+    return wijnsoort_id
+
+def set_session_fuzzy_selectie (request, fuzzy_selectie):
+    if fuzzy_selectie:
+        try:
+            int(fuzzy_selectie)
+            request.session["fuzzy_selectie"] = fuzzy_selectie + "num"
+        except ValueError:
+            request.session["fuzzy_selectie"] = fuzzy_selectie
+    else:
+        request.session["fuzzy_selectie"] = fuzzy_selectie
+    return request
+
+def get_session_fuzzy_selectie (request):
+    fuzzy_selectie = request.session.get("fuzzy_selectie", None)
+    if fuzzy_selectie:
+        if "num" in fuzzy_selectie:
+            try:
+                num = int(fuzzy_selectie[0:-3])
+                fuzzy_selectie = str(num)
+            except ValueError:
+                pass
+    return fuzzy_selectie
+
 def set_initial_user_session(request):
     if request.session.get("initial_set", None) is None:
         du = request.user.deelnemers.all()
@@ -90,4 +135,10 @@ def set_context_default(context, return_url):
     set_context_deelnemer_list (context)
     set_context_locatie_list (context)
     set_context_return_url (context, return_url)
+    return context
+
+def set_context_fuzzy_selectie (context, request):
+    fuzzy_selectie = get_session_fuzzy_selectie (request)
+    if fuzzy_selectie is not None:
+        context["fuzzy_selectie"] = fuzzy_selectie
     return context

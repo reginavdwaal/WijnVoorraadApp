@@ -1,8 +1,20 @@
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+import re
 from .models import Deelnemer, Locatie, WijnSoort
 
+def unified_wijnsoort (wijnsoort_omschrijving):
+    # Mogelijke outputwaarden: rood, wit, rose, mousserend,rodeport, witteport, onbekend
+    wijnsoort_omschrijving = wijnsoort_omschrijving.lower()
+    wijnsoort_omschrijving = re.sub("[^a-z]", "", wijnsoort_omschrijving)
+    if wijnsoort_omschrijving == 'portrood':
+        wijnsoort_omschrijving = 'rodeport'
+    if wijnsoort_omschrijving == 'portwit':
+        wijnsoort_omschrijving = 'witteport'
+    if wijnsoort_omschrijving not in ['rood', 'wit', 'rose', 'mousserend', 'rodeport', 'witteport']:
+        wijnsoort_omschrijving = 'onbekend'
+    return wijnsoort_omschrijving
 
 def set_session_deelnemer (request, deelnemer_id):
     d = Deelnemer.objects.get(pk=deelnemer_id)
@@ -65,27 +77,44 @@ def get_session_locatie_list (request):
     return locatie_list
 
 def set_session_wijnsoort_id (request, wijnsoort_id):
-    request.session["wijnsoort_id"] = wijnsoort_id
+    if wijnsoort_id:
+        ws = WijnSoort.objects.get (pk=wijnsoort_id)
+    else:
+        ws = None
+    set_session_wijnsoort (request, ws)
+    return request
+
+def set_session_wijnsoort (request, wijnsoort):
+    if wijnsoort:
+        request.session["wijnsoort_id"] = wijnsoort.id
+        request.session["wijnsoort_omschrijving"] = unified_wijnsoort(wijnsoort.omschrijving)
+    else:
+        request.session["wijnsoort_id"] = None
+        request.session["wijnsoort_omschrijving"] = None
     return request
 
 def set_session_wijnsoort_rood (request):
-    ws = WijnSoort.objects.get (omschrijving='Rood')
-    set_session_wijnsoort_id (request, ws.id)
+    ws = WijnSoort.objects.get (omschrijving__iexact='Rood')
+    set_session_wijnsoort (request, ws)
     return request
 
 def set_session_wijnsoort_wit (request):
-    ws = WijnSoort.objects.get (omschrijving='Wit')
-    set_session_wijnsoort_id (request, ws.id)
+    ws = WijnSoort.objects.get (omschrijving__iexact='Wit')
+    set_session_wijnsoort (request, ws)
     return request
 
 def set_session_wijnsoort_rose (request):
-    ws = WijnSoort.objects.get (omschrijving='Rose')
-    set_session_wijnsoort_id (request, ws.id)
+    ws = WijnSoort.objects.get (omschrijving__iexact='Rose')
+    set_session_wijnsoort (request, ws)
     return request
 
 def get_session_wijnsoort_id (request):
     wijnsoort_id = request.session.get("wijnsoort_id", None)
     return wijnsoort_id
+
+def get_session_wijnsoort_omschrijving (request):
+    wijnsoort_omschrijving = request.session.get("wijnsoort_omschrijving", None)
+    return wijnsoort_omschrijving
 
 def set_session_fuzzy_selectie (request, fuzzy_selectie):
     if fuzzy_selectie:
@@ -117,6 +146,12 @@ def set_initial_user_session(request):
             set_session_locatie (request, du[0].standaardLocatie.id)
     request.session["initial_set"] = True
 
+def reset_session_vars(request):
+    request.session["initial_set"] = None
+    set_initial_user_session(request)
+    set_session_wijnsoort_id (request, None)
+    set_session_fuzzy_selectie (request, None)
+
 def set_context_deelnemer_list (context):
     d = Deelnemer.objects.all()
     context["deelnemer_list"] = d
@@ -139,6 +174,6 @@ def set_context_default(context, return_url):
 
 def set_context_fuzzy_selectie (context, request):
     fuzzy_selectie = get_session_fuzzy_selectie (request)
-    if fuzzy_selectie is not None:
+    if fuzzy_selectie:
         context["fuzzy_selectie"] = fuzzy_selectie
     return context

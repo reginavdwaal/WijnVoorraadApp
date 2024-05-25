@@ -7,7 +7,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.db.models.functions import Lower
 from django.contrib import messages
 
@@ -59,6 +59,7 @@ class VoorraadListView(LoginRequiredMixin, ListView):
                     wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie
                 )
             )
+            voorraad_list = voorraad_list.distinct()
         return voorraad_list
 
     def get_context_data(self, **kwargs):
@@ -67,17 +68,29 @@ class VoorraadListView(LoginRequiredMixin, ListView):
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie (self.request, fuzzy_selectie)
-        ws_rood = self.request.POST.get("ws_rood")
-        if ws_rood:
-            wijnvars.set_session_wijnsoort_rood (self.request)
-        ws_wit = self.request.POST.get("ws_wit")
-        if ws_wit:
-            wijnvars.set_session_wijnsoort_wit (self.request)
-        ws_rose = self.request.POST.get("ws_rose")
-        if ws_rose:
-            wijnvars.set_session_wijnsoort_rose (self.request)
+        if "FilterClear" in self.request.POST:
+            wijnvars.reset_session_vars (self.request)
+        else:
+            fuzzy_selectie = self.request.POST["fuzzy_selectie"]
+            wijnvars.set_session_fuzzy_selectie (self.request, fuzzy_selectie)
+            ws_rood = self.request.POST.get("ws_rood")
+            if ws_rood:
+                if wijnvars.get_session_wijnsoort_omschrijving (self.request) == 'rood':
+                    wijnvars.set_session_wijnsoort(self.request, None)
+                else:
+                    wijnvars.set_session_wijnsoort_rood (self.request)
+            ws_wit = self.request.POST.get("ws_wit")
+            if ws_wit:
+                if wijnvars.get_session_wijnsoort_omschrijving (self.request) == 'wit':
+                    wijnvars.set_session_wijnsoort(self.request, None)
+                else:
+                    wijnvars.set_session_wijnsoort_wit (self.request)
+            ws_rose = self.request.POST.get("ws_rose")
+            if ws_rose:
+                if wijnvars.get_session_wijnsoort_omschrijving (self.request) == 'rose':
+                    wijnvars.set_session_wijnsoort(self.request, None)
+                else:
+                    wijnvars.set_session_wijnsoort_rose (self.request)
         url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
@@ -386,6 +399,7 @@ class MutatiesUitListView(LoginRequiredMixin, ListView):
                 | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy_selectie)
                 | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie)
             )
+            mutatie_list = mutatie_list.distinct()
         return mutatie_list
 
     def get_context_data(self, **kwargs):
@@ -428,6 +442,7 @@ class MutatiesInListView(LoginRequiredMixin, ListView):
                 | mutatie_list.filter(ontvangst__wijn__opmerking__icontains=fuzzy_selectie)
                 | mutatie_list.filter(ontvangst__wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie)
             )
+            mutatie_list = mutatie_list.distinct()
         return mutatie_list
 
     def get_context_data(self, **kwargs):
@@ -533,6 +548,7 @@ class OntvangstListView(LoginRequiredMixin, ListView):
                 | ontvangst_list.filter(wijn__opmerking__icontains=fuzzy_selectie)
                 | ontvangst_list.filter(wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie)
             )
+            ontvangst_list = ontvangst_list.distinct()
         return ontvangst_list
 
     def get_context_data(self, **kwargs):
@@ -683,6 +699,7 @@ class WijnListView(LoginRequiredMixin, ListView):
                 | wijn_list.filter(opmerking__icontains=fuzzy_selectie)
                 | wijn_list.filter(wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie)
             )
+            wijn_list = wijn_list.distinct()
         return wijn_list
 
     def get_context_data(self, **kwargs):

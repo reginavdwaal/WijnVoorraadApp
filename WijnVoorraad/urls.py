@@ -98,9 +98,7 @@ urlpatterns = [
         name="locatie-popupadd",
     ),
     path("mutaties_uit/", views.MutatiesUitListView.as_view(), name="mutatielist_uit"),
-    path("mutaties_uit/<str:fuzzy_selectie>/", views.MutatiesUitListView.as_view(), name="mutatielist_uit"),
     path("mutaties_in/", views.MutatiesInListView.as_view(), name="mutatielist_in"),
-    path("mutaties_in/<str:fuzzy_selectie>/", views.MutatiesInListView.as_view(), name="mutatielist_in"),
     path("mutatie/<int:pk>/", views.MutatieDetailView.as_view(), name="mutatiedetail"),
     path(
         "mutatie/create/",
@@ -113,7 +111,6 @@ urlpatterns = [
         name="mutatie-update",
     ),
     path("ontvangsten/", views.OntvangstListView.as_view(), name="ontvangstlist"),
-    path("ontvangsten/<str:fuzzy_selectie>/", views.OntvangstListView.as_view(), name="ontvangstlist"),
     path(
         "ontvangst/<int:pk>/",
         views.OntvangstDetailView.as_view(),
@@ -174,7 +171,6 @@ urlpatterns = [
         "voorraadvakken/", views.VoorraadVakkenListView.as_view(), name="voorraadvakken"
     ),
     path("wijnen/", views.WijnListView.as_view(), name="wijnlist"),
-    path("wijnen/<str:fuzzy_selectie>/", views.WijnListView.as_view(), name="wijnlist"),
     path("wijn/<int:pk>/", views.WijnDetailView.as_view(), name="wijndetail"),
     path("wijn/create/", views.WijnCreateView.as_view(), name="wijn-create"),
     path("wijn/update/<int:pk>/", views.WijnUpdateView.as_view(), name="wijn-update"),
@@ -215,19 +211,4 @@ urlpatterns = [
     ),
     path("change_context/", views.change_context, name="change_context"),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),
-    path(
-        "<int:wijnsoort_id_selectie>/",
-        views.VoorraadListView.as_view(),
-        name="voorraadlist",
-    ),
-    path(
-        "q=<str:fuzzy_selectie>/",
-        views.VoorraadListView.as_view(),
-        name="voorraadlist",
-    ),
-    path(
-        "<int:wijnsoort_id_selectie>/<str:fuzzy_selectie>/",
-        views.VoorraadListView.as_view(),
-        name="voorraadlist",
-    ),
 ]

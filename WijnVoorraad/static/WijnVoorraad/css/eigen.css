@@ -75,13 +75,11 @@
     background-color: var(--wijnsoort_rose);
 }
 
-.wijnsoort_rodeport, tr.wijnsoort_rodeport, input[type=submit].wijnsoort_rodeport
-.wijnsoort_portrood, tr.wijnsoort_portrood, input[type=submit].wijnsoort_portrood {
+.wijnsoort_rodeport, tr.wijnsoort_rodeport, input[type=submit].wijnsoort_rodeport {
     background-color: var(--wijnsoort_rodeport);
 }
 
-.wijnsoort_witteport, tr.wijnsoort_witteport, input[type=submit].wijnsoort_witteport
-.wijnsoort_portwit, tr.wijnsoort_portwit, input[type=submit].wijnsoort_portwit {
+.wijnsoort_witteport, tr.wijnsoort_witteport, input[type=submit].wijnsoort_witteport {
     background-color: var(--wijnsoort_witteport);
 }
 
@@ -92,11 +90,17 @@
 input[type=submit].wijnsoort {
     color: var(--body-fg);
     padding: 10px 10px;
+    border: 3px solid #ffffff;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
 }
+
+input[type=submit].wijnsoort_selected {
+    font-weight: bolder;
+    border: 3px solid #000000;
+ }
 
 table.wijnvoorraad {
     border-collapse: separate;

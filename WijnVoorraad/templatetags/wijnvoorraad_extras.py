@@ -3,7 +3,7 @@
 import os
 from django import template
 from django.conf import settings as conf_settings
-import re
+from WijnVoorraad import wijnvars
 
 
 register = template.Library()
@@ -34,8 +34,7 @@ def kolomnr(recordnr, aantal_kolommen):
 
 @register.filter(is_safe=False)
 def wijnsoort_to_css(wijnsoort):
-    css = wijnsoort.lower()
-    css = re.sub("[^a-z]", "", css)
+    css = wijnvars.unified_wijnsoort(wijnsoort)
     return css
 
 @register.filter

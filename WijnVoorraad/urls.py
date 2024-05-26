@@ -97,11 +97,17 @@ urlpatterns = [
         WijnVoorraad.views_popup.locatie_create_popup_view,
         name="locatie-popupadd",
     ),
-    path("mutaties_uit/", views.MutatiesUitListView.as_view(), name="mutatielist_uit"),
-    path("mutaties_in/", views.MutatiesInListView.as_view(), name="mutatielist_in"),
+    path("mutaties/", views.MutatieListView.as_view(), name="mutatielist"),
+    path("mutaties_uit/", views.MutatieUitListView.as_view(), name="mutatielist_uit"),
+    path("mutaties_in/", views.MutatieInListView.as_view(), name="mutatielist_in"),
     path("mutatie/<int:pk>/", views.MutatieDetailView.as_view(), name="mutatiedetail"),
     path(
         "mutatie/create/",
+        views.MutatieCreateView.as_view(),
+        name="mutatie-create",
+    ),
+    path(
+        "mutatie/create/<int:ontvangst_id>/",
         views.MutatieCreateView.as_view(),
         name="mutatie-create",
     ),
@@ -163,12 +169,12 @@ urlpatterns = [
         name="voorraadlist_filter",
     ),
     path(
-        "voorraadontvangst/<int:ontvangst_id>/",
-        views.VoorraadOntvangstView.as_view(),
-        name="voorraadontvangst",
+        "ontvangstvoorraad/<int:ontvangst_id>/",
+        views.OntvangstVoorraadView.as_view(),
+        name="ontvangstvoorraad",
     ),
     path(
-        "voorraadvakken/", views.VoorraadVakkenListView.as_view(), name="voorraadvakken"
+        "voorraadvakken/", views.VoorraadVakkenListView.as_view(), name="voorraadvakkenlist"
     ),
     path("wijnen/", views.WijnListView.as_view(), name="wijnlist"),
     path("wijn/<int:pk>/", views.WijnDetailView.as_view(), name="wijndetail"),

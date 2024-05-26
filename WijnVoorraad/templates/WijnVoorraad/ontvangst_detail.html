@@ -2,6 +2,10 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:ontvangstlist' %}">Ontvangsten</a>
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
     <div class="detail-block">
@@ -49,7 +53,7 @@
             <label class="detail-column">
                 {{ voorraad_aantal.aantal|default_if_none:"-" }}
                 &nbsp;
-                <a href="{% url 'WijnVoorraad:voorraadontvangst' ontvangst.id %}"
+                <a href="{% url 'WijnVoorraad:ontvangstvoorraad' ontvangst.id %}"
                     title="Details bekijken">
                     <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
                 </a>
@@ -73,7 +77,7 @@
         </form>
     </div>  <!-- end buttons-block -->
     <div class="buttons-block">
-        <form id="create-form" method="get" action="{% url 'WijnVoorraad:mutatie-create' %}">
+        <form id="create-form" method="get" action="{% url 'WijnVoorraad:mutatie-create' object.id %}">
             {% csrf_token %}
             <input type="submit" name="Insert" value="Mutatie toevoegen"></input>
         </form>

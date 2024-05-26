@@ -64,7 +64,8 @@
                       <a href="{% url 'WijnVoorraad:ontvangstlist' %}">Ontvangsten</a>
                       <a href="{% url 'WijnVoorraad:mutatielist_in' %}">Inkomende mutaties</a>
                       <a href="{% url 'WijnVoorraad:mutatielist_uit' %}">Uitgaande mutaties</a>
-                      <a href="{% url 'WijnVoorraad:voorraadvakken' %}">Actuele voorraad vakken</a>
+                      <a href="{% url 'WijnVoorraad:mutatielist' %}">Alle mutaties</a>
+                      <a href="{% url 'WijnVoorraad:voorraadvakkenlist' %}">Actuele voorraad vakken</a>
                     </div>
                   </div>
                   <a href="{% url 'WijnVoorraad:gebruikerdetail' user.id %}">
@@ -82,7 +83,8 @@
         <!-- END Header -->
         {% block breadcrumbs %}
           <div class="breadcrumbs">
-            <a href="{% url 'WijnVoorraad:voorraadlist' %}">{% translate 'Home' %}</a>
+            <a href="{% url 'WijnVoorraad:voorraadlist' %}">Home</a>
+            {% block breadcrumbs_extra %} {% endblock %}
             {% if title %}&rsaquo; {{ title }}{% endif %}
             <div style=" float: right;">Version:  {{ 'VERSION'|setting }}</div>
           </div>

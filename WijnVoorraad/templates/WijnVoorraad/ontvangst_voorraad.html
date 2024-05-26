@@ -2,6 +2,11 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:ontvangstlist' %}">Ontvangsten</a>
+&rsaquo;<a href="{% url 'WijnVoorraad:ontvangstdetail' ontvangst.id %}">Ontvangst</a>
+{% endblock %}
+
 {% block content_title %}
 <h1>Voorraad ontvangst {{ ontvangst.datumOntvangst }}: 
     <a href="{% url 'WijnVoorraad:wijndetail' ontvangst.wijn.id %}">

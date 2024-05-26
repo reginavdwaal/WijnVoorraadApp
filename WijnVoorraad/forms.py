@@ -55,13 +55,6 @@ class OntvangstCreateForm(forms.ModelForm):
    locatie = forms.ModelChoiceField(Locatie.objects, empty_label="----------", required=True, widget=SelectWithPop)
    aantal = forms.IntegerField()
 
-   def __init__(self, *args, **kwargs):
-      #   instance = kwargs.get('instance')
-      defaults = kwargs.pop('defaults')
-      super(OntvangstCreateForm, self).__init__(*args, **kwargs)
-      self.initial['deelnemer'] = defaults ['deelnemer_id']
-      self.initial['locatie'] = defaults ['locatie_id']
-
    class Meta:
      model = Ontvangst
      fields = '__all__'
@@ -134,12 +127,6 @@ class MutatieCreateForm(forms.ModelForm):
    ]
    actie = forms.ChoiceField(choices=actie_choices)
 
-   def __init__(self, *args, **kwargs):
-      #   instance = kwargs.get('instance')
-      defaults = kwargs.pop('defaults')
-      super(MutatieCreateForm, self).__init__(*args, **kwargs)
-      self.initial['locatie'] = defaults ['locatie_id']
-
    class Meta:
       model = VoorraadMutatie
       fields = '__all__'
@@ -181,11 +168,6 @@ class DruivenSoortForm(forms.ModelForm):
 class WijnSoortForm(forms.ModelForm):
    class Meta:
       model = WijnSoort
-      fields = '__all__'
-
-class LocatieForm(forms.ModelForm):
-   class Meta:
-      model = Locatie
       fields = '__all__'
 
 class GebruikerForm(forms.ModelForm):

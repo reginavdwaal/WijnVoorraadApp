@@ -2,6 +2,10 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:druivensoortlist' %}">Druivensoorten</a>
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
     <div class="detail-block">

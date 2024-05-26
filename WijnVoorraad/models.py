@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime 
+from datetime import datetime
 from django.db.models import Deferrable, UniqueConstraint
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
@@ -21,6 +21,7 @@ class WijnSoort(models.Model):
         verbose_name = "wijnsoort"
         verbose_name_plural = "wijnsoorten"
 
+
 class DruivenSoort(models.Model):
     omschrijving = models.CharField(max_length=200, unique=True)
 
@@ -32,6 +33,7 @@ class DruivenSoort(models.Model):
         verbose_name = "druivensoort"
         verbose_name_plural = "druivensoorten"
 
+
 class Locatie(models.Model):
     omschrijving = models.CharField(max_length=200, unique=True)
     aantal_kolommen = models.IntegerField(default=1)
@@ -41,6 +43,7 @@ class Locatie(models.Model):
 
     class Meta:
         ordering = ["omschrijving"]
+
 
 class Vak(models.Model):
     locatie = models.ForeignKey(Locatie, on_delete=models.CASCADE)
@@ -61,6 +64,7 @@ class Vak(models.Model):
             )
         ]
 
+
 class Deelnemer(models.Model):
     naam = models.CharField(max_length=200, unique=True)
     standaardLocatie = models.ForeignKey(
@@ -77,6 +81,7 @@ class Deelnemer(models.Model):
 
     class Meta:
         ordering = ["naam"]
+
 
 class Wijn(models.Model):
     domein = models.CharField(max_length=200)
@@ -100,7 +105,7 @@ class Wijn(models.Model):
     classificatie = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
     opmerking = models.CharField(max_length=200, blank=True)
-    foto = models.ImageField(upload_to='images/', null=True, blank=True)
+    foto = models.ImageField(upload_to="images/", null=True, blank=True)
     datumAangemaakt = models.DateTimeField(auto_now_add=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
 
@@ -108,9 +113,10 @@ class Wijn(models.Model):
         DruivenSoort,
         through="WijnDruivensoort",
         through_fields=("wijn", "druivensoort"),
-        null=True, blank=True
-        )
-    
+        null=True,
+        blank=True,
+    )
+
     @property
     def volle_naam(self):
         if self.jaar:
@@ -125,8 +131,10 @@ class Wijn(models.Model):
         return str(jaar)
 
     def check_afsluiten(self):
-        vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(aantal=Sum('aantal'))
-        if vrd_aantal['aantal'] is None:
+        vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(
+            aantal=Sum("aantal")
+        )
+        if vrd_aantal["aantal"] is None:
             self.datumAfgesloten = datetime.now()
             self.save()
         elif self.datumAfgesloten:
@@ -134,7 +142,7 @@ class Wijn(models.Model):
             self.save()
 
     def check_unique(self):
-        o = Wijn.objects.filter(naam = self.naam, domein = self.domein, jaar = self.jaar)
+        o = Wijn.objects.filter(naam=self.naam, domein=self.domein, jaar=self.jaar)
         if o:
             return False
         else:
@@ -148,7 +156,7 @@ class Wijn(models.Model):
         nieuwe_wijn.datumAfgesloten = None
         nieuwe_wijn.foto = None
         orig_naam = nieuwe_wijn.naam
-        nieuwe_wijn.naam = orig_naam + ' - Copy'
+        nieuwe_wijn.naam = orig_naam + " - Copy"
         copy_number = 0
 
         save_success = False
@@ -158,9 +166,9 @@ class Wijn(models.Model):
                 save_success = True
             else:
                 copy_number += 1
-                nieuwe_wijn.naam = orig_naam + ' - Copy' + str(copy_number)
+                nieuwe_wijn.naam = orig_naam + " - Copy" + str(copy_number)
 
-        if  save_success:
+        if save_success:
             orig_wijn = Wijn.objects.get(pk=orig_wijn_id)
             for i in orig_wijn.wijnDruivensoorten.all():
                 s = WijnDruivensoort()
@@ -169,7 +177,7 @@ class Wijn(models.Model):
                 s.save()
             return nieuwe_wijn.id
         else:
-            raise ValidationError('Teveel kopieën reeds aanwezig')
+            raise ValidationError("Teveel kopieën reeds aanwezig")
 
     class Meta:
         ordering = ["domein", "naam"]
@@ -181,6 +189,7 @@ class Wijn(models.Model):
                 deferrable=Deferrable.DEFERRED,
             )
         ]
+
 
 class WijnDruivensoort(models.Model):
     wijn = models.ForeignKey(Wijn, on_delete=models.CASCADE)
@@ -200,6 +209,7 @@ class WijnDruivensoort(models.Model):
             )
         ]
 
+
 class Ontvangst(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
@@ -210,11 +220,16 @@ class Ontvangst(models.Model):
     opmerking = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s " % (self.deelnemer.naam, self.wijn.volle_naam, self.datumOntvangst.strftime("%d-%m-%Y"))
+        return "%s - %s - %s " % (
+            self.deelnemer.naam,
+            self.wijn.volle_naam,
+            self.datumOntvangst.strftime("%d-%m-%Y"),
+        )
 
     class Meta:
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
         verbose_name_plural = "ontvangsten"
+
 
 class VoorraadMutatie(models.Model):
     ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
@@ -237,10 +252,10 @@ class VoorraadMutatie(models.Model):
         (KOOP, "Koop"),
         (ONTVANGST, "Ontvangst"),
         (VERPLAATSING, "Verplaatsing"),
-        (DRINK, "Drink")
+        (DRINK, "Drink"),
     ]
     actie = models.CharField(max_length=1, choices=actie_choices)
-    
+
     datum = models.DateField()
     aantal = models.IntegerField()
     omschrijving = models.CharField(max_length=200, blank=True)
@@ -251,25 +266,25 @@ class VoorraadMutatie(models.Model):
             self.ontvangst.deelnemer.naam,
             self.in_uit,
             self.datum.strftime("%d-%m-%Y"),
-            self.pk
+            self.pk,
         )
-    
+
     def save(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
         except:
             old_mutatie = None
-    
+
         super().save(*args, **kwargs)  # Call the "real" save() method.
-        WijnVoorraad.Bijwerken (self, old_mutatie)
+        WijnVoorraad.Bijwerken(self, old_mutatie)
 
     def delete(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
         except:
             old_mutatie = None
-    
-        WijnVoorraad.Bijwerken (None, old_mutatie)
+
+        WijnVoorraad.Bijwerken(None, old_mutatie)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
 
     def drinken(ontvangst, locatie, vak=None):
@@ -278,30 +293,30 @@ class VoorraadMutatie(models.Model):
         mutatie.locatie = locatie
         if vak is not None:
             mutatie.vak = vak
-        mutatie.in_uit = 'U'
-        mutatie.actie = 'D'
-        mutatie.datum = datetime.now()
-        mutatie.aantal = 1
-        mutatie.save()
-        
-    def voorraad_plus_1 (ontvangst, locatie):
-        mutatie = VoorraadMutatie()
-        mutatie.ontvangst = ontvangst
-        mutatie.locatie = locatie
-        mutatie.in_uit = 'I'
-        mutatie.actie = 'K'
+        mutatie.in_uit = "U"
+        mutatie.actie = "D"
         mutatie.datum = datetime.now()
         mutatie.aantal = 1
         mutatie.save()
 
-    def verplaatsen (ontvangst, locatie_oud, vak_oud, locatie_nieuw, vak_nieuw, aantal):
+    def voorraad_plus_1(ontvangst, locatie):
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie
+        mutatie.in_uit = "I"
+        mutatie.actie = "K"
+        mutatie.datum = datetime.now()
+        mutatie.aantal = 1
+        mutatie.save()
+
+    def verplaatsen(ontvangst, locatie_oud, vak_oud, locatie_nieuw, vak_nieuw, aantal):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
         mutatie.locatie = locatie_oud
         if vak_oud is not None:
             mutatie.vak = vak_oud
-        mutatie.in_uit = 'U'
-        mutatie.actie = 'V'
+        mutatie.in_uit = "U"
+        mutatie.actie = "V"
         mutatie.datum = datetime.now()
         mutatie.aantal = aantal
         mutatie.save()
@@ -311,8 +326,8 @@ class VoorraadMutatie(models.Model):
         mutatie.locatie = locatie_nieuw
         if vak_nieuw is not None:
             mutatie.vak = vak_nieuw
-        mutatie.in_uit = 'I'
-        mutatie.actie = 'V'
+        mutatie.in_uit = "I"
+        mutatie.actie = "V"
         mutatie.datum = datetime.now()
         mutatie.aantal = aantal
         mutatie.save()
@@ -321,8 +336,10 @@ class VoorraadMutatie(models.Model):
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"
 
+
 class WijnVoorraadQuerySet(QuerySet, GroupByMixin):
     pass
+
 
 class WijnVoorraad(models.Model):
     objects = WijnVoorraadQuerySet.as_manager()
@@ -349,11 +366,13 @@ class WijnVoorraad(models.Model):
             )
 
     def drinken(WijnVoorraad):
-        VoorraadMutatie.drinken(WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak)
-        
-    def Bijwerken (VoorraadMutatie, old_mutatie):
+        VoorraadMutatie.drinken(
+            WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak
+        )
+
+    def Bijwerken(VoorraadMutatie, old_mutatie):
         if old_mutatie is not None:
-            if old_mutatie.in_uit == 'I':
+            if old_mutatie.in_uit == "I":
                 # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
                 WijnVoorraad.Bijwerken_mutatie_UIT(old_mutatie)
             else:
@@ -362,42 +381,50 @@ class WijnVoorraad(models.Model):
 
         if VoorraadMutatie is not None:
             # Als er een nieuwe mutatie is: gewoon verwerken
-            if VoorraadMutatie.in_uit == 'I':
+            if VoorraadMutatie.in_uit == "I":
                 WijnVoorraad.Bijwerken_mutatie_IN(VoorraadMutatie)
             else:
                 WijnVoorraad.Bijwerken_mutatie_UIT(VoorraadMutatie)
 
-    def Bijwerken_mutatie_IN (VoorraadMutatie):
+    def Bijwerken_mutatie_IN(VoorraadMutatie):
         try:
-            vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
-                                            , locatie=VoorraadMutatie.locatie
-                                            , vak=VoorraadMutatie.vak)
-            vrd.aantal=F('aantal') + VoorraadMutatie.aantal
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=VoorraadMutatie.ontvangst,
+                locatie=VoorraadMutatie.locatie,
+                vak=VoorraadMutatie.vak,
+            )
+            vrd.aantal = F("aantal") + VoorraadMutatie.aantal
         except WijnVoorraad.DoesNotExist:
-            vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
-                               , deelnemer=VoorraadMutatie.ontvangst.deelnemer
-                               , ontvangst=VoorraadMutatie.ontvangst
-                               , locatie = VoorraadMutatie.locatie
-                               , vak=VoorraadMutatie.vak
-                               , aantal=VoorraadMutatie.aantal)
+            vrd = WijnVoorraad(
+                wijn=VoorraadMutatie.ontvangst.wijn,
+                deelnemer=VoorraadMutatie.ontvangst.deelnemer,
+                ontvangst=VoorraadMutatie.ontvangst,
+                locatie=VoorraadMutatie.locatie,
+                vak=VoorraadMutatie.vak,
+                aantal=VoorraadMutatie.aantal,
+            )
         vrd.save()
         vrd.refresh_from_db()
         wijn = vrd.wijn
         wijn.check_afsluiten()
 
-    def Bijwerken_mutatie_UIT (VoorraadMutatie):
+    def Bijwerken_mutatie_UIT(VoorraadMutatie):
         try:
-            vrd = WijnVoorraad.objects.get ( ontvangst=VoorraadMutatie.ontvangst
-                                           , locatie=VoorraadMutatie.locatie
-                                           , vak=VoorraadMutatie.vak)
-            vrd.aantal=F('aantal') - VoorraadMutatie.aantal
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=VoorraadMutatie.ontvangst,
+                locatie=VoorraadMutatie.locatie,
+                vak=VoorraadMutatie.vak,
+            )
+            vrd.aantal = F("aantal") - VoorraadMutatie.aantal
         except WijnVoorraad.DoesNotExist:
-            vrd = WijnVoorraad(wijn=VoorraadMutatie.ontvangst.wijn
-                               , deelnemer=VoorraadMutatie.ontvangst.deelnemer
-                               , ontvangst=VoorraadMutatie.ontvangst
-                               , locatie = VoorraadMutatie.locatie
-                               , vak=VoorraadMutatie.vak
-                               , aantal=-VoorraadMutatie.aantal)
+            vrd = WijnVoorraad(
+                wijn=VoorraadMutatie.ontvangst.wijn,
+                deelnemer=VoorraadMutatie.ontvangst.deelnemer,
+                ontvangst=VoorraadMutatie.ontvangst,
+                locatie=VoorraadMutatie.locatie,
+                vak=VoorraadMutatie.vak,
+                aantal=-VoorraadMutatie.aantal,
+            )
 
         vrd.save()
         vrd.refresh_from_db()
@@ -406,8 +433,15 @@ class WijnVoorraad(models.Model):
             vrd.delete()
         wijn.check_afsluiten()
 
-    def verplaatsen (WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
-        VoorraadMutatie.verplaatsen (WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+    def verplaatsen(WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
+        VoorraadMutatie.verplaatsen(
+            WijnVoorraad.ontvangst,
+            WijnVoorraad.locatie,
+            WijnVoorraad.vak,
+            v_nieuwe_locatie,
+            v_nieuwe_vak,
+            v_aantal_verplaatsen,
+        )
 
     class Meta:
         ordering = ["wijn", "deelnemer", "locatie", "vak"]

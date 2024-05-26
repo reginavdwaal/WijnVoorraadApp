@@ -1,10 +1,9 @@
 """Custom filters for wijnvoorraad app"""
 
 import os
-from django import template
 from django.conf import settings as conf_settings
+from django import template
 from WijnVoorraad import wijnvars
-
 
 register = template.Library()
 

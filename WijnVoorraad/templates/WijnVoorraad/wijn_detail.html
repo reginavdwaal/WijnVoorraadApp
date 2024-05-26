@@ -2,6 +2,10 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:wijnlist' %}">Wijnen</a>
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
     <div class="content-row">
@@ -106,7 +110,7 @@
     <div class="buttons-block">
         <form method="post">
             {% csrf_token %}
-            <input type="hidden" name='wijn_id' id="wijn_id" value="{{object.id}}"></input>
+            <input type="hidden" name='wijn_id' id="wijn_id" value="{{ object.id }}"></input>
             <input type="submit" name="Kopieer" value="Kopieer"></input>
         </form>
     </div>  <!-- end buttons-block -->

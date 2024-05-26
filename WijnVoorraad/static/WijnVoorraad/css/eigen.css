@@ -155,7 +155,17 @@ table.metkader {
     clear: both;
     display: table;
   }
-  
+
+@media only screen and (min-width: 800px) {
+    /* For tablets and desktop: */
+    .fuzzy_selectie {width: 200px;}
+}
+
+@media only screen and (max-width: 800px) {
+    /* For phone: */
+    .fuzzy_selectie {width: 50px;}
+}
+
 /* For mobile phones: */
 [class*="col-"] {
     width: 100%;

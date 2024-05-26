@@ -2,6 +2,25 @@ Release
 
 VSCode:
 - Make sure new requirements.txt is made!
+- cz bump : verhoogt versienummer EN creeert en pusht tag
+
+Dan naar server met putty:
+- cd domains
+- ./install.sh	-- Geeft alle tags weer die er zijn.
+- ./install.sh <gewenste tag>  -- backup gemaakt en repository uit github opgehaald en klaargezet.
+-- vino_<tag> bevat de nieuwe versie.
+- ./deploy.sh <tag> (INDIEN GEWIJZIGD: EERST EVEN KOPIEREN VANUIT vino_<tab>/build)
+- Zet virtual env python: source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate 
+- Zet virtual env: source setenv.sh -- je staat al in de domains directory
+- cd vino.vdwaal.net
+- python manage.py migrate
+- python manage.py collectstatic bevestig met yes
+- Start server: cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
+
+
+--- OUD
+VSCode:
+- Make sure new requirements.txt is made!
 - Update version number in WijnProject/__init__.py
 - Commit latest changes and push/pull to github
 - Commandline: git tag v<versienummer bijv. v0.2.2>

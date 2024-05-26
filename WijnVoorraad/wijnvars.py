@@ -138,6 +138,14 @@ def get_session_fuzzy_selectie (request):
                 pass
     return fuzzy_selectie
 
+# def set_session_ontvangst_id (request, ontvangst_id):
+#     request.session["ontvangst_id"] = ontvangst_id
+#     return request
+
+# def get_session_ontvangst_id (request):
+#     ontvangst_id = request.session.get("ontvangst_id", None)
+#     return ontvangst_id
+
 def set_initial_user_session(request):
     if request.session.get("initial_set", None) is None:
         du = request.user.deelnemers.all()

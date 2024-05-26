@@ -2,6 +2,10 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:mutatielist' %}">Mutaties</a>
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
     <div class="detail-block">
@@ -76,6 +80,7 @@
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name='object_id' id="wijn_id" value="{{object.id}}"></input>
+            <input type="hidden" name='return_url' id="return_url" value="{{ request.META.HTTP_REFERER }}"></input>
             <input type="submit" name="Verwijder" value="Verwijder"></input>
         </form>
     </div>  <!-- end buttons-block -->

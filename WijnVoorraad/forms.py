@@ -85,9 +85,10 @@ class OntvangstCreateForm(forms.ModelForm):
     )
     aantal = forms.IntegerField()
 
-   class Meta:
-     model = Ontvangst
-     fields = '__all__'
+    class Meta:
+        model = Ontvangst
+        fields = "__all__"
+
 
 class OntvangstUpdateForm(forms.ModelForm):
     deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
@@ -174,9 +175,10 @@ class MutatieCreateForm(forms.ModelForm):
     ]
     actie = forms.ChoiceField(choices=actie_choices)
 
-   class Meta:
-      model = VoorraadMutatie
-      fields = '__all__'
+    class Meta:
+        model = VoorraadMutatie
+        fields = "__all__"
+
 
 class MutatieUpdateForm(forms.ModelForm):
     ontvangst = forms.ModelChoiceField(

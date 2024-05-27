@@ -1,3 +1,13 @@
+## v0.5.0 (2024-05-27)
+
+### Feat
+
+- breadcrumbs, return_url
+
+### Fix
+
+- fixed indent in forms
+
 ## v0.4.0 (2024-05-25)
 
 ### Feat

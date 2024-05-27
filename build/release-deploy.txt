@@ -3,6 +3,7 @@ Release
 VSCode:
 - Make sure new requirements.txt is made!
 - cz bump : verhoogt versienummer EN creeert en pusht tag
+- push and pull to the server
 
 Dan naar server met putty:
 - cd domains
@@ -39,7 +40,7 @@ Dan naar server met putty:
 - Zet virtual env: source setenv.sh -- je staat al in de domains directory
 - cd vino.vdwaal.net
 - python manage.py migrate
-- python manage.py collectstatic bevestig met yes
+- python manage.py collectstatic bevestig met yes (EVENTUEEL python manage.py collectstatic --clear)
 - Start server: cloudlinux-selector start --json --interpreter python --app-root domains/vino.vdwaal.net
 
 ------

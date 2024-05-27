@@ -57,7 +57,7 @@ echo "Copying the new application..."
 mv "domains/${newdir}" "domains/vino.vdwaal.net"
 
 # Copy the database
-if [ -f "domains/vino.vdwaal.net/db.sqlite3"]; then
+if [ -f "domains/vino.vdwaal.net/db.sqlite3" ]; then
     echo "Moving existing database to filestamped copy of the database..."
     today=$(date +%Y%m%d%H%M%S) 
     mv "domains/vino.vdwaal.net/db.sqlite3" "db.sqlite3.$today"
@@ -72,7 +72,7 @@ source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate
 
 # Zet virtual env: source setenv.sh 
 source ~/domains/setenv.sh 
-
+cd vino.vdwaal.net
 
 # Migrate the database
 echo "Migrating the database..."
@@ -80,7 +80,7 @@ python manage.py migrate
 
 # Collect static files
 echo "Collecting static files..."
-python manage.py collectstatic
+python manage.py collectstatic --no-input
 
 
 read -p "Do you van to start the server? (y/n) " -n 1 -r answer

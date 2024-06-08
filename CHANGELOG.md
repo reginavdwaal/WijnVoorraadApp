@@ -1,3 +1,13 @@
+## v0.6.0 (2024-06-08)
+
+### Feat
+
+- Error bij Wijn kopieer. Ontvangst vanuit wijn
+
+### Fix
+
+- deploy.sh and release-deploy.txt
+
 ## v0.5.0 (2024-05-27)
 
 ### Feat

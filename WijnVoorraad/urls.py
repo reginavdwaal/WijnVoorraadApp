@@ -126,6 +126,9 @@ urlpatterns = [
         "ontvangst/create", views.OntvangstCreateView.as_view(), name="ontvangst-create"
     ),
     path(
+        "ontvangst/create/<int:wijn_id>/", views.OntvangstCreateView.as_view(), name="ontvangst-create"
+    ),
+    path(
         "ontvangst/update/<int:pk>/",
         views.OntvangstUpdateView.as_view(),
         name="ontvangst-update",

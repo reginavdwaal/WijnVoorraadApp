@@ -1,6 +1,7 @@
 """Development settings file"""
 
 # pylint: disable=unused-wildcard-import,wildcard-import
+import os
 from .base import *
 
 
@@ -21,4 +22,4 @@ STATIC_URL = "static/"
 STATIC_ROOT = "static/"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")

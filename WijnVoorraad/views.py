@@ -681,6 +681,9 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
         initial = super().get_initial()
         initial["deelnemer"] = wijnvars.get_session_deelnemer_id(self.request)
         initial["locatie"] = wijnvars.get_session_locatie_id(self.request)
+        wijn_id = self.kwargs.get("wijn_id")
+        if wijn_id is not None:
+            initial["wijn"] = wijn_id
         return initial
 
     def post(self, request, *args, **kwargs):
@@ -843,7 +846,7 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
                     url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
-            if "Verwijder" in self.request.POST:
+            elif "Verwijder" in self.request.POST:
                 try:
                     wijn.delete()
                     messages.success(request, "Wijn is verwijderd")

@@ -110,8 +110,14 @@
     <div class="buttons-block">
         <form method="post">
             {% csrf_token %}
-            <input type="hidden" name='wijn_id' id="wijn_id" value="{{ object.id }}"></input>
+            <input type="hidden" name='object_id' id="object_id" value="{{object.id}}"></input>
             <input type="submit" name="Kopieer" value="Kopieer"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form id="create-form" method="get" action="{% url 'WijnVoorraad:mutatie-create' object.id %}">
+            {% csrf_token %}
+            <input type="submit" name="Insert" value="Mutatie toevoegen"></input>
         </form>
     </div>  <!-- end buttons-block -->
     <div class="buttons-block">
@@ -119,6 +125,12 @@
             {% csrf_token %}
             <input type="hidden" name='object_id' id="object_id" value="{{object.id}}"></input>
             <input type="submit" name="Verwijder" value="Verwijder"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form id="create-form" method="get" action="{% url 'WijnVoorraad:ontvangst-create' object.id %}">
+            {% csrf_token %}
+            <input type="submit" name="Insert" value="Ontvangst toevoegen"></input>
         </form>
     </div>  <!-- end buttons-block -->
 

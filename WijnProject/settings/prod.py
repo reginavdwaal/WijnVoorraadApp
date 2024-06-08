@@ -1,6 +1,8 @@
 """Production settings file"""
 
 # pylint: disable=unused-wildcard-import,wildcard-import
+
+import os
 from decouple import config
 from .base import *
 
@@ -15,11 +17,11 @@ ALLOWED_HOSTS = [
     "vino.vdwaal.net",
 ]
 
-WWW_DIR = Path(BASE_DIR).resolve() / "public_html/"
+WWW_DIR = os.path.join(Path(BASE_DIR).resolve(), "public_html")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-STATIC_ROOT = WWW_DIR / "static/"
+STATIC_ROOT = os.path.join(WWW_DIR, "static")
 STATIC_URL = "static/"
 
 MEDIA_URL = "/media/"

@@ -648,8 +648,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                     % (ontvangst.deelnemer.standaardLocatie.omschrijving,),
                 )
                 url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
-                return HttpResponseRedirect(url)
-            if "Verwijder" in self.request.POST:
+            elif "Verwijder" in self.request.POST:
                 try:
                     ontvangst.delete()
                     messages.success(request, "Ontvangst is verwijderd")
@@ -659,6 +658,17 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
                     url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
+            elif "Kopieer" in self.request.POST:
+                try:
+                    nieuwe_ontvangst_id = ontvangst.create_copy()
+                    my_kwargs = {}
+                    my_kwargs["pk"] = nieuwe_ontvangst_id
+                    url = reverse("WijnVoorraad:ontvangst-update", kwargs=my_kwargs)
+                except:
+                    messages.error(
+                        request, "Kopiëren is niet gelukt. Al teveel kopieën?"
+                    )
+                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
             else:
                 url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             return HttpResponseRedirect(url)

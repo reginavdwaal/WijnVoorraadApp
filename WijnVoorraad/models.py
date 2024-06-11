@@ -226,6 +226,14 @@ class Ontvangst(models.Model):
             self.datumOntvangst.strftime("%d-%m-%Y"),
         )
 
+    def create_copy(self):
+        orig_ontvangst_id = self.id
+        nieuwe_ontvangst = self
+        nieuwe_ontvangst.pk = None
+        nieuwe_ontvangst.datumOntvangst = datetime.now()
+        nieuwe_ontvangst.save()
+        return nieuwe_ontvangst.id
+
     class Meta:
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
         verbose_name_plural = "ontvangsten"

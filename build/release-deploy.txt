@@ -10,7 +10,7 @@ Dan naar server met putty:
 - ./install.sh	-- Geeft alle tags weer die er zijn.
 - ./install.sh <gewenste tag>  -- backup gemaakt en repository uit github opgehaald en klaargezet.
 -- vino_<tag> bevat de nieuwe versie.
-- ./deploy.sh <tag> (INDIEN GEWIJZIGD: EERST EVEN KOPIEREN VANUIT vino_<tab>/build)
+- ./deploy.sh <tag> (INDIEN GEWIJZIGD: EERST EVEN KOPIEREN VANUIT vino_source_<tag>/build)
 - Zet virtual env python: source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate 
 - Zet virtual env: source setenv.sh -- je staat al in de domains directory
 - cd vino.vdwaal.net

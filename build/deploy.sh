@@ -72,7 +72,7 @@ source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate
 
 # Zet virtual env: source setenv.sh 
 source ~/domains/setenv.sh 
-cd vino.vdwaal.net
+cd ~/domains/vino.vdwaal.net
 
 # Migrate the database
 echo "Migrating the database..."

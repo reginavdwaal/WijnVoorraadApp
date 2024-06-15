@@ -2,6 +2,7 @@ from django.urls import path
 
 import WijnVoorraad.views_basis
 import WijnVoorraad.views_popup
+import WijnVoorraad.views_conversie
 
 from . import views
 
@@ -126,7 +127,9 @@ urlpatterns = [
         "ontvangst/create", views.OntvangstCreateView.as_view(), name="ontvangst-create"
     ),
     path(
-        "ontvangst/create/<int:wijn_id>/", views.OntvangstCreateView.as_view(), name="ontvangst-create"
+        "ontvangst/create/<int:wijn_id>/",
+        views.OntvangstCreateView.as_view(),
+        name="ontvangst-create",
     ),
     path(
         "ontvangst/update/<int:pk>/",
@@ -177,7 +180,9 @@ urlpatterns = [
         name="ontvangstvoorraad",
     ),
     path(
-        "voorraadvakken/", views.VoorraadVakkenListView.as_view(), name="voorraadvakkenlist"
+        "voorraadvakken/",
+        views.VoorraadVakkenListView.as_view(),
+        name="voorraadvakkenlist",
     ),
     path("wijnen/", views.WijnListView.as_view(), name="wijnlist"),
     path("wijn/<int:pk>/", views.WijnDetailView.as_view(), name="wijndetail"),
@@ -217,6 +222,11 @@ urlpatterns = [
         "wijnsoort/popupadd/",
         WijnVoorraad.views_popup.wijn_soort_create_popup_view,
         name="wijnsoort-popupadd",
+    ),
+    path(
+        "startconversie/",
+        WijnVoorraad.views_conversie.StartConversieView.as_view(),
+        name="startconversie",
     ),
     path("change_context/", views.change_context, name="change_context"),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),

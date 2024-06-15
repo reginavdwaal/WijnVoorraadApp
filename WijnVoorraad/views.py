@@ -7,7 +7,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
-from django.db.models import Sum, F, Q
+from django.db.models import Sum, F
 from django.db.models.functions import Lower
 from django.contrib import messages
 

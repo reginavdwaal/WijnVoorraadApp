@@ -236,3 +236,7 @@ class GebruikerForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "email", "deelnemers"]
+
+
+class StartConversieForm(forms.Form):
+    aantal_deelnemers_oud = forms.IntegerField()

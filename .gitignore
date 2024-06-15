@@ -2,5 +2,4 @@
 cov.xml
 .gitignore
 .coverage
-.coverage
 WijnProject/settings/.env

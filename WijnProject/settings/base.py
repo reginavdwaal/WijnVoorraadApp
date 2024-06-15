@@ -69,7 +69,15 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    }
+    },
+    "oudwijndb": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "vdwanet_defaultdb",
+        "USER": "vdwanet_django",
+        "PASSWORD": "neZT9syP8VLZKjB34MDh",
+        "HOST": "87.236.102.45",
+        "PORT": "3306",
+    },
 }
 
 

@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import find_dotenv, load_dotenv
 from .. import __version__
 
 
@@ -62,8 +65,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "WijnProject.wsgi.application"
 
 
+load_dotenv(find_dotenv())
+DB_PASSWORD = os.environ["DB_PASSWORD"]
+
+
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
 
 DATABASES = {
     "default": {
@@ -74,7 +82,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "vdwanet_defaultdb",
         "USER": "vdwanet_django",
-        "PASSWORD": "neZT9syP8VLZKjB34MDh",
+        "PASSWORD": DB_PASSWORD,
         "HOST": "87.236.102.45",
         "PORT": "3306",
     },

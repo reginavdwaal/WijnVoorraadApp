@@ -26,6 +26,44 @@ class OudDruivensoort(models.Model):
         app_label = "ouddb"
 
 
+class OudLocatie(models.Model):
+    omschrijving = models.CharField(max_length=50)
+
+    class Meta:
+        managed = False
+        db_table = "locatie"
+        app_label = "ouddb"
+
+
+class OudWijn(models.Model):
+    naam = models.CharField(unique=True, max_length=100)
+    kleur = models.CharField(max_length=20)
+    jaar = models.IntegerField()
+    land = models.CharField(max_length=20, blank=True, null=True)
+    streek = models.CharField(max_length=50, blank=True, null=True)
+    domein = models.CharField(max_length=50, blank=True, null=True)
+    classificatie = models.CharField(max_length=50, blank=True, null=True)
+    leverancier = models.CharField(max_length=50, blank=True, null=True)
+    url = models.CharField(max_length=255, blank=True, null=True)
+    opmerkingen = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "wijn"
+        app_label = "ouddb"
+
+
+class OudWijnDruivensoort(models.Model):
+    id_wijn = models.IntegerField(primary_key=True)
+    id_druivensoort = models.IntegerField(primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = "wijn_druivensoort"
+        unique_together = (("id_wijn", "id_druivensoort"),)
+        app_label = "ouddb"
+
+
 class OudFoto(models.Model):
     datum_gemaakt = models.DateField(blank=True, null=True)
     filenaam = models.CharField(max_length=100)
@@ -45,15 +83,6 @@ class OudKeynumber(models.Model):
     class Meta:
         managed = False
         db_table = "keynumber"
-        app_label = "ouddb"
-
-
-class OudLocatie(models.Model):
-    omschrijving = models.CharField(max_length=50)
-
-    class Meta:
-        managed = False
-        db_table = "locatie"
         app_label = "ouddb"
 
 
@@ -84,33 +113,4 @@ class OudVoorraadmutatie(models.Model):
         unique_together = (
             ("id_wijn", "id_deelnemer", "id_locatie", "indicatie_in_uit", "datum"),
         )
-        app_label = "ouddb"
-
-
-class OudWijn(models.Model):
-    naam = models.CharField(unique=True, max_length=100)
-    kleur = models.CharField(max_length=20)
-    jaar = models.IntegerField()
-    land = models.CharField(max_length=20, blank=True, null=True)
-    streek = models.CharField(max_length=50, blank=True, null=True)
-    domein = models.CharField(max_length=50, blank=True, null=True)
-    classificatie = models.CharField(max_length=50, blank=True, null=True)
-    leverancier = models.CharField(max_length=50, blank=True, null=True)
-    url = models.CharField(max_length=255, blank=True, null=True)
-    opmerkingen = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = "wijn"
-        app_label = "ouddb"
-
-
-class OudWijnDruivensoort(models.Model):
-    id_wijn = models.IntegerField(primary_key=True)
-    id_druivensoort = models.IntegerField(primary_key=True)
-
-    class Meta:
-        managed = False
-        db_table = "wijn_druivensoort"
-        unique_together = (("id_wijn", "id_druivensoort"),)
         app_label = "ouddb"

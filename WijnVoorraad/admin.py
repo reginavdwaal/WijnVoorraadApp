@@ -1,26 +1,31 @@
 from django.contrib import admin
 
-from WijnVoorraad.models_conversie import ConvDeelnemer
+from WijnVoorraad.models_conversie import ConvDeelnemer, ConvDruivenSoort
 
 from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
+
 
 class VakInline(admin.TabularInline):
     model = Vak
     extra = 10
 
+
 class LocatieAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,               {'fields': ['omschrijving']}),
+        (None, {"fields": ["omschrijving"]}),
     ]
     inlines = [VakInline]
+
 
 class DruivenSoortInline(admin.TabularInline):
     model = WijnDruivensoort
     extra = 4
 
+
 class WijnAdmin(admin.ModelAdmin):
     inlines = [DruivenSoortInline]
+
 
 admin.site.register(WijnSoort)
 
@@ -36,12 +41,15 @@ admin.site.register(Wijn, WijnAdmin)
 
 admin.site.register(WijnDruivensoort)
 
+
 class MutatiesInline(admin.TabularInline):
     model = VoorraadMutatie
     extra = 5
 
+
 class OntvangstAdmin(admin.ModelAdmin):
     inlines = [MutatiesInline]
+
 
 admin.site.register(Ontvangst, OntvangstAdmin)
 
@@ -51,3 +59,4 @@ admin.site.register(VoorraadMutatie)
 
 admin.site.register(ConvDeelnemer)
 
+admin.site.register(ConvDruivenSoort)

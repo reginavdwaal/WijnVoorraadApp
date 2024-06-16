@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from WijnVoorraad.models_conversie import ConvDeelnemer, ConvDruivenSoort
-
 from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
+
+from WijnVoorraad.models_conversie import ConvDeelnemer, ConvDruivenSoort, ConvLocatie
 
 
 class VakInline(admin.TabularInline):
@@ -60,3 +60,5 @@ admin.site.register(VoorraadMutatie)
 admin.site.register(ConvDeelnemer)
 
 admin.site.register(ConvDruivenSoort)
+
+admin.site.register(ConvLocatie)

@@ -8,8 +8,8 @@
 from django.db import models
 from django.db.models import Deferrable
 
-from WijnVoorraad.models import Deelnemer, DruivenSoort
-from WijnVoorraad.models_oudwijn import OudDeelnemer, OudDruivensoort
+from WijnVoorraad.models import Deelnemer, DruivenSoort, Locatie
+from WijnVoorraad.models_oudwijn import OudDeelnemer, OudDruivensoort, OudLocatie
 
 
 class ConvDeelnemer(models.Model):
@@ -65,6 +65,8 @@ class ConvDruivenSoort(models.Model):
 
     class Meta:
         ordering = ["id_oud"]
+        verbose_name = "Conv druivensoort"
+        verbose_name_plural = "Conv druivensoorten"
 
 
 def te_conv_druivensoorten():
@@ -100,6 +102,50 @@ def converteer_druivensoorten(InclAanmaken, DoCommit):
     return (aantal_gekoppeld, aantal_aangemaakt)
 
 
+class ConvLocatie(models.Model):
+    id_oud = models.BigIntegerField(unique=True)
+    id_nieuw = models.BigIntegerField()
+
+    def __str__(self):
+        return "Oud %s - Nieuw %s" % (self.id_oud, self.id_nieuw)
+
+    class Meta:
+        ordering = ["id_oud"]
+
+
+def te_conv_locaties():
+    conv_ids = list(ConvLocatie.objects.all().values_list("id_oud", flat=True))
+    oudlocaties = OudLocatie.objects.exclude(id__in=conv_ids)
+    return oudlocaties
+
+
+def koppel_locatie_oud_nieuw(id_oud, id_nieuw):
+    koppel = ConvLocatie()
+    koppel.id_oud = id_oud
+    koppel.id_nieuw = id_nieuw
+    koppel.save()
+
+
+def converteer_locaties(InclAanmaken, DoCommit):
+    aantal_gekoppeld = 0
+    aantal_aangemaakt = 0
+    for d_oud in te_conv_locaties():
+        try:
+            d_nieuw = Locatie.objects.get(omschrijving__iexact=d_oud.omschrijving)
+            aantal_gekoppeld += 1
+            if DoCommit:
+                koppel_locatie_oud_nieuw(d_oud.id, d_nieuw.id)
+        except:
+            if InclAanmaken:
+                d_nieuw = Locatie()
+                d_nieuw.omschrijving = d_oud.omschrijving
+                aantal_aangemaakt += 1
+                if DoCommit:
+                    d_nieuw.save()
+                    koppel_locatie_oud_nieuw(d_oud.id, d_nieuw.id)
+    return (aantal_gekoppeld, aantal_aangemaakt)
+
+
 # class ConvFoto(models.Model):
 #     id_oud = models.BigIntegerField()
 #     id_nieuw = models.BigIntegerField()
@@ -123,20 +169,6 @@ def converteer_druivensoorten(InclAanmaken, DoCommit):
 #             models.UniqueConstraint(
 #                 name="uniquekey",
 #                 fields=["keyname_oud", "id_nieuw"],
-#                 deferrable=Deferrable.DEFERRED,
-#             )
-#         ]
-
-
-# class ConvLocatie(models.Model):
-#     id_oud = models.BigIntegerField()
-#     id_nieuw = models.BigIntegerField()
-
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(
-#                 name="uniquekey",
-#                 fields=["id_oud", "id_nieuw"],
 #                 deferrable=Deferrable.DEFERRED,
 #             )
 #         ]

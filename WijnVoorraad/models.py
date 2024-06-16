@@ -1,6 +1,6 @@
 from django.db import models
 from datetime import datetime
-from django.db.models import Deferrable, UniqueConstraint
+from django.db.models import Deferrable
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.db.models import F, Q, Sum

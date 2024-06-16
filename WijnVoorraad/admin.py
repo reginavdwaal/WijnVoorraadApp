@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from WijnVoorraad.models_conversie import ConvDeelnemer
+
 from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
 
@@ -46,4 +48,6 @@ admin.site.register(Ontvangst, OntvangstAdmin)
 admin.site.register(WijnVoorraad)
 
 admin.site.register(VoorraadMutatie)
+
+admin.site.register(ConvDeelnemer)
 

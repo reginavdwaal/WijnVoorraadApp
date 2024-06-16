@@ -14,6 +14,7 @@ class OudDeelnemer(models.Model):
     class Meta:
         managed = False
         db_table = "deelnemer"
+        app_label = "ouddb"
 
 
 class OudDruivensoort(models.Model):
@@ -22,6 +23,7 @@ class OudDruivensoort(models.Model):
     class Meta:
         managed = False
         db_table = "druivensoort"
+        app_label = "ouddb"
 
 
 class OudFoto(models.Model):
@@ -33,6 +35,7 @@ class OudFoto(models.Model):
     class Meta:
         managed = False
         db_table = "foto"
+        app_label = "ouddb"
 
 
 class OudKeynumber(models.Model):
@@ -42,6 +45,7 @@ class OudKeynumber(models.Model):
     class Meta:
         managed = False
         db_table = "keynumber"
+        app_label = "ouddb"
 
 
 class OudLocatie(models.Model):
@@ -50,6 +54,7 @@ class OudLocatie(models.Model):
     class Meta:
         managed = False
         db_table = "locatie"
+        app_label = "ouddb"
 
 
 class OudProefnotitie(models.Model):
@@ -61,6 +66,7 @@ class OudProefnotitie(models.Model):
     class Meta:
         managed = False
         db_table = "proefnotitie"
+        app_label = "ouddb"
 
 
 class OudVoorraadmutatie(models.Model):
@@ -78,6 +84,7 @@ class OudVoorraadmutatie(models.Model):
         unique_together = (
             ("id_wijn", "id_deelnemer", "id_locatie", "indicatie_in_uit", "datum"),
         )
+        app_label = "ouddb"
 
 
 class OudWijn(models.Model):
@@ -95,13 +102,15 @@ class OudWijn(models.Model):
     class Meta:
         managed = False
         db_table = "wijn"
+        app_label = "ouddb"
 
 
 class OudWijnDruivensoort(models.Model):
     id_wijn = models.IntegerField(primary_key=True)
-    id_druivensoort = models.IntegerField()
+    id_druivensoort = models.IntegerField(primary_key=True)
 
     class Meta:
         managed = False
         db_table = "wijn_druivensoort"
         unique_together = (("id_wijn", "id_druivensoort"),)
+        app_label = "ouddb"

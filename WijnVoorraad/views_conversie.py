@@ -12,6 +12,7 @@ from WijnVoorraad.models_oudwijn import (
     OudDruivensoort,
     OudLocatie,
     OudWijn,
+    OudWijnDruivensoort,
 )
 from WijnVoorraad.models_conversie import (
     converteer_deelnemers,
@@ -22,6 +23,8 @@ from WijnVoorraad.models_conversie import (
     te_conv_locaties,
     converteer_wijnen,
     te_conv_wijnen,
+    converteer_wijndruivensoorten,
+    te_conv_wijndruivensoorten,
 )
 from . import wijnvars
 
@@ -63,6 +66,14 @@ class StartConversieView(LoginRequiredMixin, TemplateView):
         )
         wijnvars.set_session_extra_var(self.request, "message_list_wijn", None)
 
+        context["aantal_wijndruivensoorten_oud"] = OudWijnDruivensoort.objects.count()
+        conv = te_conv_wijndruivensoorten()
+        context["aantal_wijndruivensoorten_te_conv"] = conv.count()
+        context["message_list_wijndruivensoort"] = wijnvars.get_session_extra_var(
+            self.request, "message_list_wijndruivensoort"
+        )
+        wijnvars.set_session_extra_var(self.request, "message_list_wijn", None)
+
         context["title"] = "Start conversie"
         return context
 
@@ -94,6 +105,11 @@ class StartConversieView(LoginRequiredMixin, TemplateView):
             convdata = converteer_wijnen(InclAanmaken, DoCommit)
             wijnvars.set_session_extra_var(
                 request, "message_list_wijn", convdata.message_list
+            )
+        elif "StartConversieWijnDruivensoort" in self.request.POST:
+            convdata = converteer_wijndruivensoorten(InclAanmaken, DoCommit)
+            wijnvars.set_session_extra_var(
+                request, "message_list_wijndruivensoort", convdata.message_list
             )
         url = reverse("WijnVoorraad:startconversie")
         return HttpResponseRedirect(url)

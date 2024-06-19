@@ -6,14 +6,23 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.db.models import Deferrable
+from django.db.models import Deferrable, Value, CharField
+from django.db.models.functions import Concat
 
-from WijnVoorraad.models import Deelnemer, DruivenSoort, Locatie, Wijn, WijnSoort
+from WijnVoorraad.models import (
+    Deelnemer,
+    DruivenSoort,
+    Locatie,
+    Wijn,
+    WijnSoort,
+    WijnDruivensoort,
+)
 from WijnVoorraad.models_oudwijn import (
     OudDeelnemer,
     OudDruivensoort,
     OudLocatie,
     OudWijn,
+    OudWijnDruivensoort,
 )
 
 
@@ -219,6 +228,107 @@ def converteer_wijnen(InclAanmaken, DoCommit):
     return convdata
 
 
+class ConvWijnDruivensoort(models.Model):
+    id_wijn_oud = models.BigIntegerField()
+    id_druivensoort_oud = models.BigIntegerField()
+    id_nieuw = models.BigIntegerField()
+
+    def __str__(self):
+        return "Oud wijn %s - Oud druivensoort %s - Nieuw %s" % (
+            self.id_wijn_oud,
+            self.id_druivensoort_oud,
+            self.id_nieuw,
+        )
+
+    class Meta:
+        ordering = ["id_wijn_oud", "id_druivensoort_oud"]
+        constraints = [
+            models.UniqueConstraint(
+                name="uniquekey",
+                fields=["id_wijn_oud", "id_druivensoort_oud"],
+                deferrable=Deferrable.DEFERRED,
+            )
+        ]
+
+
+def te_conv_wijndruivensoorten():
+    conv_ids = list(
+        ConvWijnDruivensoort.objects.all().values_list(
+            "id_wijn_oud", "id_druivensoort_oud"
+        )
+    )
+
+    t = tuple(conv_ids)
+
+    if conv_ids:
+        oudwijndruivensoorten = OudWijnDruivensoort.objects.extra(
+            where=[f"(id_wijn,id_druivensoort) in {t}"]
+        )
+    else:
+        oudwijndruivensoorten = OudWijnDruivensoort.objects.all()
+
+    return oudwijndruivensoorten
+
+
+def koppel_wijndruivensoort_oud_nieuw(id_wijn_oud, id_druivensoort_oud, id_nieuw):
+    koppel = ConvWijnDruivensoort()
+    koppel.id_wijn_oud = id_wijn_oud
+    koppel.id_druivensoort_oud = id_druivensoort_oud
+    koppel.id_nieuw = id_nieuw
+    koppel.save()
+
+
+def converteer_wijndruivensoorten(InclAanmaken, DoCommit):
+    convdata = init_conv(DoCommit)
+
+    for wd_oud in te_conv_wijndruivensoorten():
+        try:
+            w_conv = ConvWijn.objects.get(id_oud=wd_oud.id_wijn)
+            d_conv = ConvDruivenSoort.objects.get(id_oud=wd_oud.id_druivensoort)
+            try:
+                wd_nieuw = WijnDruivensoort.objects.get(
+                    wijn__id=w_conv.id_nieuw, druivensoort__id=d_conv.id_nieuw
+                )
+                convdata.aantal_gekoppeld += 1
+                if DoCommit:
+                    koppel_wijndruivensoort_oud_nieuw(
+                        wd_oud.id_wijn, wd_oud.id_druivensoort, wd_nieuw.id
+                    )
+            except WijnDruivensoort.DoesNotExist:
+                if InclAanmaken:
+                    wd_nieuw = WijnDruivensoort()
+                    wd_nieuw.wijn = Wijn.objects.get(pk=w_conv.id_nieuw)
+                    wd_nieuw.druivensoort = DruivenSoort.objects.get(pk=d_conv.id_nieuw)
+                    convdata.aantal_aangemaakt += 1
+                    if DoCommit:
+                        wd_nieuw.save()
+                        koppel_wijndruivensoort_oud_nieuw(
+                            wd_oud.id_wijn, wd_oud.id_druivensoort, wd_nieuw.id
+                        )
+        except ConvWijn.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Wijn onbekend / nog niet geconverteerd. Id wijn oud {wd_oud.id_wijn}"
+            )
+        except ConvDruivenSoort.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Druivensoort onbekend / nog niet geconverteerd. Id druivensoort oud {wd_oud.id_druivensoort}"
+            )
+        except Wijn.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Geconverteerde wijn niet gevonden. Id wijn nieuw {w_conv}"
+            )
+        except DruivenSoort.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Geconverteerde druivensoort niet gevonden. Id druivensoort nieuw {d_conv}"
+            )
+    add_messages(DoCommit, convdata)
+    return convdata
+
+
 class ConvData:
     def __init__(self):
         self.aantal_gekoppeld = 0
@@ -308,21 +418,6 @@ def add_messages(DoCommit, convdata):
 #             models.UniqueConstraint(
 #                 name="uniquekey",
 #                 fields=["id_oud", "id_nieuw"],
-#                 deferrable=Deferrable.DEFERRED,
-#             )
-#         ]
-
-
-# class ConvWijnDruivensoort(models.Model):
-#     id_wijn_oud = models.IntegerField()
-#     id_druivensoort_oud = models.IntegerField()
-#     id_nieuw = models.BigIntegerField()
-
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(
-#                 name="uniquekey",
-#                 fields=["id_wijn_oud", "id_druivensoort_oud", "id_nieuw"],
 #                 deferrable=Deferrable.DEFERRED,
 #             )
 #         ]

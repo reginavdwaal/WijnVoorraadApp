@@ -299,3 +299,9 @@ select[multiple] {
 .button:hover, input[type=submit]:hover, input[type=button]:hover {
     background: var(--button-hover-bg);
 }
+
+button:disabled, button[disabled],
+input[type=submit]:disabled, input[type=button]:disabled {
+  background:  var(--button-disabled-bg);
+}
+

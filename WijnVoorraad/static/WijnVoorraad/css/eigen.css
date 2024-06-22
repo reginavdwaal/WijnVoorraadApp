@@ -49,6 +49,7 @@
   --button-fg: #fff;
   --button-bg: #79aec8;
   --button-hover-bg: #609ab6;
+  --button-disabled-bg: #bfdff0;
 
   /* EIGEN VARS */
   --wijnsoort_rood: #FBC9C9;

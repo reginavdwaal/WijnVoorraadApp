@@ -22,6 +22,13 @@
             document.getElementById('Save').disabled = true;        // disable
         }
     }
+    function addOne(element) {
+        if (element.value < element.max) {
+            if (document.getElementById('aantal_verplaatsen_nog').value != 0) {
+                ++element.value
+            }
+        }
+    }
 </script>
 <h1>{{ aantal_verplaatsen_org }} flessen {{wijn.volle_naam}} verplaatsen naar {{ nieuwe_locatie.omschrijving }}</h1>
 <h2>Beschikbare vakken:</h2>
@@ -64,13 +71,13 @@
             <td>
                 <input type="hidden" name='nieuw_vak_id{{ forloop.counter }}' id="vak{{ forloop.counter }}" value="{{v.id}}">
                 {% if v.beschikbaar > aantal_verplaatsen_org %}
-                    <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
+                    <input onclick="addOne(this)" onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
                         min="1" max="{{ aantal_verplaatsen_org }}" id="aantal_verplaatsen{{ forloop.counter }}"
                         oninput="javascript: if (this.value > this.max) this.value = this.max;"
                         onchange="javascript: if (parseInt(this.value) > parseInt(this.max)) this.value = parseInt(this.max);"
                         />
                 {% else %}
-                    <input onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
+                    <input onclick="addOne(this)" onblur="findTotal()" class="aantal" type="number" name='aantal_verplaatsen{{ forloop.counter }}'
                         min="1" max="{{ v.beschikbaar }}" id="aantal_verplaatsen{{ forloop.counter }}"
                         oninput="javascript: if (this.value > this.max) this.value = this.max;"
                         onchange="javascript: if (parseInt(this.value) > parseInt(this.max)) this.value = parseInt(this.max);"

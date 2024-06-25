@@ -7,7 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 from django.db.models import Deferrable, Value, CharField
-from django.db.models.functions import Concat
+import datetime
 
 from WijnVoorraad.models import (
     Deelnemer,
@@ -16,6 +16,8 @@ from WijnVoorraad.models import (
     Wijn,
     WijnSoort,
     WijnDruivensoort,
+    Ontvangst,
+    VoorraadMutatie,
 )
 from WijnVoorraad.models_oudwijn import (
     OudDeelnemer,
@@ -23,6 +25,7 @@ from WijnVoorraad.models_oudwijn import (
     OudLocatie,
     OudWijn,
     OudWijnDruivensoort,
+    OudVoorraadmutatie,
 )
 
 
@@ -242,9 +245,11 @@ class ConvWijnDruivensoort(models.Model):
 
     class Meta:
         ordering = ["id_wijn_oud", "id_druivensoort_oud"]
+        verbose_name = "Conv wijn druivensoort"
+        verbose_name_plural = "Conv wijn druivensoorten"
         constraints = [
             models.UniqueConstraint(
-                name="uniquekey",
+                name="uniquekey_convwijndruivensoort",
                 fields=["id_wijn_oud", "id_druivensoort_oud"],
                 deferrable=Deferrable.DEFERRED,
             )
@@ -262,7 +267,7 @@ def te_conv_wijndruivensoorten():
 
     if conv_ids:
         oudwijndruivensoorten = OudWijnDruivensoort.objects.extra(
-            where=[f"(id_wijn,id_druivensoort) in {t}"]
+            where=[f"(id_wijn,id_druivensoort) not in {t}"]
         )
     else:
         oudwijndruivensoorten = OudWijnDruivensoort.objects.all()
@@ -329,10 +334,134 @@ def converteer_wijndruivensoorten(InclAanmaken, DoCommit):
     return convdata
 
 
+class ConvVoorraadmutatie(models.Model):
+    id_oud = models.BigIntegerField(unique=True)
+    id_nieuw = models.BigIntegerField()
+
+    def __str__(self):
+        return "Oud %s - Nieuw %s" % (self.id_oud, self.id_nieuw)
+
+    class Meta:
+        ordering = ["id_oud"]
+
+
+def te_conv_voorraadmutaties():
+    conv_ids = list(ConvVoorraadmutatie.objects.all().values_list("id_oud", flat=True))
+    oudVoorraadmutaties = OudVoorraadmutatie.objects.exclude(id__in=conv_ids)
+    return oudVoorraadmutaties
+
+
+def koppel_voorraadmutatie_oud_nieuw(id_oud, id_nieuw):
+    koppel = ConvVoorraadmutatie()
+    koppel.id_oud = id_oud
+    koppel.id_nieuw = id_nieuw
+    koppel.save()
+
+
+def converteer_voorraadmutaties(InclAanmaken, DoCommit):
+    convdata = init_conv(DoCommit)
+    dflt_ontvangstdatum = datetime.datetime(1900, 1, 1)
+
+    for mut_oud in te_conv_voorraadmutaties():
+        try:
+            w_conv = ConvWijn.objects.get(id_oud=mut_oud.id_wijn)
+            d_conv = ConvDeelnemer.objects.get(id_oud=mut_oud.id_deelnemer)
+            l_conv = ConvLocatie.objects.get(id_oud=mut_oud.id_locatie)
+            try:
+                o_nieuw = None
+                o_nieuw = Ontvangst.objects.get(
+                    wijn__id=w_conv.id_nieuw,
+                    deelnemer__id=d_conv.id_nieuw,
+                    datumOntvangst=dflt_ontvangstdatum,
+                )
+            except Ontvangst.DoesNotExist:
+                if InclAanmaken:
+                    w_oud = OudWijn.objects.get(pk=mut_oud.id_wijn)
+                    o_nieuw = Ontvangst()
+                    o_nieuw.wijn = Wijn.objects.get(pk=w_conv.id_nieuw)
+                    o_nieuw.deelnemer = Deelnemer.objects.get(pk=d_conv.id_nieuw)
+                    o_nieuw.datumOntvangst = dflt_ontvangstdatum
+                    o_nieuw.leverancier = w_oud.leverancier
+                    o_nieuw.website = w_oud.url
+                    o_nieuw.opmerking = w_oud.opmerkingen
+                    convdata.aantal_aangemaakt_extra += 1
+                    if DoCommit:
+                        o_nieuw.save()
+            if o_nieuw:
+                mut_datum = mut_oud.datum
+                if not mut_datum:
+                    mut_datum = datetime.datetime(1900, 1, 1)
+                try:
+                    mut_nieuw = VoorraadMutatie.objects.get(
+                        ontvangst=o_nieuw,
+                        locatie__id=l_conv.id_nieuw,
+                        in_uit=mut_oud.indicatie_in_uit,
+                        datum=mut_datum,
+                    )
+                    convdata.aantal_gekoppeld += 1
+                    if DoCommit:
+                        koppel_voorraadmutatie_oud_nieuw(mut_oud.id, mut_nieuw.id)
+                except VoorraadMutatie.DoesNotExist:
+                    if InclAanmaken:
+                        mut_nieuw = VoorraadMutatie()
+                        mut_nieuw.ontvangst = o_nieuw
+                        mut_nieuw.locatie = Locatie.objects.get(pk=l_conv.id_nieuw)
+                        mut_nieuw.in_uit = mut_oud.indicatie_in_uit
+                        mut_nieuw.datum = mut_datum
+                        if mut_oud.indicatie_in_uit == "I":
+                            mut_nieuw.actie = "K"
+                        else:
+                            mut_nieuw.actie = "D"
+                        mut_nieuw.aantal = mut_oud.aantal
+                        mut_nieuw.omschrijving = mut_oud.omschrijving
+                        convdata.aantal_aangemaakt += 1
+                        if DoCommit:
+                            mut_nieuw.save()
+                            koppel_voorraadmutatie_oud_nieuw(mut_oud.id, mut_nieuw.id)
+        except ConvWijn.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Wijn onbekend / nog niet geconverteerd. Id Vrd oud {mut_oud.id}. Id wijn oud {mut_oud.id_wijn}"
+            )
+        except ConvDeelnemer.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Deelnemer onbekend / nog niet geconverteerd. Id Vrd oud {mut_oud.id}. Id deelnemer oud {mut_oud.id_deelnemer}"
+            )
+        except ConvLocatie.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Locatie onbekend / nog niet geconverteerd. Id Vrd oud {mut_oud.id}. Id locatie oud {mut_oud.id_locatie}"
+            )
+        except Wijn.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Geconverteerde wijn niet gevonden. Id Vrd oud {mut_oud.id}. Id wijn nieuw {w_conv}"
+            )
+        except Deelnemer.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Geconverteerde deelnemer niet gevonden. Id Vrd oud {mut_oud.id}. Id deelnemer nieuw {d_conv}"
+            )
+        except Locatie.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Geconverteerde locatie niet gevonden. Id Vrd oud {mut_oud.id}. Id locatie nieuw {l_conv}"
+            )
+        except OudWijn.DoesNotExist:
+            convdata.aantal_fouten += 1
+            convdata.message_list.append(
+                f"Oude wijn niet gevonden. Id Vrd oud {mut_oud.id}. Id wijn oud {mut_oud.id_wijn}"
+            )
+    add_messages(DoCommit, convdata)
+    return convdata
+
+
 class ConvData:
     def __init__(self):
         self.aantal_gekoppeld = 0
         self.aantal_aangemaakt = 0
+        self.aantal_aangemaakt_extra = 0
         self.aantal_fouten = 0
         self.message_list = []
 
@@ -355,6 +484,10 @@ def add_messages(DoCommit, convdata):
             )
         else:
             convdata.message_list.append("Geen aangemaakt.")
+        if convdata.aantal_aangemaakt_extra > 0:
+            convdata.message_list.append(
+                f"Aantal extra aangemaakt {convdata.aantal_aangemaakt_extra}."
+            )
         if convdata.aantal_fouten > 0:
             convdata.message_list.append(f"Aantal fouten {convdata.aantal_fouten}.")
     else:
@@ -362,6 +495,10 @@ def add_messages(DoCommit, convdata):
         if convdata.aantal_aangemaakt > 0:
             convdata.message_list.append(
                 f"Aantal aan te maken {convdata.aantal_aangemaakt}."
+            )
+        if convdata.aantal_aangemaakt_extra > 0:
+            convdata.message_list.append(
+                f"Aantal extra aan te maken {convdata.aantal_aangemaakt_extra}."
             )
         if convdata.aantal_fouten > 0:
             convdata.message_list.append(f"Aantal fouten {convdata.aantal_fouten}.")
@@ -396,20 +533,6 @@ def add_messages(DoCommit, convdata):
 
 
 # class ConvProefnotitie(models.Model):
-#     id_oud = models.BigIntegerField()
-#     id_nieuw = models.BigIntegerField()
-
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(
-#                 name="uniquekey",
-#                 fields=["id_oud", "id_nieuw"],
-#                 deferrable=Deferrable.DEFERRED,
-#             )
-#         ]
-
-
-# class ConvVoorraadmutatie(models.Model):
 #     id_oud = models.BigIntegerField()
 #     id_nieuw = models.BigIntegerField()
 

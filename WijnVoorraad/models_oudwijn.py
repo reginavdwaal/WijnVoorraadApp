@@ -64,6 +64,24 @@ class OudWijnDruivensoort(models.Model):
         app_label = "ouddb"
 
 
+
+class OudVoorraadmutatie(models.Model):
+    id_wijn = models.IntegerField()
+    id_deelnemer = models.IntegerField()
+    id_locatie = models.IntegerField()
+    indicatie_in_uit = models.CharField(max_length=1)
+    datum = models.DateField()
+    aantal = models.IntegerField()
+    omschrijving = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "voorraadmutatie"
+        unique_together = (
+            ("id_wijn", "id_deelnemer", "id_locatie", "indicatie_in_uit", "datum"),
+        )
+        app_label = "ouddb"
+
 class OudFoto(models.Model):
     datum_gemaakt = models.DateField(blank=True, null=True)
     filenaam = models.CharField(max_length=100)
@@ -97,20 +115,3 @@ class OudProefnotitie(models.Model):
         db_table = "proefnotitie"
         app_label = "ouddb"
 
-
-class OudVoorraadmutatie(models.Model):
-    id_wijn = models.IntegerField()
-    id_deelnemer = models.IntegerField()
-    id_locatie = models.IntegerField()
-    indicatie_in_uit = models.CharField(max_length=1)
-    datum = models.DateField()
-    aantal = models.IntegerField()
-    omschrijving = models.CharField(max_length=255, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = "voorraadmutatie"
-        unique_together = (
-            ("id_wijn", "id_deelnemer", "id_locatie", "indicatie_in_uit", "datum"),
-        )
-        app_label = "ouddb"

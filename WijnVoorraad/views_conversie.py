@@ -13,6 +13,7 @@ from WijnVoorraad.models_oudwijn import (
     OudLocatie,
     OudWijn,
     OudWijnDruivensoort,
+    OudVoorraadmutatie,
 )
 from WijnVoorraad.models_conversie import (
     converteer_deelnemers,
@@ -25,6 +26,8 @@ from WijnVoorraad.models_conversie import (
     te_conv_wijnen,
     converteer_wijndruivensoorten,
     te_conv_wijndruivensoorten,
+    converteer_voorraadmutaties,
+    te_conv_voorraadmutaties,
 )
 from . import wijnvars
 
@@ -72,7 +75,19 @@ class StartConversieView(LoginRequiredMixin, TemplateView):
         context["message_list_wijndruivensoort"] = wijnvars.get_session_extra_var(
             self.request, "message_list_wijndruivensoort"
         )
-        wijnvars.set_session_extra_var(self.request, "message_list_wijn", None)
+        wijnvars.set_session_extra_var(
+            self.request, "message_list_wijndruivensoort", None
+        )
+
+        context["aantal_voorraadmutaties_oud"] = OudVoorraadmutatie.objects.count()
+        conv = te_conv_voorraadmutaties()
+        context["aantal_voorraadmutaties_te_conv"] = conv.count()
+        context["message_list_voorraadmutatie"] = wijnvars.get_session_extra_var(
+            self.request, "message_list_voorraadmutatie"
+        )
+        wijnvars.set_session_extra_var(
+            self.request, "message_list_voorraadmutatie", None
+        )
 
         context["title"] = "Start conversie"
         return context
@@ -110,6 +125,11 @@ class StartConversieView(LoginRequiredMixin, TemplateView):
             convdata = converteer_wijndruivensoorten(InclAanmaken, DoCommit)
             wijnvars.set_session_extra_var(
                 request, "message_list_wijndruivensoort", convdata.message_list
+            )
+        elif "StartConversieVoorraadmutatie" in self.request.POST:
+            convdata = converteer_voorraadmutaties(InclAanmaken, DoCommit)
+            wijnvars.set_session_extra_var(
+                request, "message_list_voorraadmutatie", convdata.message_list
             )
         url = reverse("WijnVoorraad:startconversie")
         return HttpResponseRedirect(url)

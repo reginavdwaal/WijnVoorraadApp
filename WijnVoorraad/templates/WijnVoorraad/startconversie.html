@@ -139,6 +139,32 @@
                 <label class="detail-column">{{ message }}</label>
             </div>
         {% endfor %}
+
+    <div class="detail-block">
+        <h1>Voorraadmutaties</h1>
+        <div class="detail-row">
+            <label class="detail-column-label">Aantal oud</label>
+            <label class="detail-column">{{ aantal_voorraadmutaties_oud }}</label>            
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Nog te converteren</label>
+            <label class="detail-column">{{ aantal_voorraadmutaties_te_conv }}</label>            
+        </div>
+    </div>  <!-- end detail-block -->
+    <div class="detail-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="checkbox" name="InclAanmaken">
+            <label for="InclAanmaken">Incl. Aanmaken records</label>
+            <input type="checkbox" name="DoCommit" value="DoCommit">
+            <label for="DoCommit">Wijzigingen opslaan</label>
+            <input type="submit" name="StartConversieVoorraadmutatie" value="Converteer Voorraadmutaties">
+        </form>
+        {% for message in message_list_voorraadmutatie %}        
+            <div class="detail-row">
+                <label class="detail-column">{{ message }}</label>
+            </div>
+        {% endfor %}
     </div>  <!-- end buttons-block -->
 
 </div>  <!-- end content-main -->

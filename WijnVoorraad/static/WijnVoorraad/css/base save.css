@@ -68,7 +68,7 @@ a img {
 #header {
     width: auto;
     height: auto;
-    display: inline-flex;
+    display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
@@ -78,14 +78,15 @@ a img {
 }
 
 #branding {
+    float: left;
     display: inline-block;
 }
 
 #branding h1 {
     padding: 0;
     margin: 0 20px 0 0;
-    font-weight: 700;
-    font-size: 1.5rem;
+    font-weight: 100;
+    font-size: 1rem;
     color: var(--header-branding-color);
 }
 
@@ -94,10 +95,7 @@ a img {
 }
 
 #header-bar {
-    display: inline-block;
-}
-
-#user-tools {
+    float: right;
     display: inline-block;
 }
 

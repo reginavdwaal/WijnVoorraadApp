@@ -31,7 +31,7 @@
             <div id="branding">
               {% block branding %}
                 <h1 id="site-name">
-                  <img src="{% static 'WijnVoorraad/img/Wineicon.png' %}" alt="logo">
+                  <img src="{% static 'WijnVoorraad/img/Wineicon.png' %}" width="50" height="50" alt="logo">
                   <a href="{% url 'WijnVoorraad:voorraadlist' %}">{{ site_header|default:_('Wijnvoorraad') }}</a>
                 </h1>
               {% endblock %}

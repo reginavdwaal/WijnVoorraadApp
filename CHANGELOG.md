@@ -1,3 +1,25 @@
+## v0.7.0 (2024-06-26)
+
+### Feat
+
+- **icons and styling mobile**: icons and styling mobile
+- conversie voorraadmutaties
+- **verplaatsen**: verplaatsen onclick +1
+- conversie wijndruivensoorten
+- **Conversie**: Conversie wijnen + refactor
+- **Conversie Locaties**: Conversie Locaties
+- **Conversie**: Conversie druivensoorten
+- **Conversie**: Conversie deelnemers
+- Fixed db security issue
+- **conversie view**: Startconversie view
+- **databases**: Added connection and model for old environment
+- Ontvangst kopieer toegevoegd
+
+### Fix
+
+- Added git ignore
+- herstel prod.py settings en deploy.sh
+
 ## v0.6.0 (2024-06-08)
 
 ### Feat

@@ -16,6 +16,20 @@ ALLOWED_HOSTS = [
     "vdwaal.net",
     "vino.vdwaal.net",
 ]
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "oudwijndb": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "vdwanet_defaultdb",
+        "USER": "vdwanet_django",
+        "PASSWORD": DB_PASSWORD,
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+    },
+}
 
 WWW_DIR = os.path.join(Path(BASE_DIR).resolve(), "public_html")
 

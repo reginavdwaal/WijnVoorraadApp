@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
-from dotenv import find_dotenv, load_dotenv
+from decouple import config
 from .. import __version__
 
 
@@ -65,29 +65,12 @@ TEMPLATES = [
 WSGI_APPLICATION = "WijnProject.wsgi.application"
 
 
-load_dotenv(find_dotenv())
-DB_PASSWORD = os.environ["DB_PASSWORD"]
+DB_PASSWORD = config("DB_PASSWORD")
 
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    },
-    "oudwijndb": {
-        # "ENGINE": "django.db.backends.mysql",
-        "ENGINE": "mysql.connector.django",
-        "NAME": "vdwanet_defaultdb",
-        "USER": "vdwanet_django",
-        "PASSWORD": DB_PASSWORD,
-        "HOST": "87.236.102.45",
-        "PORT": "3306",
-    },
-}
 
 DATABASE_ROUTERS = ("WijnVoorraad.dbrouters.MyDBRouter",)
 

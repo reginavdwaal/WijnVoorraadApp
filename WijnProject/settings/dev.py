@@ -13,6 +13,20 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["espresso", "localhost", "AsusRegina", "192.168.178.96"]
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "oudwijndb": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "vdwanet_defaultdb",
+        "USER": "vdwanet_django",
+        "PASSWORD": DB_PASSWORD,
+        "HOST": "87.236.102.45",
+        "PORT": "3306",
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

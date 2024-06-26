@@ -79,7 +79,8 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     },
     "oudwijndb": {
-        "ENGINE": "django.db.backends.mysql",
+        # "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "mysql.connector.django",
         "NAME": "vdwanet_defaultdb",
         "USER": "vdwanet_django",
         "PASSWORD": DB_PASSWORD,

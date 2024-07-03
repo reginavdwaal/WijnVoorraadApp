@@ -1,0 +1,58 @@
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+      <input type="text"
+             name='fuzzy_selectie'
+             id="fuzzy_selectie"
+             class="fuzzy_selectie"
+             value="{{ request.session.fuzzy_selectie| default_if_none:'' }}" />
+      <button class="clear_style" name="Search" type="submit">
+        <img class="clear_style"
+             src="{% static '/WijnVoorraad/img/Searchicon.png' %}"
+             width="30"
+             height="30"
+             alt="Zoeken" />
+      </button>
+      <input type="submit" class="wijnsoort wijnsoort_rood {% if request.session.wijnsoort_omschrijving == 'rood' %} wijnsoort_selected {% endif %}" 
+        name='ws_rood'
+        id="ws_rood"
+        value="R"
+      />
+      <input type="submit" class="wijnsoort wijnsoort_wit {% if request.session.wijnsoort_omschrijving == 'wit' %} wijnsoort_selected {% endif %}" 
+        name='ws_wit'
+        id="ws_wit"
+        value="W"
+      />
+      <input type="submit" class="wijnsoort wijnsoort_rose {% if request.session.wijnsoort_omschrijving == 'rose' %} wijnsoort_selected {% endif %}" 
+        name='ws_rose'
+        id="ws_rose"
+        value="Rs"
+      />
+      <a class="clear_style"
+         href="{% url 'WijnVoorraad:voorraadlist_filter' %}">
+        <img class="clear_style"
+             src="{% static '/WijnVoorraad/img/Filtericon.png' %}"
+             width="30"
+             height="30"
+             alt="Filter" />
+      </a>
+      <button class="clear_style" name="FilterClear" type="submit">
+        <img class="clear_style"
+             src="{% static '/WijnVoorraad/img/FilterClearIcon.png' %}"
+             width="30"
+             height="30"
+             alt="clear" />
+      </button>
+      {% if addoption %}
+        <a class="clear_style" href="{{ addoption }}">
+          <img class="clear_style" src="{% static '/WijnVoorraad/img/Addicon.png' %}"
+               width="30"
+               height="30"
+               alt="Toevoegen" />
+        </a>
+      {% endif %}
+    </div>
+  </form>

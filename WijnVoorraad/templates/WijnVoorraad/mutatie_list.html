@@ -4,14 +4,7 @@
 
 {% block content %}
 <div id="content-main">
-    <form method="post">{% csrf_token %}
-        <div class="form-row">
-          <input type="text" name='fuzzy_selectie' id="fuzzy_selectie" value="{{ request.session.fuzzy_selectie | default_if_none:'' }}"/>
-          <button class="clear_style" type="submit">
-            <img class="clear_style" src="{% static '/WijnVoorraad/img/Searchicon.png' %}" width="30" height="30" alt="Zoeken"/>
-          </button>
-        </div>
-    </form>
+    {% include 'WijnVoorraad/component_filter.html' %}
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 

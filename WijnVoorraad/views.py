@@ -69,33 +69,13 @@ class VoorraadListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:voorraadlist"
+        )
         return context
 
     def post(self, request, *args, **kwargs):
-        if "FilterClear" in self.request.POST:
-            wijnvars.reset_session_vars(self.request)
-        else:
-            fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-            wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
-            ws_rood = self.request.POST.get("ws_rood")
-            if ws_rood:
-                if wijnvars.get_session_wijnsoort_omschrijving(self.request) == "rood":
-                    wijnvars.set_session_wijnsoort(self.request, None)
-                else:
-                    wijnvars.set_session_wijnsoort_rood(self.request)
-            ws_wit = self.request.POST.get("ws_wit")
-            if ws_wit:
-                if wijnvars.get_session_wijnsoort_omschrijving(self.request) == "wit":
-                    wijnvars.set_session_wijnsoort(self.request, None)
-                else:
-                    wijnvars.set_session_wijnsoort_wit(self.request)
-            ws_rose = self.request.POST.get("ws_rose")
-            if ws_rose:
-                if wijnvars.get_session_wijnsoort_omschrijving(self.request) == "rose":
-                    wijnvars.set_session_wijnsoort(self.request, None)
-                else:
-                    wijnvars.set_session_wijnsoort_rose(self.request)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
@@ -134,8 +114,8 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
         wijnvars.set_session_locatie(self.request, l_id)
         wijnvars.set_session_wijnsoort_id(self.request, ws_id)
         wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
-        url = reverse("WijnVoorraad:voorraadlist")
-        return HttpResponseRedirect(url)
+        url = wijnvars.get_session_return_url(self.request)
+        return HttpResponseRedirect(reverse(url))
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -360,6 +340,10 @@ class MutatieListView(LoginRequiredMixin, ListView):
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l
         ).order_by("-datum")
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
+
         fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
         if fuzzy_selectie:
             mutatie_list = (
@@ -390,13 +374,14 @@ class MutatieListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         wijnvars.set_context_default(context, "WijnVoorraad:mutatielist")
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:mutatielist"
+        )
         context["title"] = "Mutaties"
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:mutatielist")
         return HttpResponseRedirect(url)
 
@@ -412,6 +397,10 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="U"
         ).order_by("-datum")
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
+
         fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
         if fuzzy_selectie:
             mutatie_list = (
@@ -442,13 +431,14 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         wijnvars.set_context_default(context, "WijnVoorraad:mutatielist_uit")
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:mutatielist_uit"
+        )
         context["title"] = "Uitgaande mutaties"
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:mutatielist_uit")
         return HttpResponseRedirect(url)
 
@@ -464,6 +454,10 @@ class MutatieInListView(LoginRequiredMixin, ListView):
         mutatie_list = VoorraadMutatie.objects.filter(
             ontvangst__deelnemer=d, locatie=l, in_uit="I"
         ).order_by("-datum")
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
+
         fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
         if fuzzy_selectie:
             mutatie_list = (
@@ -494,13 +488,14 @@ class MutatieInListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         wijnvars.set_context_default(context, "WijnVoorraad:mutatielist_in")
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:mutatielist_in"
+        )
         context["title"] = "Inkomende mutaties"
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:mutatielist_in")
         return HttpResponseRedirect(url)
 
@@ -585,6 +580,10 @@ class OntvangstListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         ontvangst_list = Ontvangst.objects.all()
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            ontvangst_list = ontvangst_list.filter(wijn__wijnsoort__id=ws_id)
+
         fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
         if fuzzy_selectie:
             ontvangst_list = (
@@ -609,13 +608,14 @@ class OntvangstListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:ontvangstlist"
+        )
         context["title"] = "Ontvangsten"
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:ontvangstlist")
         return HttpResponseRedirect(url)
 
@@ -797,6 +797,10 @@ class WijnListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         wijn_list = Wijn.objects.all()
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            wijn_list = wijn_list.filter(wijnsoort__id=ws_id)
+
         fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
         if fuzzy_selectie:
             wijn_list = (
@@ -817,13 +821,14 @@ class WijnListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_fuzzy_selectie(context, self.request)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:wijnlist"
+        )
         context["title"] = "Wijnen"
         return context
 
     def post(self, request, *args, **kwargs):
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        wijnvars.handle_filter_options_post(request)
         url = reverse("WijnVoorraad:wijnlist")
         return HttpResponseRedirect(url)
 

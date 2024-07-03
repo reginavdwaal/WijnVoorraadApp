@@ -169,6 +169,16 @@ def get_session_fuzzy_selectie(request):
     return fuzzy_selectie
 
 
+def set_session_return_url(request, return_url):
+    request.session["return_url"] = return_url
+    return request
+
+
+def get_session_return_url(request):
+    return_url = request.session.get("return_url")
+    return return_url
+
+
 # def set_session_ontvangst_id (request, ontvangst_id):
 #     request.session["ontvangst_id"] = ontvangst_id
 #     return request
@@ -218,10 +228,11 @@ def set_context_default(context, return_url):
     return context
 
 
-def set_context_fuzzy_selectie(context, request):
+def set_context_filter_options(context, request, return_url):
     fuzzy_selectie = get_session_fuzzy_selectie(request)
     if fuzzy_selectie:
         context["fuzzy_selectie"] = fuzzy_selectie
+    set_session_return_url(request, return_url)
     return context
 
 
@@ -233,3 +244,29 @@ def set_session_extra_var(request, extra_var_name, extra_var_value):
 def get_session_extra_var(request, extra_var_name):
     extra_var_value = request.session.get(extra_var_name, None)
     return extra_var_value
+
+
+def handle_filter_options_post(request):
+    if "FilterClear" in request.POST:
+        reset_session_vars(request)
+    else:
+        fuzzy_selectie = request.POST["fuzzy_selectie"]
+        set_session_fuzzy_selectie(request, fuzzy_selectie)
+        ws_rood = request.POST.get("ws_rood")
+        if ws_rood:
+            if get_session_wijnsoort_omschrijving(request) == "rood":
+                set_session_wijnsoort(request, None)
+            else:
+                set_session_wijnsoort_rood(request)
+        ws_wit = request.POST.get("ws_wit")
+        if ws_wit:
+            if get_session_wijnsoort_omschrijving(request) == "wit":
+                set_session_wijnsoort(request, None)
+            else:
+                set_session_wijnsoort_wit(request)
+        ws_rose = request.POST.get("ws_rose")
+        if ws_rose:
+            if get_session_wijnsoort_omschrijving(request) == "rose":
+                set_session_wijnsoort(request, None)
+            else:
+                set_session_wijnsoort_rose(request)

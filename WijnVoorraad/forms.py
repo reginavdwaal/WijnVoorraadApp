@@ -18,6 +18,8 @@ from .models import (
     WijnVoorraad,
 )
 
+from . import wijnvars
+
 
 class SelectWithPop(forms.Select):
 
@@ -65,6 +67,16 @@ class VoorraadFilterForm(forms.Form):
         WijnSoort.objects, empty_label="----------", required=False
     )
     fuzzy_selectie = forms.CharField(max_length=200, required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
+        bool_deelnemer = wijnvars.get_bool_deelnemer(self.request)
+        bool_locatie = wijnvars.get_bool_locatie(self.request)
+        super(VoorraadFilterForm, self).__init__(*args, **kwargs)
+        if not bool_deelnemer:
+            del self.fields["deelnemer"]
+        if not bool_locatie:
+            del self.fields["locatie"]
 
 
 class OntvangstCreateForm(forms.ModelForm):

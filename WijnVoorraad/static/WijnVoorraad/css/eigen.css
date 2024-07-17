@@ -17,6 +17,8 @@
   --body-fg: #333;
   --body-headers-color: #333; /* h1 t/m h5 */ 
 
+  --clearfilter-bg: #f3eeee;
+
   --header-bg: #417690;
   --header-color: #ffc;
   --header-branding-color: #000000;
@@ -102,6 +104,12 @@ input[type=submit].wijnsoort_selected {
     font-weight: bolder;
     border: 3px solid #000000;
  }
+
+ input[type=submit].clear_filter {
+    color: var(--body-fg);
+    background: var(--clearfilter-bg);
+    padding: 3px 15px 3px 3px;
+}
 
 table.wijnvoorraad {
     border-collapse: separate;

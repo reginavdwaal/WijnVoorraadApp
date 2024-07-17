@@ -5,7 +5,7 @@
 {% block content %}
 <div id="content-main">
     {% url 'WijnVoorraad:ontvangst-create' as urlname %}
-    {% include 'WijnVoorraad/component_filter.html' with addoption=urlname %}
+    {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
     <table>
         {% for o in ontvangst_list %}
             {% if o == ontvangst_list|first %} 

@@ -197,6 +197,11 @@ def set_initial_user_session(request):
     request.session["initial_set"] = True
 
 
+def reset_session_locatie(request):
+    d = get_session_deelnemer(request)
+    set_session_locatie(request, d.standaardLocatie.id)
+
+
 def reset_session_vars(request):
     request.session["initial_set"] = None
     set_initial_user_session(request)
@@ -228,11 +233,50 @@ def set_context_default(context, return_url):
     return context
 
 
+def get_bool_deelnemer(request):
+    bool_deelnemer = request.session.get("bool_deelnemer", None)
+    return bool_deelnemer
+
+
+def get_bool_locatie(request):
+    bool_locatie = request.session.get("bool_locatie", None)
+    return bool_locatie
+
+
+def set_filter_options(request, bool_deelnemer, bool_locatie):
+    request.session["bool_deelnemer"] = bool_deelnemer
+    request.session["bool_locatie"] = bool_locatie
+    return request
+
+
 def set_context_filter_options(context, request, return_url):
+    set_session_return_url(request, return_url)
+    context["active_filters"] = []
+    if get_bool_deelnemer(request):
+        add_filter = {"type": "Deelnemer", "text": get_session_deelnemer_naam(request)}
+        context["active_filters"].append(add_filter)
+    if get_bool_locatie(request):
+        add_filter = {
+            "type": "Locatie",
+            "text": get_session_locatie_omschrijving(request),
+        }
+        context["active_filters"].append(add_filter)
+    ws_id = get_session_wijnsoort_id(request)
+    if ws_id:
+        add_filter = {
+            "type": "Wijnsoort",
+            "text": get_session_wijnsoort_omschrijving(request).capitalize(),
+        }
+        context["active_filters"].append(add_filter)
     fuzzy_selectie = get_session_fuzzy_selectie(request)
     if fuzzy_selectie:
         context["fuzzy_selectie"] = fuzzy_selectie
-    set_session_return_url(request, return_url)
+        add_filter = {
+            "type": "Fuzzy",
+            "text": fuzzy_selectie,
+        }
+        context["active_filters"].append(add_filter)
+
     return context
 
 
@@ -249,6 +293,15 @@ def get_session_extra_var(request, extra_var_name):
 def handle_filter_options_post(request):
     if "FilterClear" in request.POST:
         reset_session_vars(request)
+    elif "clearfilterDeelnemer" in request.POST:
+        request.session["initial_set"] = None
+        set_initial_user_session(request)
+    elif "clearfilterLocatie" in request.POST:
+        reset_session_locatie(request)
+    elif "clearfilterWijnsoort" in request.POST:
+        set_session_wijnsoort(request, None)
+    elif "clearfilterFuzzy" in request.POST:
+        set_session_fuzzy_selectie(request, None)
     else:
         fuzzy_selectie = request.POST["fuzzy_selectie"]
         set_session_fuzzy_selectie(request, fuzzy_selectie)

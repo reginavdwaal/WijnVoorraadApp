@@ -1,10 +1,10 @@
-{% extends "./base_context.html" %}
+{% extends "./base.html" %}
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
-    {% include 'WijnVoorraad/component_filter.html' %}
+    {% include 'WijnVoorraad/component_filter.html' with show_filters=True %}
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 

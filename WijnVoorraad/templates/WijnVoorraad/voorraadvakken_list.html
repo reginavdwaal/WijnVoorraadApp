@@ -38,7 +38,7 @@
                             <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
                                 <td class="bgstd">
                                 <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
-                                ( {{ vrd.aantal}} )
+                                ( {{ vrd.aantal }} )
                             </td></tr>
                         {% endif %}
                     {% endfor %}

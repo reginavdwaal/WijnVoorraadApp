@@ -5,7 +5,7 @@
 {% block content %}
 <div id="content-main">
   {% url 'WijnVoorraad:ontvangst-create' as urlname %}
-  {% include 'WijnVoorraad/component_filter.html' with addoption=urlname %}
+  {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
     <table class="wijnvoorraad">
       {% for v in voorraad_list %}
         <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">

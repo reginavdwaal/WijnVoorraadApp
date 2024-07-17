@@ -55,4 +55,17 @@
         </a>
       {% endif %}
     </div>
+    {% if show_filters %}
+      {% if active_filters %}
+        <div class="form-row">
+          {% for filter in active_filters %}
+            <input type="submit" class="clear_filter"  
+              name='clearfilter{{ filter.type }}'
+              id="clearfilter{{ filter.type }}"
+              value="{{ filter.text }}&nbsp;&nbsp; X"
+            />
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endif %}
   </form>

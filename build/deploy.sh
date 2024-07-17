@@ -103,6 +103,17 @@ source ~/domains/parse_env.sh ~/domains/${DOMAIN}/public_html/.htaccess
 
 cd ~/domains/${DOMAIN}
 
+# install new modules
+pip install -r requirements.txt 
+
+read -p "Did pip install run without errors (y/n) " -n 1 -r answer
+if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+   echo
+   echo "Aborting"
+   exit 1
+fi
+
+
 # Migrate the database
 echo "Migrating the database..."
 python manage.py migrate

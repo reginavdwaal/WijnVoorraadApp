@@ -29,7 +29,7 @@ class VoorraadListView(LoginRequiredMixin, ListView):
     # template_name = 'WijnVoorraad/index.html'
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True)
+        wijnvars.set_filter_options(self.request, True, True, False, False)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         voorraad_list = (
@@ -139,10 +139,11 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/wijnvoorraad_detail.html"
 
     def get_queryset(self):
-        d = wijnvars.get_session_deelnemer(self.request)
-        l = wijnvars.get_session_locatie(self.request)
+        l = self.kwargs["locatie_id"]
         w = self.kwargs["wijn_id"]
         o = self.kwargs["ontvangst_id"]
+        ontvangst = Ontvangst.objects.get(pk=o)
+        d = ontvangst.deelnemer.id
         voorraad_list = WijnVoorraad.objects.filter(
             deelnemer=d, locatie=l, wijn=w, ontvangst=o
         )
@@ -150,6 +151,8 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        l = self.kwargs["locatie_id"]
+        context["locatie"] = Locatie.objects.get(pk=l)
         w = self.kwargs["wijn_id"]
         context["wijn"] = Wijn.objects.get(pk=w)
         o = self.kwargs["ontvangst_id"]
@@ -180,7 +183,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/voorraadvakken_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, True)
+        wijnvars.set_filter_options(self.request, False, True, False, False)
         l = wijnvars.get_session_locatie(self.request)
         vakken_list = (
             Vak.objects.filter(locatie=l)
@@ -191,16 +194,22 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_default(context, "WijnVoorraad:voorraadvakkenlist")
-        d = wijnvars.get_session_deelnemer(self.request)
+        wijnvars.set_context_locatie_list(context)
         l = wijnvars.get_session_locatie(self.request)
-        voorraad_list = WijnVoorraad.objects.filter(deelnemer=d, locatie=l).order_by(
-            "vak"
-        )
+        voorraad_list = WijnVoorraad.objects.filter(locatie=l).order_by("vak")
+        wijnvars.set_context_is_mobile(context, self.request)
+        if context["is_mobile"]:
+            l.aantal_kolommen = 1
         context["locatie"] = l
         context["voorraad_list"] = voorraad_list
-        context["title"] = "Vakken"
+        context["title"] = "Voorraad Vakken"
         return context
+
+    def post(self, request, *args, **kwargs):
+        l_id = request.POST["locatie_id"]
+        wijnvars.set_session_locatie(request, l_id)
+        url = reverse("WijnVoorraad:voorraadvakkenlist")
+        return HttpResponseRedirect(url)
 
 
 class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
@@ -346,12 +355,14 @@ class MutatieListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
-        mutatie_list = VoorraadMutatie.objects.filter(
-            ontvangst__deelnemer=d, locatie=l
-        ).order_by("-datum")
+        mutatie_list = VoorraadMutatie.objects.order_by("-datum")
+        if d:
+            mutatie_list = mutatie_list.filter(ontvangst__deelnemer=d)
+        if l:
+            mutatie_list = mutatie_list.filter(locatie=l)
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
             mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
@@ -385,7 +396,6 @@ class MutatieListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_default(context, "WijnVoorraad:mutatielist")
         wijnvars.set_context_filter_options(
             context, self.request, "WijnVoorraad:mutatielist"
         )
@@ -404,12 +414,14 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_uit_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
-        mutatie_list = VoorraadMutatie.objects.filter(
-            ontvangst__deelnemer=d, locatie=l, in_uit="U"
-        ).order_by("-datum")
+        mutatie_list = VoorraadMutatie.objects.filter(in_uit="U").order_by("-datum")
+        if d:
+            mutatie_list = mutatie_list.filter(ontvangst__deelnemer=d)
+        if l:
+            mutatie_list = mutatie_list.filter(locatie=l)
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
             mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
@@ -443,7 +455,6 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_default(context, "WijnVoorraad:mutatielist_uit")
         wijnvars.set_context_filter_options(
             context, self.request, "WijnVoorraad:mutatielist_uit"
         )
@@ -462,12 +473,14 @@ class MutatieInListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_in_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
-        mutatie_list = VoorraadMutatie.objects.filter(
-            ontvangst__deelnemer=d, locatie=l, in_uit="I"
-        ).order_by("-datum")
+        mutatie_list = VoorraadMutatie.objects.filter(in_uit="I").order_by("-datum")
+        if d:
+            mutatie_list = mutatie_list.filter(ontvangst__deelnemer=d)
+        if l:
+            mutatie_list = mutatie_list.filter(locatie=l)
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
             mutatie_list = mutatie_list.filter(ontvangst__wijn__wijnsoort__id=ws_id)
@@ -501,7 +514,6 @@ class MutatieInListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wijnvars.set_context_default(context, "WijnVoorraad:mutatielist_in")
         wijnvars.set_context_filter_options(
             context, self.request, "WijnVoorraad:mutatielist_in"
         )
@@ -593,8 +605,12 @@ class OntvangstListView(LoginRequiredMixin, ListView):
     context_object_name = "ontvangst_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, False)
+        wijnvars.set_filter_options(self.request, True, False, True, False)
         ontvangst_list = Ontvangst.objects.all()
+        d = wijnvars.get_session_deelnemer(self.request)
+        if d:
+            ontvangst_list = ontvangst_list.filter(deelnemer=d)
+
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
             ontvangst_list = ontvangst_list.filter(wijn__wijnsoort__id=ws_id)
@@ -811,7 +827,7 @@ class WijnListView(LoginRequiredMixin, ListView):
     context_object_name = "wijn_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, False)
+        wijnvars.set_filter_options(self.request, False, False, False, False)
         wijn_list = Wijn.objects.all()
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
@@ -921,12 +937,3 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update wijn"
         return context
-
-
-def change_context(request):
-    d_id = request.POST["deelnemer_id"]
-    l_id = request.POST["locatie_id"]
-    return_url = request.POST["return_url"]
-    wijnvars.set_session_deelnemer(request, d_id)
-    wijnvars.set_session_locatie(request, l_id)
-    return HttpResponseRedirect(reverse(return_url))

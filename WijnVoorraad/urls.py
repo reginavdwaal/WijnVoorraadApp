@@ -165,7 +165,7 @@ urlpatterns = [
         "verplaatsen/<int:pk>", views.VoorraadVerplaatsen.as_view(), name="verplaatsen"
     ),
     path(
-        "voorraad/<int:wijn_id>/<int:ontvangst_id>",
+        "voorraad/<int:locatie_id>/<int:wijn_id>/<int:ontvangst_id>",
         views.VoorraadDetailView.as_view(),
         name="voorraaddetail",
     ),
@@ -228,6 +228,5 @@ urlpatterns = [
         WijnVoorraad.views_conversie.StartConversieView.as_view(),
         name="startconversie",
     ),
-    path("change_context/", views.change_context, name="change_context"),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),
 ]

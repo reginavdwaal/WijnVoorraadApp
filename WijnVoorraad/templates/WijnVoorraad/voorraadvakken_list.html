@@ -1,10 +1,40 @@
-{% extends "./base_context.html" %}
+{% extends "./base_form.html" %}
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
 {% block content %}
 <div id="content-main">
-    <table>
+    <div class="content-row"> 
+        <form method="post" %}">
+        {% csrf_token %}
+            <div class="col-3 col-s-12"> 
+                <div class="detail-block">
+                    <div class="detail-row">
+                        <label for="locaties" class="detail-column-label">Locatie</label>
+                        <select name="locatie_id" id="locatie_id" class="detail-column">       
+                            {% for l in locatie_list  %}
+                                <option value="{{ l.id }}"
+                                {% if l.omschrijving == request.session.locatie_omschrijving %}
+                                    selected
+                                {% endif %}
+                                >{{ l.omschrijving }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>   <!-- end detail-row -->
+                </div>  <!-- end detail-block -->
+            </div>  <!-- end col -->
+            <div class="col-9 col-s-12">
+                <div class="detail-block">
+                    <div class="detail-row">
+                        <button type="submit">Wijzig</button>
+                    </div>   <!-- end detail-row -->
+                </div>  <!-- end detail-block -->
+            </div>  <!-- end col -->
+        </form>
+    </div>   <!-- end content-row -->
+
+    <div class="content-row"> 
+        <table>
         {% for v in vakken_list %}
             {% if v == vakken_list|first %} 
                 <thead>
@@ -37,7 +67,7 @@
                         {% if vrd.vak.code == v.code %}
                             <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
                                 <td class="bgstd">
-                                <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
+                                <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.locatie.id vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
                                 ( {{ vrd.aantal }} )
                             </td></tr>
                         {% endif %}
@@ -54,5 +84,6 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
+    </div>   <!-- end content-row -->
+</div>   <!-- end content-main -->
 {% endblock %}

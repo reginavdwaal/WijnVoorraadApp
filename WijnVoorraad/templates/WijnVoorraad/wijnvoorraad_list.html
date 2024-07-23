@@ -10,12 +10,12 @@
       {% for v in voorraad_list %}
         <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
           <td class="col-12 col-s-12">
-            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}">
               <b>{{ v.wijn.volle_naam }}</b>
             </a>
           </td>
           <td class="col-11 col-s-10">
-            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}"
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">
               {{ v.wijn.wijnsoort.omschrijving }}
               {% if v.wijn.jaar %}, {{ v.wijn.jaar | default_if_none:"" }}{% endif %}
@@ -24,7 +24,7 @@
             </a>
           </td>
           <td class="col-1 col-s-2">
-            <a href="{% url 'WijnVoorraad:voorraaddetail' v.wijn.id v.ontvangst.id %}"
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">#{{ v.aantal }}</a>
           </td>
         </tr>

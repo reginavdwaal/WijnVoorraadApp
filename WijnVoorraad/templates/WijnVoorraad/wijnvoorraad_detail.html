@@ -56,6 +56,28 @@
         <div class="col-6 col-s-8">
             <div class="detail-block">
                 <div class="detail-row">
+                    <label class="detail-column-label">Deelnemer</label>
+                    <label class="detail-column">
+                        {{ ontvangst.deelnemer.naam }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:deelnemerdetail' ontvangst.deelnemer.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Locatie</label>
+                    <label class="detail-column">
+                        {{ locatie.omschrijving }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:locatiedetail' locatie.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>
+                </div>
+                <div class="detail-row">
                     <label class="detail-column-label">Wijn</label>
                     <label class="detail-column">
                         {{ wijn.volle_naam }}
@@ -65,6 +87,17 @@
                             <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
                         </a>
                     </label>
+                </div>
+                <div class="detail-row">
+                    <label class="detail-column-label">Ontvangstdatum</label>
+                    <label  class="detail-column">
+                        {{ ontvangst.datumOntvangst }}
+                        &nbsp;
+                        <a href="{% url 'WijnVoorraad:ontvangstdetail' ontvangst.id %}"
+                            title="Details bekijken">
+                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                        </a>
+                    </label>            
                 </div>
                 <div class="detail-row">
                     <label class="detail-column-label">Wijnsoort</label>
@@ -108,18 +141,6 @@
                         <label class="detail-column">{{ wijn.opmerking }} </label>
                     </div>
                 {% endif %}
-                <div class="detail-row">
-                    <label class="detail-column-label">Ontvangstdatum</label>
-                    <label  class="detail-column">
-                        {{ ontvangst.datumOntvangst }}
-                        &nbsp;
-                        <a href="{% url 'WijnVoorraad:ontvangstdetail' ontvangst.id %}"
-                            title="Details bekijken">
-                            <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
-                        </a>
-                </label>            
-
-                </div>
                 {% if ontvangst.leverancier %}
                     <div class="detail-row">
                         <label class="detail-column-label">Leverancier</label>

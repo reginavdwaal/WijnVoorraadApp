@@ -72,11 +72,19 @@ class VoorraadFilterForm(forms.Form):
         self.request = kwargs.pop("request", None)
         bool_deelnemer = wijnvars.get_bool_deelnemer(self.request)
         bool_locatie = wijnvars.get_bool_locatie(self.request)
+        allow_all_deelnemers = wijnvars.get_allow_all_deelnemers(self.request)
+        allow_all_locaties = wijnvars.get_allow_all_locaties(self.request)
         super(VoorraadFilterForm, self).__init__(*args, **kwargs)
         if not bool_deelnemer:
             del self.fields["deelnemer"]
+        elif allow_all_deelnemers:
+            self.fields["deelnemer"].required = False
+            self.fields["deelnemer"].empty_label = "Alle deelnemers"
         if not bool_locatie:
             del self.fields["locatie"]
+        elif allow_all_locaties:
+            self.fields["locatie"].required = False
+            self.fields["locatie"].empty_label = "Alle locaties"
 
 
 class OntvangstCreateForm(forms.ModelForm):

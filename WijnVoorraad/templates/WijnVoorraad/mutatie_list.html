@@ -10,6 +10,16 @@
             {% if m == mutatie_list|first %} 
             <thead>
             <tr>
+                {% if not deelnemer_filter %}
+                    <th>
+                        Deelnemer
+                    </th>
+                {% endif %}
+                {% if not locatie_filter %}
+                    <th>
+                        Locatie
+                    </th>
+                {% endif %}
                 <th>
                     Mutatiedatum
                 </th>
@@ -36,6 +46,17 @@
             <tbody>
             {% endif %}
             <tr>
+                {% if not deelnemer_filter %}
+                    <td>
+                        <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.ontvangst.deelnemer.naam }}</a>
+                    </td>
+                {% endif %}
+                {% if not locatie_filter %}
+                    <td>
+                        <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.locatie.omschrijving }}</a>
+                    </td>
+                {% endif %}
+
                 <td>
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.datum }}</a>
                 </td>

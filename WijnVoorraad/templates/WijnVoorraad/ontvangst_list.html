@@ -14,9 +14,11 @@
                 <th>
                     Ontvangstdatum
                 </th>
-                <th>
-                    Deelnemer
-                </th>
+                {% if not deelnemer_filter %}
+                    <th>
+                        Deelnemer
+                    </th>
+                {% endif %}
                 <th>
                     Wijn
                 </th>
@@ -28,9 +30,11 @@
                 <td>
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.datumOntvangst}}</a>
                 </td>
-                <td>
-                    <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.deelnemer.naam }}</a>
-                </td>
+                {% if not deelnemer_filter %}
+                    <td>
+                        <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}">{{ o.deelnemer.naam }}</a>
+                    </td>
+                {% endif %}
                 <td>
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}"
                      class = "wijnsoort_{{ o.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">{{ o.wijn.volle_naam }}</a>

@@ -1,3 +1,17 @@
+## v0.8.0 (2024-07-23)
+
+### Feat
+
+- Filter gestandaardiseerd
+- Tonen actieve filters
+- filter opties gestandaardiseerd
+
+### Fix
+
+- Added pip install to deploy
+- merge en clearstyle
+- **settings**: Changed database to env specific settings
+
 ## v0.7.0 (2024-06-26)
 
 ### Feat

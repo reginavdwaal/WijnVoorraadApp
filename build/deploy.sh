@@ -122,6 +122,12 @@ python manage.py migrate
 echo "Collecting static files..."
 python manage.py collectstatic --no-input
 
+read -p "Collectstatic force? (y/n) " -n 1 -r answer
+if [[ "$answer" = "y" && "$answer" = "Y" ]]; then
+    echo "Forcing collectstatic files..."
+    python manage.py collectstatic --clear
+fi
+
 
 read -p "Do you van to start the server? (y/n) " -n 1 -r answer
 if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
@@ -134,7 +140,7 @@ fi
 echo "Starting the server..."
 output=$(cloudlinux-selector start --json --interpreter python --app-root domains/${DOMAIN})
 # Check if the result is "success"
-if [[ "$output" != *"\"result\": \"success\"* ]]; then
+if [[ "$output" != *"\"result\": \"success\""* ]]; then
     echo "Error: Failed to stop the current application."
     exit 1
 fi

@@ -214,6 +214,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
             .order_by(Lower("wijn__wijnsoort"))
             .annotate(aantal=Sum("aantal"))
         )
+
         wijnvars.set_context_is_mobile(context, self.request)
         if context["is_mobile"]:
             l.aantal_kolommen = 1

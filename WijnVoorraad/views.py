@@ -199,7 +199,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         voorraad_list = WijnVoorraad.objects.filter(locatie=l).order_by(
             "vak", "wijn__volle_naam"
         )
-        summary_list = (
+        summary_deelnemer_list = (
             WijnVoorraad.objects.filter(locatie=l)
             .group_by("deelnemer")
             .distinct()
@@ -207,12 +207,20 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
             .annotate(aantal=Sum("aantal"))
         )
 
+        summary_wijnsoort_list = (
+            WijnVoorraad.objects.filter(locatie=l)
+            .group_by("wijn__wijnsoort")
+            .distinct()
+            .order_by(Lower("wijn__wijnsoort"))
+            .annotate(aantal=Sum("aantal"))
+        )
         wijnvars.set_context_is_mobile(context, self.request)
         if context["is_mobile"]:
             l.aantal_kolommen = 1
         context["locatie"] = l
         context["voorraad_list"] = voorraad_list
-        context["summary_list"] = summary_list
+        context["summary_deelnemer_list"] = summary_deelnemer_list
+        context["summary_wijnsoort_list"] = summary_wijnsoort_list
         context["title"] = "Voorraad Vakken"
         return context
 

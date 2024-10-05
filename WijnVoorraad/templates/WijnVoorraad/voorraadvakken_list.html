@@ -4,6 +4,7 @@
 
 {% block content %}
 <div id="content-main">
+
     <div class="content-row"> 
         <form method="post" %}">
         {% csrf_token %}
@@ -34,9 +35,12 @@
     </div>   <!-- end content-row -->
 
     <div class="content-row"> 
+        <div class="col-4 col-s-8">
+        <div class="detail-block">
+
         <table>
-        {% for d in summary_list %}
-            {% if d == summary_list|first %} 
+        {% for d in summary_deelnemer_list %}
+            {% if d == summary_deelnemer_list|first %} 
                 <thead>
                     <tr>
                         <th>
@@ -63,8 +67,42 @@
         {% endfor %}
         </tbody>
         </table>
+        </div>  <!-- end detail-block -->
+        </div> <!-- end col -->
+
+        <div class="col-8 col-s-4">
+        <div class="detail-block">
+        <table>
+        {% for w in summary_wijnsoort_list %}
+            {% if w == summary_wijnsoort_list|first %} 
+                <thead>
+                    <tr>
+                        <th>
+                            Wijnsoort
+                        </th>
+                        <th>
+                            Aantal
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% endif %}
+            <tr class="bgstd wijnsoort_{{ w.wijn_wijnsoort.omschrijving|wijnsoort_to_css }}">
+                <td>
+                    {{ w.wijn_wijnsoort.omschrijving }}
+                </td>
+                <td>
+                    {{ w.aantal|default_if_none:"-" }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+        </div>  <!-- end detail-block -->
+        </div> <!-- end col -->
     </div>   <!-- end content-row -->
     <br class="clear">
+
     <div class="content-row"> 
         <table>
         {% for v in vakken_list %}
@@ -137,11 +175,11 @@
                         --
                     </td>
                     <td>
-                        <table class="bgstd">
+                        <table>
                             {% for vrd in voorraad_list %}
                                 {% if not vrd.vak %}
                                 <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
-                                    <td class="bgstd">
+                                    <td>
                                         <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.locatie.id vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
                                         ( {{ vrd.aantal }} )
                                     </td>

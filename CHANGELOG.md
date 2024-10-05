@@ -1,3 +1,9 @@
+## v0.12.0 (2024-10-05)
+
+### Feat
+
+- Deelnemer toegevoegd in wijnen zonder vak
+
 ## v0.11.0 (2024-10-05)
 
 ### Feat

@@ -61,9 +61,9 @@ class VoorraadListView(LoginRequiredMixin, ListView):
                 | voorraad_list.filter(wijn__opmerking__icontains=fuzzy_selectie)
                 | voorraad_list.filter(ontvangst__leverancier__icontains=fuzzy_selectie)
                 | voorraad_list.filter(ontvangst__opmerking__icontains=fuzzy_selectie)
-                | voorraad_list.filter(
-                    wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie
-                )
+                # | voorraad_list.filter(
+                #     wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie
+                # )
             )
             voorraad_list = voorraad_list.distinct()
         return voorraad_list
@@ -196,12 +196,23 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         wijnvars.set_context_locatie_list(context)
         l = wijnvars.get_session_locatie(self.request)
-        voorraad_list = WijnVoorraad.objects.filter(locatie=l).order_by("vak")
+        voorraad_list = WijnVoorraad.objects.filter(locatie=l).order_by(
+            "vak", "wijn__volle_naam"
+        )
+        summary_list = (
+            WijnVoorraad.objects.filter(locatie=l)
+            .group_by("deelnemer")
+            .distinct()
+            .order_by(Lower("deelnemer__naam"))
+            .annotate(aantal=Sum("aantal"))
+        )
+
         wijnvars.set_context_is_mobile(context, self.request)
         if context["is_mobile"]:
             l.aantal_kolommen = 1
         context["locatie"] = l
         context["voorraad_list"] = voorraad_list
+        context["summary_list"] = summary_list
         context["title"] = "Voorraad Vakken"
         return context
 

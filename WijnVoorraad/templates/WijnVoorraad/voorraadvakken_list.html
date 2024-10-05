@@ -35,6 +35,38 @@
 
     <div class="content-row"> 
         <table>
+        {% for d in summary_list %}
+            {% if d == summary_list|first %} 
+                <thead>
+                    <tr>
+                        <th>
+                            Deelnemer
+                        </th>
+                        <th>
+                            Aantal
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            {% endif %}
+            <tr>
+                <td>
+                    {{ d.deelnemer.naam}}
+                </td>
+                <td>
+                    {{ d.aantal|default_if_none:"-" }}
+                </td>
+            </tr>
+        {% empty %}
+            <tbody>
+            <p>Deze locatie heeft geen voorraad.</p>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>   <!-- end content-row -->
+    <br class="clear">
+    <div class="content-row"> 
+        <table>
         {% for v in vakken_list %}
             {% if v == vakken_list|first %} 
                 <thead>
@@ -85,5 +117,43 @@
         </tbody>
     </table>
     </div>   <!-- end content-row -->
-</div>   <!-- end content-main -->
+
+    <br class="clear">
+    <div class="content-row"> 
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        Vak
+                    </th>
+                    <th>
+                        Wijnen (aantal)
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        --
+                    </td>
+                    <td>
+                        <table class="bgstd">
+                            {% for vrd in voorraad_list %}
+                                {% if not vrd.vak %}
+                                <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
+                                    <td class="bgstd">
+                                        <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.locatie.id vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
+                                        ( {{ vrd.aantal }} )
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>   <!-- end content-row -->
+
+    </div>   <!-- end content-main -->
 {% endblock %}

@@ -1,3 +1,13 @@
+## v0.9.0 (2024-10-05)
+
+### Feat
+
+- **actuele voorraadview + bug**: Actuele voorraad view uitgebreid + bug fuzzy
+
+### Fix
+
+- deploy.sh verbeterd
+
 ## v0.8.0 (2024-07-23)
 
 ### Feat

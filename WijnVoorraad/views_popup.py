@@ -15,7 +15,15 @@ from WijnVoorraad.forms import (
 
 
 def handle_pop_add(request, add_form, field):
+
+    zoeken = False
+    wijnresponse = ""
+
     if request.method == "POST":
+        zoeken = request.POST.get("ZOEK")
+
+    if request.method == "POST" and not zoeken:
+
         form = add_form(request.POST, request.FILES)
         if form.is_valid():
             try:
@@ -31,7 +39,15 @@ def handle_pop_add(request, add_form, field):
 
     else:
         form = add_form()
-    page_context = {"form": form, "field": field}
+
+        if zoeken:
+            wijnresponse = "heel lekker wijn gevonden"
+
+    page_context = {
+        "form": form,
+        "field": field,
+        "wijngevonden": wijnresponse,
+    }
     return render(request, "WijnVoorraad/general_popupadd.html", page_context)
 
 

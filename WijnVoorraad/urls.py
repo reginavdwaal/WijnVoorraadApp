@@ -189,6 +189,9 @@ urlpatterns = [
     path("wijn/create/", views.WijnCreateView.as_view(), name="wijn-create"),
     path("wijn/update/<int:pk>/", views.WijnUpdateView.as_view(), name="wijn-update"),
     path(
+        "wijn/opzoeken/<int:pk>/", views.WijnSearchView.as_view(), name="wijn-opzoeken"
+    ),
+    path(
         "wijn/popupadd/",
         WijnVoorraad.views_popup.wijn_create_popup_view,
         name="wijn-popupadd",
@@ -229,4 +232,5 @@ urlpatterns = [
         name="startconversie",
     ),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),
+    path("AI-zoeken/", views.AIview.as_view(), name="AI-zoeken"),
 ]

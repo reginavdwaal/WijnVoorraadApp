@@ -12,6 +12,7 @@
 
 {% block content_title %}
     <h1>Toevoegen {{ field }}</h1>
+
 {% endblock %}
 
 {% block form_actions %}
@@ -20,4 +21,64 @@
 
 {% block form_buttons %}
        <p><input type="submit" value="Opslaan"/> | <a href="javascript:window.close()">Cancel</a></p>
+       <script type="text/javascript">
+        document.getElementById('id_foto').onchange = function () {
+        var src = URL.createObjectURL(this.files[0])
+        document.getElementById('image').src = src
+      }
+    </script>
+
+{% endblock %}
+
+{% block footer %}
+<script>
+    function callPythonFunction() {
+        const baseUrl = `${window.location.protocol}//${window.location.host}`;
+        const fileInput = document.getElementById('id_foto'); // Verwijst naar het file-input element
+        const imageFile = fileInput.files[0]; // Het geselecteerde bestand
+
+        if (!imageFile) {
+            alert("Selecteer een afbeelding voordat je zoekt.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageFile); // Voeg de afbeelding toe aan FormData
+
+        fetch(baseUrl + '/AI-zoeken/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value // CSRF-token toevoegen
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            var fieldNameElement = document.getElementById('ai_result');
+            fieldNameElement.innerHTML = data.message;
+          
+            alert(data.message);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+   {% if field ==  "wijn" %}
+        <img id="image" width=100 />
+        <button onclick="callPythonFunction()" formNoValidate>zoeken</button>
+        <div id="panel">
+            <div id="ai_result">TEXT GOES HERE</div>
+        </div>
+    {% endif %}
+{% if wijngevonden %}
+
+<div> {{ wijngevonden }} </div>
+{% endif %}
+
 {% endblock %}

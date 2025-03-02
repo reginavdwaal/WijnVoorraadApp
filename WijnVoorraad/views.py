@@ -2,6 +2,7 @@
 
 import base64
 from datetime import datetime
+import json
 from django.conf import settings
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
@@ -102,8 +103,16 @@ def searchwine(my_image):
     if message:
         return message
     else:
-        # Translate the response back to Dutch
-        translated_response = translate_to_dutch(response.choices[0].message.content)
+        # Parse the JSON response
+        response_content = response.choices[0].message.content
+        response_json = json.loads(response_content)
+
+        # Translate the "country" field
+        if "country" in response_json:
+            response_json["country"] = translate_to_dutch(response_json["country"])
+
+        # Convert the modified JSON back to a string
+        translated_response = json.dumps(response_json)
         return translated_response
 
 

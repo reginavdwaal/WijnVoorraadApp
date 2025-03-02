@@ -2,7 +2,6 @@
 
 import base64
 from datetime import datetime
-from io import BytesIO
 from django.conf import settings
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
@@ -16,7 +15,9 @@ from django.db.models.functions import Lower
 from django.contrib import messages
 from openai import OpenAI, APIError, OpenAIError
 
+
 from pydantic import BaseModel
+from translate import Translator
 
 from .models import (
     Locatie,
@@ -28,36 +29,55 @@ from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
 from .forms import VoorraadFilterForm, MutatieCreateForm, MutatieUpdateForm
 from . import wijnvars
+from enum import Enum
 
 
-class wine_info(BaseModel):
-    domein: str
-    jaar: int
-    naam: str
-    druif: list[str]
-    land: str
-    wijnsoort: str
-    streek: str
-    classificatie: str
+def translate_to_dutch(text):
+    translator = Translator(to_lang="nl")
+    translation = translator.translate(text)
+    return translation
+
+
+class WineTypeEnum(str, Enum):
+    red = "red"
+    white = "white"
+    rose = "rose"
+    red_port = "red port"
+    white_port = "white port"
+    sparkling = "sparkling"
+
+
+class WineInfo(BaseModel):
+    domain: str
+    year: int
+    name: str
+    grape_varieties: list[str]
+    country: str
+    wine_type: WineTypeEnum
+    region: str
+    classification: str
 
 
 def searchwine(my_image):
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     message = None
     try:
-
         image_base = base64.b64encode(my_image.read()).decode("utf-8")
 
-        # Gebruik GPT-4 Vision om een vraag te stellen over de afbeelding
+        # Use GPT-4 Vision to ask a question about the image
         response = client.beta.chat.completions.parse(
-            model="gpt-4o-mini",  # Gebruik GPT-4 met Vision ondersteuning
+            model="gpt-4o-mini",  # Use GPT-4 with Vision support
             messages=[
+                {
+                    "role": "system",
+                    "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
+                },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Welke wijn staat er in dit plaatje?",
+                            "text": "What wine is in this picture?",
                         },
                         {
                             "type": "image_url",
@@ -66,9 +86,9 @@ def searchwine(my_image):
                             },
                         },
                     ],
-                }
+                },
             ],
-            response_format=wine_info,
+            response_format=WineInfo,
             max_tokens=300,
         )
 
@@ -77,13 +97,14 @@ def searchwine(my_image):
         message = f"OpenAI API returned an API Error: {e}"
 
     except OpenAIError as e:
-        message = f"AI verzoek ging fout door %{e}"
+        message = f"AI request failed due to {e}"
 
     if message:
         return message
     else:
-        print(response)
-        return response.choices[0].message.content
+        # Translate the response back to Dutch
+        translated_response = translate_to_dutch(response.choices[0].message.content)
+        return translated_response
 
 
 #   model="gpt-4-vision",  # Model dat afbeeldingen kan verwerken
@@ -790,7 +811,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                     messages.error(
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
-                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+                    url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             else:
                 url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             return HttpResponseRedirect(url)
@@ -1090,6 +1111,7 @@ class AIview(View):
         print(f"Ontvangen afbeelding: {image.name}")
 
         response = searchwine(image)
+        print(response)
 
         # Stuur een antwoord terug
         return JsonResponse({"message": response})

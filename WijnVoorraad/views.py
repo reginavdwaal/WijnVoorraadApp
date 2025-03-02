@@ -1,8 +1,11 @@
 """Main views module"""
 
+import base64
 from datetime import datetime
-from django.http import HttpResponseRedirect
+from django.conf import settings
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,6 +13,11 @@ from django.views.generic.edit import FormView
 from django.db.models import Sum, F
 from django.db.models.functions import Lower
 from django.contrib import messages
+from openai import OpenAI, APIError, OpenAIError
+
+
+from pydantic import BaseModel
+from translate import Translator
 
 from .models import (
     Locatie,
@@ -21,6 +29,90 @@ from .forms import OntvangstCreateForm, OntvangstUpdateForm
 from .forms import WijnForm
 from .forms import VoorraadFilterForm, MutatieCreateForm, MutatieUpdateForm
 from . import wijnvars
+from enum import Enum
+
+
+def translate_to_dutch(text):
+    translator = Translator(to_lang="nl")
+    translation = translator.translate(text)
+    return translation
+
+
+class WineTypeEnum(str, Enum):
+    red = "red"
+    white = "white"
+    rose = "rose"
+    red_port = "red port"
+    white_port = "white port"
+    sparkling = "sparkling"
+
+
+class WineInfo(BaseModel):
+    domain: str
+    year: int
+    name: str
+    grape_varieties: list[str]
+    country: str
+    wine_type: WineTypeEnum
+    region: str
+    classification: str
+
+
+def searchwine(my_image):
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    message = None
+    try:
+        image_base = base64.b64encode(my_image.read()).decode("utf-8")
+
+        # Use GPT-4 Vision to ask a question about the image
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o-mini",  # Use GPT-4 with Vision support
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What wine is in this picture?",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base}"
+                            },
+                        },
+                    ],
+                },
+            ],
+            response_format=WineInfo,
+            max_tokens=300,
+        )
+
+    except APIError as e:
+        # Handle API error, e.g. retry or log
+        message = f"OpenAI API returned an API Error: {e}"
+
+    except OpenAIError as e:
+        message = f"AI request failed due to {e}"
+
+    if message:
+        return message
+    else:
+        # Translate the response back to Dutch
+        translated_response = translate_to_dutch(response.choices[0].message.content)
+        return translated_response
+
+
+#   model="gpt-4-vision",  # Model dat afbeeldingen kan verwerken
+#                 messages=[
+#                     {"role": "user", "content": "What wine is in this image?"}
+#                 ],
+#                 files={"file": image},  # Bestand rechtstreeks doorsturen
+#                 max_tokens=300,
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -719,7 +811,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                     messages.error(
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
-                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+                    url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             else:
                 url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             return HttpResponseRedirect(url)
@@ -930,6 +1022,51 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
         return HttpResponseRedirect(url)
 
 
+class WijnSearchView(LoginRequiredMixin, DetailView):
+    model = Wijn
+    context_object_name = "wijn"
+    template_name = "WijnVoorraad/wijn_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Wijnen zoeken"
+        # wijn = Wijn.objects.get(pk=wijn_id)
+        # result=openai.haalfoto(wijn.foto)
+        context["chatgpt"] = self.searchwine()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        wijn_id = self.request.POST["object_id"]
+        if wijn_id:
+            wijn = Wijn.objects.get(pk=wijn_id)
+            if "Kopieer" in self.request.POST:
+                try:
+                    nieuwe_wijn_id = wijn.create_copy()
+                    my_kwargs = {}
+                    my_kwargs["pk"] = nieuwe_wijn_id
+                    url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
+                except:
+                    messages.error(
+                        request, "Kopiëren is niet gelukt. Al teveel kopieën?"
+                    )
+                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+            elif "Verwijder" in self.request.POST:
+                try:
+                    wijn.delete()
+                    messages.success(request, "Wijn is verwijderd")
+                    url = reverse("WijnVoorraad:wijnlist")
+                except:
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
+                    url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+            else:
+                url = reverse("WijnVoorraad:wijndetail", kwargs=dict(pk=wijn_id))
+        else:
+            url = reverse("WijnVoorraad:wijnlist")
+        return HttpResponseRedirect(url)
+
+
 class WijnCreateView(LoginRequiredMixin, CreateView):
     form_class = WijnForm
     model = Wijn
@@ -939,6 +1076,7 @@ class WijnCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe wijn"
+        context["zoekwijn"] = "TRUE"
         return context
 
 
@@ -957,3 +1095,23 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update wijn"
         return context
+
+
+class AIview(View):
+    def get(self, request):
+        data = {"message": "heel lekkere wijn"}
+        return JsonResponse(data)
+
+    def post(self, request, *args, **kwargs):
+        image = request.FILES.get("image")  # Ophalen van de afbeelding
+        if not image:
+            return JsonResponse({"message": "Geen afbeelding ontvangen"}, status=400)
+
+        # Verwerk de afbeelding hier
+        print(f"Ontvangen afbeelding: {image.name}")
+
+        response = searchwine(image)
+        print(response)
+
+        # Stuur een antwoord terug
+        return JsonResponse({"message": response})

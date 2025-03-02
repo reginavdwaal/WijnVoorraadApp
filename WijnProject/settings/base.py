@@ -66,7 +66,7 @@ WSGI_APPLICATION = "WijnProject.wsgi.application"
 
 
 DB_PASSWORD = config("DB_PASSWORD")
-
+OPENAI_API_KEY = config("OPENAI_API_KEY")
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

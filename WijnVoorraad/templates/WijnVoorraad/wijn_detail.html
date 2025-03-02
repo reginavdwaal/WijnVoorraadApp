@@ -134,8 +134,19 @@
         </form>
     </div>  <!-- end buttons-block -->
 
+    {% if wijn.foto  %}
+        <div class="buttons-block">
+            <form id="create-form" method="get" action="{% url 'WijnVoorraad:wijn-opzoeken' object.id %}">
+                {% csrf_token %}
+                <input type="submit" name="Insert" value="Zoek"></input>
+            </form>
+        </div>  <!-- end buttons-block -->
+    {% endif %}    
     <br class="clear">
 
+    <div>
+        {{ chatgpt }}
+    </div>
     {% if ontvangst_list  %}
     <h2>Ontvangsten</h2>
     <table>

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
+from .models import AIUsage, WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
 
 from WijnVoorraad.models_conversie import (
@@ -63,6 +63,7 @@ admin.site.register(Ontvangst, OntvangstAdmin)
 admin.site.register(WijnVoorraad)
 
 admin.site.register(VoorraadMutatie)
+admin.site.register(AIUsage)
 
 admin.site.register(ConvDeelnemer)
 admin.site.register(ConvDruivenSoort)

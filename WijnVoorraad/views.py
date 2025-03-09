@@ -1,36 +1,42 @@
 """Main views module"""
 
 import base64
-from datetime import datetime
 import json
+from django.utils import timezone
+from enum import Enum
+
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F, Sum
+from django.db.models.functions import Lower
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import ListView, DetailView
-from django.views.generic.edit import CreateView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import FormView
-from django.db.models import Sum, F
-from django.db.models.functions import Lower
-from django.contrib import messages
-from openai import OpenAI, APIError, OpenAIError
-
-
+from django.views.generic import DetailView, ListView
+from django.views.generic.edit import CreateView, FormView, UpdateView
+from openai import APIError, OpenAI, OpenAIError
 from pydantic import BaseModel
 from translate import Translator
 
-from .models import (
-    Locatie,
-    Vak,
-    Wijn,
-)
-from .models import WijnVoorraad, VoorraadMutatie, Ontvangst
-from .forms import OntvangstCreateForm, OntvangstUpdateForm
-from .forms import WijnForm
-from .forms import VoorraadFilterForm, MutatieCreateForm, MutatieUpdateForm
 from . import wijnvars
-from enum import Enum
+from .forms import (
+    MutatieCreateForm,
+    MutatieUpdateForm,
+    OntvangstCreateForm,
+    OntvangstUpdateForm,
+    VoorraadFilterForm,
+    WijnForm,
+)
+from .models import (
+    AIUsage,
+    Locatie,
+    Ontvangst,
+    Vak,
+    VoorraadMutatie,
+    Wijn,
+    WijnVoorraad,
+)
 
 
 def translate_to_dutch(text):
@@ -59,7 +65,7 @@ class WineInfo(BaseModel):
     classification: str
 
 
-def searchwine(my_image):
+def searchwine(my_image, request):
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     message = None
     try:
@@ -103,6 +109,14 @@ def searchwine(my_image):
     if message:
         return message
     else:
+        # Store the response to ai_usage table
+        AIUsage.objects.create(
+            user=request.user,
+            model="gpt-4o-mini",
+            response_time=timezone.now(),
+            response_content=response.choices[0].message.content,
+            response_tokens_used=response.usage.total_tokens,
+        )
         # Parse the JSON response
         response_content = response.choices[0].message.content
         response_json = json.loads(response_content)
@@ -1119,7 +1133,7 @@ class AIview(View):
         # Verwerk de afbeelding hier
         print(f"Ontvangen afbeelding: {image.name}")
 
-        response = searchwine(image)
+        response = searchwine(image, request)
         print(response)
 
         # Stuur een antwoord terug

@@ -3,8 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('id_foto').onchange = function () {
         var src = URL.createObjectURL(this.files[0]);
         document.getElementById('image').src = src;
+        document.getElementById('btnSearch').hidden = false;
+        document.getElementById('ai_result').hidden = false;
     };
 });
+
 
 function toUpper(str) {
     return str
@@ -102,7 +105,3 @@ function callPythonFunction() {
     });
 }
 
-document.getElementById('id_foto').onchange = function () {
-    var src = URL.createObjectURL(this.files[0])
-    document.getElementById('image').src = src
-}

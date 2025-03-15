@@ -11,6 +11,7 @@
         {{ title }} | {{ site_title|default:_('Wijnvoorraad') }}
       {% endblock %}
     </title>
+    <link rel="shortcut icon" type="image/ico" href="{% static 'WijnVoorraad/img/vino.ico' %}" >
     <link rel="stylesheet" href="{% block stylesheet %}{% static "WijnVoorraad/css/eigen.css" %}{% endblock %}">
     {% block extrastyle %}{% endblock %}
     {% block extrahead %}{% endblock %}
@@ -112,7 +113,7 @@
               {% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}
             {% endblock %}
             {% block content %}{{ content }}{% endblock %}
-            <br class="clear">
+            
           </div>
           <!-- END Content -->
           <div id="footer">

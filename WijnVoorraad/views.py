@@ -65,79 +65,6 @@ class WineInfo(BaseModel):
     classification: str
 
 
-def searchwine(my_image, request):
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
-    message = None
-    try:
-        image_base = base64.b64encode(my_image.read()).decode("utf-8")
-
-        # Use GPT-4 Vision to ask a question about the image
-        response = client.beta.chat.completions.parse(
-            model="gpt-4o-mini",  # Use GPT-4 with Vision support
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "What wine is in this picture?",
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_base}"
-                            },
-                        },
-                    ],
-                },
-            ],
-            response_format=WineInfo,
-            max_tokens=300,
-        )
-
-    except APIError as e:
-        # Handle API error, e.g. retry or log
-        message = f"OpenAI API returned an API Error: {e}"
-
-    except OpenAIError as e:
-        message = f"AI request failed due to {e}"
-
-    if message:
-        return message
-    else:
-        # Store the response to ai_usage table
-        AIUsage.objects.create(
-            user=request.user,
-            model="gpt-4o-mini",
-            response_time=timezone.now(),
-            response_content=response.choices[0].message.content,
-            response_tokens_used=response.usage.total_tokens,
-        )
-        # Parse the JSON response
-        response_content = response.choices[0].message.content
-        response_json = json.loads(response_content)
-
-        # Translate the "country" field
-        if "country" in response_json:
-            response_json["country"] = translate_to_dutch(response_json["country"])
-
-        # Convert the modified JSON back to a string
-        translated_response = json.dumps(response_json)
-        return translated_response
-
-
-#   model="gpt-4-vision",  # Model dat afbeeldingen kan verwerken
-#                 messages=[
-#                     {"role": "user", "content": "What wine is in this image?"}
-#                 ],
-#                 files={"file": image},  # Bestand rechtstreeks doorsturen
-#                 max_tokens=300,
-
-
 class VoorraadListView(LoginRequiredMixin, ListView):
     model = WijnVoorraad
     context_object_name = "voorraad_list"
@@ -1055,7 +982,7 @@ class WijnSearchView(LoginRequiredMixin, DetailView):
         context["title"] = "Wijnen zoeken"
         # wijn = Wijn.objects.get(pk=wijn_id)
         # result=openai.haalfoto(wijn.foto)
-        context["chatgpt"] = self.searchwine()
+        # context["chatgpt"] = self.searchwine()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1121,9 +1048,70 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class AIview(View):
-    def get(self, request):
-        data = {"message": "heel lekkere wijn"}
-        return JsonResponse(data)
+
+    def searchwine(self, my_image, request):
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        message = None
+        try:
+            image_base = base64.b64encode(my_image.read()).decode("utf-8")
+
+            # Use GPT-4 Vision to ask a question about the image
+            response = client.beta.chat.completions.parse(
+                model="gpt-4o-mini",  # Use GPT-4 with Vision support
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "What wine is in this picture?",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_base}"
+                                },
+                            },
+                        ],
+                    },
+                ],
+                response_format=WineInfo,
+                max_tokens=300,
+            )
+
+        except APIError as e:
+            # Handle API error, e.g. retry or log
+            message = f"OpenAI API returned an API Error: {e}"
+
+        except OpenAIError as e:
+            message = f"AI request failed due to {e}"
+
+        if message:
+            return message
+        else:
+            # Store the response to ai_usage table
+            AIUsage.objects.create(
+                user=request.user,
+                model="gpt-4o-mini",
+                response_time=timezone.now(),
+                response_content=response.choices[0].message.content,
+                response_tokens_used=response.usage.total_tokens,
+            )
+            # Parse the JSON response
+            response_content = response.choices[0].message.content
+            response_json = json.loads(response_content)
+
+            # Translate the "country" field
+            if "country" in response_json:
+                response_json["country"] = translate_to_dutch(response_json["country"])
+
+            # Convert the modified JSON back to a string
+            translated_response = json.dumps(response_json)
+            return translated_response
 
     def post(self, request, *args, **kwargs):
         image = request.FILES.get("image")  # Ophalen van de afbeelding
@@ -1133,7 +1121,7 @@ class AIview(View):
         # Verwerk de afbeelding hier
         print(f"Ontvangen afbeelding: {image.name}")
 
-        response = searchwine(image, request)
+        response = self.searchwine(image, request)
         print(response)
 
         # Stuur een antwoord terug

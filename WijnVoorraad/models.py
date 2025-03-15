@@ -127,7 +127,7 @@ class Wijn(models.Model):
     def __str__(self):
         return self.volle_naam
 
-    def jaar_str(jaar):
+    def jaar_str(self, jaar):
         return str(jaar)
 
     def check_afsluiten(self):
@@ -295,6 +295,7 @@ class VoorraadMutatie(models.Model):
         WijnVoorraad.Bijwerken(None, old_mutatie)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
 
+    @staticmethod
     def drinken(ontvangst, locatie, vak=None):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
@@ -307,6 +308,7 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = 1
         mutatie.save()
 
+    @staticmethod
     def voorraad_plus_1(ontvangst, locatie):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst

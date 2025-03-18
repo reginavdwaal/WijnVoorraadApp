@@ -127,9 +127,6 @@ class Wijn(models.Model):
     def __str__(self):
         return self.volle_naam
 
-    def jaar_str(self, jaar):
-        return str(jaar)
-
     def check_afsluiten(self):
         vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(
             aantal=Sum("aantal")

@@ -1,6 +1,7 @@
 """Main views module"""
 
 import base64
+from datetime import datetime
 import json
 from django.utils import timezone
 from enum import Enum
@@ -1101,6 +1102,7 @@ class AIview(View):
                 response_content=response.choices[0].message.content,
                 response_tokens_used=response.usage.total_tokens,
             )
+
             # Parse the JSON response
             response_content = response.choices[0].message.content
             response_json = json.loads(response_content)

@@ -1027,7 +1027,7 @@ class WijnCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe wijn"
-        context["zoekwijn"] = "TRUE"
+        context["field"] = "wijn"
         return context
 
 
@@ -1045,6 +1045,7 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Update wijn"
+        context["field"] = "wijn"
         return context
 
 

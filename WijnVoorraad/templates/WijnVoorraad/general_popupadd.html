@@ -28,17 +28,6 @@
 
 {% block footer %}
 
-
-
-{% if field == "wijn" %}
-    <div class="image-panel-container">
-        <img id="image" class="ai_image"  />
-        <div id="panel">
-            <div id="ai_result" hidden>Hier komt het onbewerkte resultaat..</div>
-            <button class="button" hidden id="btnSearch" onclick="callPythonFunction()" formNoValidate>zoeken</button>
-        </div>
-    </div>
-{% endif %}
-
+{% include 'WijnVoorraad\wine_block.html' %}
 
 {% endblock %}

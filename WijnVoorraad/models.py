@@ -88,7 +88,7 @@ class Wijn(models.Model):
     naam = models.CharField(max_length=200)
     wijnsoort = models.ForeignKey(WijnSoort, on_delete=models.PROTECT)
 
-    def validate_jaartal(jaartal):
+    def validate_jaartal(self, jaartal):
         if not (1900 < jaartal < 2500):
             raise ValidationError(
                 (
@@ -126,9 +126,6 @@ class Wijn(models.Model):
 
     def __str__(self):
         return self.volle_naam
-
-    def jaar_str(jaar):
-        return str(jaar)
 
     def check_afsluiten(self):
         vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(
@@ -295,6 +292,7 @@ class VoorraadMutatie(models.Model):
         WijnVoorraad.Bijwerken(None, old_mutatie)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
 
+    @staticmethod
     def drinken(ontvangst, locatie, vak=None):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
@@ -307,6 +305,7 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = 1
         mutatie.save()
 
+    @staticmethod
     def voorraad_plus_1(ontvangst, locatie):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
@@ -347,6 +346,36 @@ class VoorraadMutatie(models.Model):
 
 class WijnVoorraadQuerySet(QuerySet, GroupByMixin):
     pass
+
+
+# AIUsage model tostore the AI usage
+class AIUsage(models.Model):
+    """
+    AIUsage model to track the usage of AI by users.
+    Attributes:
+        user (ForeignKey): Reference to the User model, with a PROTECT delete behavior.
+        model (CharField): Name of the AI model used, with a maximum length of 200 characters.
+        response_time (DateTimeField): Timestamp of when the AI response was generated.
+        response_content (TextField): Content of the AI response.
+        response_tokens_used (IntegerField): Number of tokens used in the AI response.
+    Methods:
+        __str__(): Returns a string representation of the AIUsage instance, combining the username and response time.
+    """
+
+    # pylint: disable=no-member
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    model = models.CharField(max_length=200)
+    response_time = models.DateTimeField()
+    response_content = models.TextField()
+    response_tokens_used = models.IntegerField()
+
+    def __str__(self):
+        return (
+            self.user.username
+            + " - "
+            + self.response_time.strftime("%d-%m-%Y %H:%M:%S")
+        )
 
 
 class WijnVoorraad(models.Model):

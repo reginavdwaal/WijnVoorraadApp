@@ -335,3 +335,33 @@ ul.messagelist li.warning {
     color: var(--warning-fg);
     background-color: var(--warning_bg);
 }
+
+.image-panel-container {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Afbeelding links, panel rechts */
+    align-items: stretch; /* Zorgt ervoor dat de afbeelding de volledige hoogte heeft */
+    gap: 10px;
+}
+
+#image {
+    height: 100%; /* Maakt de afbeelding even hoog als de container */
+    object-fit: contain; /* Voorkomt vervorming */
+}
+
+#panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Tekst boven, knop onder */
+}
+
+#ai_result {
+    align-self: flex-start; /* Tekst bovenaan */
+}
+
+#btnSearch {
+    align-self: flex-start; /* Knop onderaan */
+}
+
+.ai_image {
+    max-height: 130px;
+}

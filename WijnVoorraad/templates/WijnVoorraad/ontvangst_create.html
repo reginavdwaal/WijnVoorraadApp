@@ -17,9 +17,12 @@
 
 <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
 {{ media }}
+
+
 {{ form.media.css }}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 {{ form.media.js }}
+<script src="{% static 'WijnVoorraad/js/override_popup_create.js' %}" defer > </script>
 {% endblock %}
 
 {% block form_buttons %}

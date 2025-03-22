@@ -14,8 +14,12 @@
 <script src="{% static 'admin/js/vendor/xregexp/xregexp.js' %}"></script>
 
 <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
+<script src="{% static 'WijnVoorraad/js/override_popup_create.js' %}" defer > </script>
+<script src="{% static 'WijnVoorraad/js/wine_search.js' %}"></script>
+
 
 {% endblock %}
+
 {% load wijnvoorraad_extras %}
 
 {% block form_actions %}
@@ -24,4 +28,8 @@
         <input type="submit" name="ZOEK" value="Zoeken">
      
     {% endif%}
+{% endblock %}
+
+{% block footer%}
+    {% include 'WijnVoorraad\wine_block.html' %}
 {% endblock %}

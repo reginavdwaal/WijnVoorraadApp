@@ -1,3 +1,21 @@
+## v0.13.0 (2025-03-22)
+
+### Feat
+
+- **wine**: Added AI search to normal wine screens
+- **WIne Search**: Added popup override, styling and clean up
+- **Search Log**: Added logging of AI search
+- **add win**: First attempt to analyse wine
+- **Add Wine**: First version of ai search
+
+### Fix
+
+- **Icon and import**: Changed icons and fixed missing import
+
+### Refactor
+
+- remove deprecated code and moved new JavaScript functionality for image handling
+
 ## v0.12.0 (2024-10-05)
 
 ### Feat

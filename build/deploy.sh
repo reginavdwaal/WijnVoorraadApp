@@ -96,7 +96,7 @@ fi
 
 # Activate the virtual environment
 echo "Activating the virtual environment..."
-source /home/vdwanet/virtualenv/domains/${DOMAIN}/3.8/bin/activate
+source /home/vdwanet/virtualenv/domains/${DOMAIN}/3.11/bin/activate
 
 # Zet virtual gebaseerd op variabelen in htaccess
 source ~/domains/parse_env.sh ~/domains/${DOMAIN}/public_html/.htaccess

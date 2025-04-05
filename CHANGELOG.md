@@ -1,3 +1,13 @@
+## v0.14.0 (2025-04-05)
+
+### Feat
+
+- **deploy fixes**: deploy fixes: template with / instead of "
+
+### Fix
+
+- **add wine**: Fixed validation 500 error
+
 ## v0.13.1 (2025-03-22)
 
 ### Fix

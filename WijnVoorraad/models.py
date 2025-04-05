@@ -88,7 +88,7 @@ class Wijn(models.Model):
     naam = models.CharField(max_length=200)
     wijnsoort = models.ForeignKey(WijnSoort, on_delete=models.PROTECT)
 
-    def validate_jaartal(self, jaartal):
+    def validate_jaartal(jaartal):
         if not (1900 < jaartal < 2500):
             raise ValidationError(
                 (
@@ -126,6 +126,9 @@ class Wijn(models.Model):
 
     def __str__(self):
         return self.volle_naam
+
+    def jaar_str(jaar):
+        return str(jaar)
 
     def check_afsluiten(self):
         vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(

@@ -25,6 +25,7 @@ def handle_pop_add(request, add_form, field):
     if request.method == "POST" and not zoeken:
 
         form = add_form(request.POST, request.FILES)
+
         if form.is_valid():
             try:
                 new_object = form.save()

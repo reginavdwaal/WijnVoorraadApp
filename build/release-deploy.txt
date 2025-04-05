@@ -2,6 +2,7 @@ Release
 
 VSCode:
 - Make sure new requirements.txt is made!
+- 	LET OP met een nieuwe requirements.txt file: mysqlclient moet eruit worden gehaald!!!
 - cz bump : verhoogt versienummer EN creeert en pusht tag
 - push and pull to the server
 
@@ -11,8 +12,9 @@ Dan naar server met putty:
 - ./install.sh vino <gewenste tag>  -- backup gemaakt en repository uit github opgehaald en klaargezet.
 -- vino_<tag> bevat de nieuwe versie.
 - ./deploy.sh vino <tag> (INDIEN GEWIJZIGD: EERST EVEN KOPIEREN VANUIT vino_source_<tag>/build)
-- Zet virtual env python: source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.8/bin/activate 
-- Zet virtual env: source setenv.sh -- je staat al in de domains directory
+- Zet virtual env python: 
+- 	source /home/vdwanet/virtualenv/domains/vino.vdwaal.net/3.11/bin/activate 
+-	source ~/domains/parse_env.sh ~/domains/vino.vdwaal.net/public_html/.htaccess
 - cd vino.vdwaal.net
 - python manage.py migrate
 - python manage.py collectstatic bevestig met yes

@@ -41,8 +41,12 @@ input[type="submit"], button {
         line-height: 1.0;
     }
 
+    thead th {
+        padding: 5px 5px;
+    }
+
     td, th {
-        padding: 10px;
+        padding: 3px;
     }
 
     .detail-column {

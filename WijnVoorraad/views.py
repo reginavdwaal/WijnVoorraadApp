@@ -16,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
+from django.core.exceptions import ValidationError
 from openai import APIError, OpenAI, OpenAIError
 from pydantic import BaseModel
 from translate import Translator
@@ -213,6 +214,13 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )
             return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
+        elif "Afboeken" in self.request.POST:
+            o_id = voorraad.ontvangst.id
+            url = reverse(
+                "WijnVoorraad:mutatie-create",
+                kwargs=dict(ontvangst_id=o_id, voorraad_id=v_id),
+            )
+            return HttpResponseRedirect(url)
         elif "Verplaatsen" in self.request.POST:
             url = reverse("WijnVoorraad:verplaatsen", kwargs=dict(pk=v_id))
             return HttpResponseRedirect(url)
@@ -606,9 +614,15 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
             in_out = mutatie.in_uit
             if "Verwijder" in self.request.POST:
                 try:
+                    WijnVoorraad.check_voorraad_wijziging(None, mutatie)
                     mutatie.delete()
                     messages.success(request, "Mutatie is verwijderd")
                     url = self.request.POST["return_url"]
+                except ValidationError as e:
+                    messages.error(request, e.message)
+                    url = reverse(
+                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
+                    )
                 except:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
@@ -616,8 +630,10 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
                     url = reverse(
                         "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
                     )
-            else:
-                url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id))
+                else:
+                    url = reverse(
+                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
+                    )
             return HttpResponseRedirect(url)
 
 
@@ -625,6 +641,11 @@ class MutatieCreateView(LoginRequiredMixin, CreateView):
     form_class = MutatieCreateForm
     model = VoorraadMutatie
     template_name = "WijnVoorraad/general_create_update.html"
+
+    def get_form_kwargs(self):
+        result = super().get_form_kwargs()
+        result["request"] = self.request
+        return result
 
     def get_success_url(self) -> str:
         return reverse_lazy(
@@ -639,10 +660,25 @@ class MutatieCreateView(LoginRequiredMixin, CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
+        voorraad_id = self.kwargs.get("voorraad_id")
         ontvangst_id = self.kwargs.get("ontvangst_id")
-        if ontvangst_id is not None:
+        wijnvars.set_session_extra_var(self.request, "voorraad_id", voorraad_id)
+        wijnvars.set_session_extra_var(self.request, "ontvangst_id", ontvangst_id)
+        if voorraad_id is not None:
+            voorraad = WijnVoorraad.objects.get(pk=voorraad_id)
+            initial["voorraad_id"] = voorraad_id
+            initial["ontvangst"] = voorraad.ontvangst.id
+            initial["locatie"] = voorraad.locatie
+            initial["vak"] = voorraad.vak
+            initial["in_uit"] = "U"
+            initial["actie"] = "V"
+            initial["datum"] = datetime.now()
+        elif ontvangst_id is not None:
             initial["ontvangst"] = ontvangst_id
-        initial["locatie"] = wijnvars.get_session_locatie_id(self.request)
+            initial["datum"] = datetime.now()
+        else:
+            initial["locatie"] = wijnvars.get_session_locatie_id(self.request)
+            initial["datum"] = datetime.now()
         return initial
 
 

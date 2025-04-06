@@ -8,7 +8,7 @@
 
 <div id="content-main">
     <div class="content-row">
-        <div class="col-3 col-s-12">
+        <div class="col-4 col-s-10">
             <table class="metkader" width="100%">
                 {% for v in voorraad_list %}
                     {% if v == voorraad_list|first %}
@@ -19,6 +19,8 @@
                                 </th>
                                 <th style="text-align: center">
                                     Aantal
+                                </th>
+                                <th>
                                 </th>
                                 <th>
                                 </th>
@@ -39,6 +41,10 @@
                         <td>
                             <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
                             <input type="submit" name="Drinken" value="Drinken">
+                        </td>
+                        <td>
+                            <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">
+                            <input type="submit" name="Afboeken" value="Afboeken">
                         </td>
                         <td>
                             <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">

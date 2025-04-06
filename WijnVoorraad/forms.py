@@ -195,6 +195,20 @@ class MutatieCreateForm(forms.ModelForm):
     ]
     actie = forms.ChoiceField(choices=actie_choices)
 
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
+        voorraad_id = wijnvars.get_session_extra_var(self.request, "voorraad_id")
+        ontvangst_id = wijnvars.get_session_extra_var(self.request, "ontvangst_id")
+        super(MutatieCreateForm, self).__init__(*args, **kwargs)
+        if voorraad_id is not None:
+            self.fields["ontvangst"].disabled = True
+            self.fields["locatie"].disabled = True
+            self.fields["vak"].disabled = True
+            self.fields["in_uit"].disabled = True
+            # self.fields["aantal"].m
+        elif ontvangst_id is not None:
+            self.fields["ontvangst"].disabled = True
+
     class Meta:
         model = VoorraadMutatie
         fields = "__all__"

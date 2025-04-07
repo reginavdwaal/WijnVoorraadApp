@@ -11,7 +11,17 @@ from django_group_by import GroupByMixin
 
 
 class WijnSoort(models.Model):
+    css_choices = [
+        ("wijnsoort_rood", "wijnsoort_rood"),
+        ("wijnsoort_wit", "wijnsoort_wit"),
+        ("wijnsoort_rose", "wijnsoort_rose"),
+        ("wijnsoort_mousserend", "wijnsoort_mousserend"),
+        ("wijnsoort_rodeport", "wijnsoort_rodeport"),
+        ("wijnsoort_witteport", "wijnsoort_witteport"),
+    ]
     omschrijving = models.CharField(max_length=200, unique=True)
+    omschrijving_engels_ai = models.CharField(max_length=200, blank=True)
+    style_css_class = models.CharField(max_length=100, blank=True, choices=css_choices)
 
     def __str__(self):
         return self.omschrijving

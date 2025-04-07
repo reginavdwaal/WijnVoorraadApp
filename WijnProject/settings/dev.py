@@ -23,7 +23,7 @@ DATABASES = {
         "NAME": "vdwanet_defaultdb",
         "USER": "vdwanet_django",
         "PASSWORD": DB_PASSWORD,
-        "HOST": "87.236.102.45",
+        "HOST": "localhost",
         "PORT": "3306",
     },
 }

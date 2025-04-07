@@ -28,17 +28,18 @@ function populateForm(data) {
     document.getElementById('id_streek').value = ovData.region;
     document.getElementById('id_classificatie').value = ovData.classification;
 
-    // Wijnsoort selecteren
-    const wijnsoortMap = {
-        "red": "1",
-        "white": "2",
-        "sparkling": "3",
-        "rose": "4",
-        "port_red": "5",
-        "port_white": "6"
-    };
-    if (wijnsoortMap[ovData.wine_type]) {
-        document.getElementById('id_wijnsoort').value = wijnsoortMap[ovData.wine_type];
+    // Dynamically select the wine type in the combobox
+    const wijnsoortSelect = document.getElementById('id_wijnsoort');
+    const wijnsoortOptions = Array.from(wijnsoortSelect.options);
+
+
+    // Find the option that matches the wine_type and select it
+    const matchingOption = wijnsoortOptions.find(option => option.textContent === ovData.wine_type);
+    if (matchingOption) {
+        wijnsoortSelect.value = matchingOption.value;
+        console.log("Matching wine type found:", matchingOption.value);
+    } else {
+        console.warn("No matching wine type found for:", ovData.wine_type);
     }
 
     // Wijndruivensoorten selecteren

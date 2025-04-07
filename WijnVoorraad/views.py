@@ -36,6 +36,7 @@ from .models import (
     Vak,
     VoorraadMutatie,
     Wijn,
+    WijnSoort,
     WijnVoorraad,
 )
 
@@ -46,13 +47,26 @@ def translate_to_dutch(text):
     return translation
 
 
-class WineTypeEnum(str, Enum):
-    red = "red"
-    white = "white"
-    rose = "rose"
-    red_port = "red port"
-    white_port = "white port"
-    sparkling = "sparkling"
+# class WineTypeEnum(str, Enum):
+#     red = "red"
+#     white = "white"
+#     rose = "rose"
+#     red_port = "red port"
+#     white_port = "white port"
+#     sparkling = "sparkling"
+
+
+def generate_wine_type_enum():
+    wine_types = WijnSoort.objects.values_list("omschrijving_engels_ai", "omschrijving")
+
+    return Enum(
+        "WineTypeEnum",
+        {ai_type: human_readable for ai_type, human_readable in wine_types if ai_type},
+    )
+
+
+# Dynamically generate the WineTypeEnum
+WineTypeEnum = generate_wine_type_enum()
 
 
 class WineInfo(BaseModel):
@@ -1053,6 +1067,7 @@ class AIview(View):
 
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
         message = None
         try:
             image_base = base64.b64encode(my_image.read()).decode("utf-8")
@@ -1107,6 +1122,10 @@ class AIview(View):
             # Parse the JSON response
             response_content = response.choices[0].message.content
             response_json = json.loads(response_content)
+
+            # if debug print the response
+            if settings.DEBUG:
+                print("AI response:", response_content)
 
             # Translate the "country" field
             if "country" in response_json:

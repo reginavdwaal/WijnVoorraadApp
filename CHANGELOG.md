@@ -1,3 +1,9 @@
+## v0.15.0 (2025-04-06)
+
+### Feat
+
+- **Voorraad afboeken**: Voorraad detail afboeken
+
 ## v0.14.0 (2025-04-05)
 
 ### Feat

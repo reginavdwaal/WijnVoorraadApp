@@ -113,6 +113,11 @@ urlpatterns = [
         name="mutatie-create",
     ),
     path(
+        "mutatie/create/<int:ontvangst_id>/<int:voorraad_id>",
+        views.MutatieCreateView.as_view(),
+        name="mutatie-create",
+    ),
+    path(
         "mutatie/update/<int:pk>/",
         views.MutatieUpdateView.as_view(),
         name="mutatie-update",

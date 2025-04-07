@@ -287,12 +287,19 @@ class VoorraadMutatie(models.Model):
             self.pk,
         )
 
+    def clean(self, *args, **kwargs):
+        try:
+            old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
+        except:
+            old_mutatie = None
+        WijnVoorraad.check_voorraad_wijziging(self, old_mutatie)
+        super().clean(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
         except:
             old_mutatie = None
-
         super().save(*args, **kwargs)  # Call the "real" save() method.
         WijnVoorraad.Bijwerken(self, old_mutatie)
 
@@ -301,7 +308,7 @@ class VoorraadMutatie(models.Model):
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
         except:
             old_mutatie = None
-
+        WijnVoorraad.check_voorraad_wijziging(None, old_mutatie)
         WijnVoorraad.Bijwerken(None, old_mutatie)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
 
@@ -492,6 +499,48 @@ class WijnVoorraad(models.Model):
             v_nieuwe_vak,
             v_aantal_verplaatsen,
         )
+
+    def check_voorraad_wijziging(VoorraadMutatie, old_mutatie):
+        if old_mutatie is not None:
+            if old_mutatie.in_uit == "I":
+                wijziging_aantal = old_mutatie.aantal * -1
+            else:
+                wijziging_aantal = old_mutatie.aantal
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=old_mutatie.ontvangst,
+                    locatie=old_mutatie.locatie,
+                    vak=old_mutatie.vak,
+                )
+                if vrd.aantal + wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
+            except WijnVoorraad.DoesNotExist:
+                if wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
+        if VoorraadMutatie is not None:
+            if VoorraadMutatie.in_uit == "I":
+                wijziging_aantal = VoorraadMutatie.aantal
+            else:
+                wijziging_aantal = VoorraadMutatie.aantal * -1
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=VoorraadMutatie.ontvangst,
+                    locatie=VoorraadMutatie.locatie,
+                    vak=VoorraadMutatie.vak,
+                )
+                if vrd.aantal + wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
+            except WijnVoorraad.DoesNotExist:
+                if wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
 
     class Meta:
         ordering = ["wijn", "deelnemer", "locatie", "vak"]

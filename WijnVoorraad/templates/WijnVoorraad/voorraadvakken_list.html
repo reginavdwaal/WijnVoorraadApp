@@ -87,7 +87,7 @@
                 </thead>
                 <tbody>
             {% endif %}
-            <tr class="bgstd wijnsoort_{{ w.wijn_wijnsoort.omschrijving|wijnsoort_to_css }}">
+            <tr class="bgstd {{ w.wijn_wijnsoort.style_css_class }}">
                 <td>
                     {{ w.wijn_wijnsoort.omschrijving }}
                 </td>
@@ -135,7 +135,7 @@
                 <table class="bgstd">
                     {% for vrd in voorraad_list %}
                         {% if vrd.vak.code == v.code %}
-                            <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
+                            <tr class="bgstd {{ vrd.wijn.wijnsoort.style_css_class }}">
                                 <td class="bgstd">
                                 <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.locatie.id vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
                                 ( {{ vrd.aantal }} )
@@ -176,7 +176,7 @@
             <tbody>
                 {% for vrd in voorraad_list %}
                     {% if not vrd.vak %}
-                        <tr class="bgstd wijnsoort_{{ vrd.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
+                        <tr class="bgstd {{ vrd.wijn.wijnsoort.style_css_class }}">
                             <td>
                                 <a href="{% url 'WijnVoorraad:voorraaddetail' vrd.locatie.id vrd.wijn.id vrd.ontvangst.id %}">{{ vrd.wijn.volle_naam }} </a>
                             </td>

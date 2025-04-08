@@ -8,7 +8,7 @@
   {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
     <table class="wijnvoorraad">
       {% for v in voorraad_list %}
-        <tr class="wijnvoorraad_row wijnsoort_{{ v.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">
+        <tr class="wijnvoorraad_row {{ v.wijn.wijnsoort.style_css_class }}">
           <td class="col-12 col-s-12">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}">
               <b>{{ v.wijn.volle_naam }}</b>

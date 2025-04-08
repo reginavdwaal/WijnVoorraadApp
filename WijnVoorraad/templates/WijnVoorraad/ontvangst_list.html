@@ -37,7 +37,7 @@
                 {% endif %}
                 <td>
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' o.id %}"
-                     class = "wijnsoort_{{ o.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">{{ o.wijn.volle_naam }}</a>
+                     class = "{{ o.wijn.wijnsoort.style_css_class }}">{{ o.wijn.volle_naam }}</a>
                 </td>
             </tr>
         {% empty %}

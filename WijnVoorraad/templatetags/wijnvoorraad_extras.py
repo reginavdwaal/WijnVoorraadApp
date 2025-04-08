@@ -19,9 +19,11 @@ def sub(value, arg):
         except Exception:
             return ""
 
-@register.filter(name='range')
+
+@register.filter(name="range")
 def filter_range(start, end):
-    return range(start, end+1)
+    return range(start, end + 1)
+
 
 @register.filter(is_safe=False)
 def kolomnr(recordnr, aantal_kolommen):
@@ -31,10 +33,6 @@ def kolomnr(recordnr, aantal_kolommen):
     except (ValueError, TypeError):
         return ""
 
-@register.filter(is_safe=False)
-def wijnsoort_to_css(wijnsoort):
-    css = wijnvars.unified_wijnsoort(wijnsoort)
-    return css
 
 @register.filter
 def env(key):

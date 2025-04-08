@@ -94,7 +94,9 @@ class OntvangstCreateForm(forms.ModelForm):
     )
     website = forms.CharField(max_length=200, required=False)
     opmerking = forms.CharField(
-        max_length=200, required=False, widget=forms.TextInput(attrs={"size": "40"})
+        max_length=200,
+        required=False,
+        widget=forms.Textarea(attrs={"cols": "90"}),
     )
     KOOP = "K"
     ONTVANGST = "O"
@@ -115,7 +117,9 @@ class OntvangstUpdateForm(forms.ModelForm):
     wijn = forms.ModelChoiceField(Wijn.objects, widget=SelectWithPop)
     website = forms.CharField(max_length=200, required=False)
     opmerking = forms.CharField(
-        max_length=200, required=False, widget=forms.TextInput(attrs={"size": "40"})
+        max_length=200,
+        required=False,
+        widget=forms.Textarea(attrs={"cols": "90"}),
     )
     KOOP = "K"
     ONTVANGST = "O"
@@ -156,7 +160,7 @@ class WijnForm(forms.ModelForm):
     website = forms.CharField(max_length=200, required=False)
     # website = forms.URLInput.attrs={'novalidate': True}
     opmerking = forms.CharField(
-        max_length=200, required=False, widget=forms.TextInput(attrs={"size": "40"})
+        max_length=200, required=False, widget=forms.Textarea(attrs={"cols": "90"})
     )
 
     class Meta:
@@ -181,7 +185,7 @@ class MutatieCreateForm(forms.ModelForm):
     datum = forms.DateField()
     aantal = forms.IntegerField()
     omschrijving = forms.CharField(
-        max_length=200, required=False, widget=forms.TextInput(attrs={"size": "40"})
+        max_length=200, required=False, widget=forms.Textarea(attrs={"cols": "90"})
     )
     KOOP = "K"
     ONTVANGST = "O"
@@ -231,7 +235,7 @@ class MutatieUpdateForm(forms.ModelForm):
     datum = forms.DateField()
     aantal = forms.IntegerField()
     omschrijving = forms.CharField(
-        max_length=200, required=False, widget=forms.TextInput(attrs={"size": "40"})
+        max_length=200, required=False, widget=forms.Textarea(attrs={"cols": "90"})
     )
     KOOP = "K"
     ONTVANGST = "O"

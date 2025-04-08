@@ -4,7 +4,8 @@
 
 {% block content %}
 <div id="content-main">
-    {% include 'WijnVoorraad/component_filter.html' with show_filters=True %}
+    {% url 'WijnVoorraad:mutatie-create' as urlname %}
+    {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 
@@ -66,7 +67,7 @@
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.aantal }}</a>
                 </td>
                 <td>
-                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}" class = "wijnsoort_{{ m.ontvangst.wijn.wijnsoort.omschrijving|wijnsoort_to_css }}">{{ m.ontvangst.wijn.volle_naam }}</a>
+                    <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}" class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">{{ m.ontvangst.wijn.volle_naam }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:mutatiedetail' m.id %}">{{ m.omschrijving }}</a>

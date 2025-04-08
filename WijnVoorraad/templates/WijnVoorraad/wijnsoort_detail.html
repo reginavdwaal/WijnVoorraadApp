@@ -13,6 +13,14 @@
             <label class="detail-column-label">Omschrijving</label> 
             <label class="detail-column">{{ wijnsoort.omschrijving }}</label>             
         </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Omschrijving Engels (AI)</label> 
+            <label class="detail-column">{{ wijnsoort.omschrijving_engels_ai }}</label>             
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">CSS class</label> 
+            <label class="detail-column">{{ wijnsoort.get_style_css_class_display }}</label>             
+        </div>
     </div>  <!-- end detail-block -->
 </div>  <!-- end content-main -->
 <br class="clear">

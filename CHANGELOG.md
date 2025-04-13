@@ -1,3 +1,9 @@
+## v0.16.0 (2025-04-13)
+
+### Feat
+
+- **wijnsoort ccs gebruikt en detail scherm aangepast.**: Wijnsoort ccs gebruikt en detail scherm uitgebreid
+
 ## v0.15.1 (2025-04-07)
 
 ### Fix

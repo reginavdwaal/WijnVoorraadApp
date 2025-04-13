@@ -2,7 +2,6 @@ from django.urls import path
 
 import WijnVoorraad.views_basis
 import WijnVoorraad.views_popup
-import WijnVoorraad.views_conversie
 
 from . import views
 
@@ -230,11 +229,6 @@ urlpatterns = [
         "wijnsoort/popupadd/",
         WijnVoorraad.views_popup.wijn_soort_create_popup_view,
         name="wijnsoort-popupadd",
-    ),
-    path(
-        "startconversie/",
-        WijnVoorraad.views_conversie.StartConversieView.as_view(),
-        name="startconversie",
     ),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),
     path("AI-zoeken/", views.AIview.as_view(), name="AI-zoeken"),

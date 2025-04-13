@@ -3,16 +3,6 @@ from django.contrib import admin
 from .models import AIUsage, WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
 
-from WijnVoorraad.models_conversie import (
-    ConvDeelnemer,
-    ConvDruivenSoort,
-    ConvLocatie,
-    ConvWijn,
-    ConvWijnDruivensoort,
-    ConvVoorraadmutatie,
-)
-
-
 class VakInline(admin.TabularInline):
     model = Vak
     extra = 10
@@ -64,10 +54,3 @@ admin.site.register(WijnVoorraad)
 
 admin.site.register(VoorraadMutatie)
 admin.site.register(AIUsage)
-
-admin.site.register(ConvDeelnemer)
-admin.site.register(ConvDruivenSoort)
-admin.site.register(ConvLocatie)
-admin.site.register(ConvWijn)
-admin.site.register(ConvWijnDruivensoort)
-admin.site.register(ConvVoorraadmutatie)

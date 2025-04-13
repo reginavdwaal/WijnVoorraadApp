@@ -71,9 +71,6 @@ OPENAI_API_KEY = config("OPENAI_API_KEY")
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-
-DATABASE_ROUTERS = ("WijnVoorraad.dbrouters.MyDBRouter",)
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 

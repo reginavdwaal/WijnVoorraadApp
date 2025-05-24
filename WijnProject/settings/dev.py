@@ -18,14 +18,6 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     },
-    "oudwijndb": {
-        "ENGINE": "mysql.connector.django",
-        "NAME": "vdwanet_defaultdb",
-        "USER": "vdwanet_django",
-        "PASSWORD": DB_PASSWORD,
-        "HOST": "localhost",
-        "PORT": "3306",
-    },
 }
 
 # Static files (CSS, JavaScript, Images)

@@ -1,0 +1,62 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block content %}
+<div id="content-main">
+    {% url 'WijnVoorraad:bestelling-create' as urlname %}
+    {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
+    <table>
+        {% for o in bestelling_list %}
+            {% if o == bestelling_list|first %} 
+            <thead>
+            <tr>
+                {% if not deelnemer_filter %}
+                    <th>
+                        Deelnemer
+                    </th>
+                {% endif %}
+                <th>
+                    Datum aangemaakt
+                </th>
+                <th>
+                    Van locatie
+                </th>
+                <th>
+                    Datum afgesloten
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% endif %}
+            <tr>
+                {% if not deelnemer_filter %}
+                    <td>
+                        <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.deelnemer.naam }}</a>
+                    </td>
+                {% endif %}
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.datumAangemaakt}}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.vanLocatie.omschrijving}}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.datumAfgesloten|default:"-"}}</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tbody>
+            <p>Er zijn GEEN bestellingen.</p>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <form id="create-form" method="get" action="{% url 'WijnVoorraad:bestelling-create' %}">
+        {% csrf_token %}
+        <input type="submit" name="Insert" value="Toevoegen"></input>
+    </form>
+</div>
+{% endblock content %}

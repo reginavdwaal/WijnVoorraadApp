@@ -4,6 +4,7 @@
   <form method="post">
     {% csrf_token %}
     <div class="form-row">
+      <input type="hidden" name='FilterPost' id="FilterPost" value="FilterPost">
       <input type="text"
              name='fuzzy_selectie'
              id="fuzzy_selectie"

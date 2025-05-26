@@ -1,0 +1,120 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block content %}
+<div id="content-main">
+  {% include 'WijnVoorraad/component_filter.html' with show_filters=True %}
+  <div>
+    <table>
+      {% for o in bestelling_list %}
+          {% if o == bestelling_list|first %} 
+          <thead>
+          <tr>
+              <th>
+                  Deelnemer
+              </th>
+              <th>
+                  Datum aangemaakt
+              </th>
+              <th>
+                Opmerking
+              </th>
+          </tr>
+          </thead>
+          <tbody>
+          {% endif %}
+          <tr>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.deelnemer.naam }}</a>
+              </td>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.datumAangemaakt }}</a>
+              </td>
+              <td>
+                <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.opmerking }}</a>
+            </td>
+        </tr>
+      {% empty %}
+          <tbody>
+          <p>Er zijn GEEN bestellingen.</p>
+      {% endfor %}
+      </tbody>
+  </table>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name='aantal_rgls' id="aantal_rgls" value="{{bestelregel_list|length}}">
+    <h2>Bestelregels</h2>
+      <table>
+        {% for m in bestelregel_list %}
+          {% if m == bestelregel_list|first %} 
+            <thead>
+              <tr>
+                <th>
+                  Wijn
+                </th>
+                <th>
+                  Deelnemer
+                </th>
+                <th>
+                  Vak
+                </th>
+                <th>
+                  Aantal
+                </th>
+                <th>
+                  Verzameld
+                </th>
+                <th>
+                  Aantal correctie
+                </th>
+                <th>
+                  Voorraad
+                </th>
+                <th>
+                  Opmerking
+                </th>
+              </tr>
+            </thead>
+          <tbody>
+        {% endif %}
+        <tr>
+          <td class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
+            <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.volle_naam }}</a>
+          </td>
+          <td>
+            {{ m.bestelling.deelnemer.naam }}
+          </td>
+          <td>
+            {{ m.vak.code|default:"---" }}
+          </td>
+          <td>
+            {{ m.aantal }}
+          </td>
+          <td>
+          <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{ m.id }}">
+          <input type="checkbox" name="isVerzameld{{ forloop.counter }}" id="isVerzameld{{ forloop.counter }}" value="True"
+            {% if m.isVerzameld %}checked{% endif %}/>
+          </td>
+          <td>
+            <input type="number" name='aantal_correctie{{ forloop.counter }}' value="{{ m.aantal_correctie }}"
+                  min="0" max="{{ m.aantal_vrd }}" id="aantal_correctie{{ forloop.counter }}"/>
+          </td>
+          <td>
+            <div {% if m.aantal > m.aantal_vrd %} class="accent" {% endif %}>
+              {{ m.aantal_vrd }}
+              </div>
+          </td>
+          <td>
+            <input size='60' type="text" name='opmerking{{ forloop.counter }}' id="opmerking{{ forloop.counter }}"
+            value="{{ m.opmerking }}" />
+         </td>
+        </tr>
+        {% empty %}
+        <p>Er zijn GEEN bestellingen.</p>
+      {% endfor %}
+    </table>
+    <input type="submit" name="Save" id="Save" value="Opslaan">
+  </form>
+  </div>
+{% endblock %}
+

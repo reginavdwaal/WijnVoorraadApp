@@ -16,6 +16,8 @@ from .models import (
     Deelnemer,
     WijnSoort,
     WijnVoorraad,
+    Bestelling,
+    BestellingRegel,
 )
 
 from . import wijnvars
@@ -72,6 +74,8 @@ class VoorraadFilterForm(forms.Form):
         self.request = kwargs.pop("request", None)
         bool_deelnemer = wijnvars.get_bool_deelnemer(self.request)
         bool_locatie = wijnvars.get_bool_locatie(self.request)
+        bool_wijnsoort = wijnvars.get_bool_wijnsoort(self.request)
+        bool_fuzzy = wijnvars.get_bool_fuzzy(self.request)
         allow_all_deelnemers = wijnvars.get_allow_all_deelnemers(self.request)
         allow_all_locaties = wijnvars.get_allow_all_locaties(self.request)
         super(VoorraadFilterForm, self).__init__(*args, **kwargs)
@@ -85,6 +89,10 @@ class VoorraadFilterForm(forms.Form):
         elif allow_all_locaties:
             self.fields["locatie"].required = False
             self.fields["locatie"].empty_label = "Alle locaties"
+        if not bool_wijnsoort:
+            del self.fields["wijnsoort"]
+        if not bool_fuzzy:
+            del self.fields["fuzzy_selectie"]
 
 
 class OntvangstCreateForm(forms.ModelForm):
@@ -191,11 +199,13 @@ class MutatieCreateForm(forms.ModelForm):
     ONTVANGST = "O"
     VERPLAATSING = "V"
     DRINK = "D"
+    AFBOEKING = "A"
     actie_choices = [
         (KOOP, "Koop"),
         (ONTVANGST, "Ontvangst"),
         (VERPLAATSING, "Verplaatsing"),
         (DRINK, "Drink"),
+        (AFBOEKING, "Afboeking"),
     ]
     actie = forms.ChoiceField(choices=actie_choices)
 
@@ -241,11 +251,13 @@ class MutatieUpdateForm(forms.ModelForm):
     ONTVANGST = "O"
     VERPLAATSING = "V"
     DRINK = "D"
+    AFBOEKING = "A"
     actie_choices = [
         (KOOP, "Koop"),
         (ONTVANGST, "Ontvangst"),
         (VERPLAATSING, "Verplaatsing"),
         (DRINK, "Drink"),
+        (AFBOEKING, "Afboeking"),
     ]
     actie = forms.ChoiceField(choices=actie_choices)
 
@@ -274,3 +286,74 @@ class GebruikerForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "email", "deelnemers"]
+
+
+class BestellingCreateForm(forms.ModelForm):
+    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
+    vanLocatie = forms.ModelChoiceField(
+        Locatie.objects, required=True, widget=SelectWithPop
+    )
+    opmerking = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.Textarea(attrs={"cols": "90"}),
+    )
+
+    class Meta:
+        model = Bestelling
+        fields = ["deelnemer", "vanLocatie", "datumAangemaakt", "opmerking"]
+
+
+class BestellingUpdateForm(forms.ModelForm):
+    deelnemer = forms.ModelChoiceField(Deelnemer.objects, widget=SelectWithPop)
+    vanLocatie = forms.ModelChoiceField(
+        Locatie.objects, required=True, widget=SelectWithPop
+    )
+    opmerking = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.Textarea(attrs={"cols": "90"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(BestellingUpdateForm, self).__init__(*args, **kwargs)
+        self.fields["deelnemer"].disabled = True
+        self.fields["vanLocatie"].disabled = True
+        self.fields["datumAangemaakt"].disabled = True
+
+    class Meta:
+        model = Bestelling
+        fields = [
+            "deelnemer",
+            "vanLocatie",
+            "datumAangemaakt",
+            "opmerking",
+            "datumAfgesloten",
+        ]
+
+
+class BestellingRegelUpdateForm(forms.ModelForm):
+    bestelling = forms.ModelChoiceField(Bestelling.objects, widget=SelectWithPop)
+    ontvangst = forms.ModelChoiceField(
+        Ontvangst.objects, required=True, widget=SelectWithPop
+    )
+    vak = forms.ModelChoiceField(Vak.objects, required=False, widget=SelectWithPop)
+    aantal = forms.IntegerField()
+    isVerzameld = forms.CheckboxInput()
+    aantal_correctie = forms.IntegerField(required=False)
+    opmerking = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.Textarea(attrs={"cols": "90"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(BestellingRegelUpdateForm, self).__init__(*args, **kwargs)
+        self.fields["bestelling"].disabled = True
+        self.fields["ontvangst"].disabled = True
+        self.fields["vak"].disabled = True
+
+    class Meta:
+        model = BestellingRegel
+        # fields = ["bestelling", "ontvangst", "vak", "aantal", "opmerking"]
+        fields = "__all__"

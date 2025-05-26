@@ -29,9 +29,13 @@ from .forms import (
     OntvangstUpdateForm,
     VoorraadFilterForm,
     WijnForm,
+    BestellingCreateForm,
+    BestellingUpdateForm,
+    BestellingRegelUpdateForm,
 )
 from .models import (
     AIUsage,
+    Deelnemer,
     Locatie,
     Ontvangst,
     Vak,
@@ -39,6 +43,8 @@ from .models import (
     Wijn,
     WijnSoort,
     WijnVoorraad,
+    Bestelling,
+    BestellingRegel,
 )
 
 
@@ -94,7 +100,7 @@ class VoorraadListView(LoginRequiredMixin, ListView):
     # template_name = 'WijnVoorraad/index.html'
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, False, False)
+        wijnvars.set_filter_options(self.request, True, True, False, False, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         voorraad_list = (
@@ -166,8 +172,12 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
             initial["deelnemer"] = wijnvars.get_session_deelnemer_id(self.request)
         if wijnvars.get_bool_locatie(self.request):
             initial["locatie"] = wijnvars.get_session_locatie_id(self.request)
-        initial["wijnsoort"] = wijnvars.get_session_wijnsoort_id(self.request)
-        initial["fuzzy_selectie"] = wijnvars.get_session_fuzzy_selectie(self.request)
+        if wijnvars.get_bool_wijnsoort(self.request):
+            initial["wijnsoort"] = wijnvars.get_session_wijnsoort_id(self.request)
+        if wijnvars.get_bool_fuzzy(self.request):
+            initial["fuzzy_selectie"] = wijnvars.get_session_fuzzy_selectie(
+                self.request
+            )
         return initial
 
     def post(self, request, *args, **kwargs):
@@ -185,10 +195,12 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
         if wijnvars.get_bool_locatie(self.request):
             l_id = self.request.POST["locatie"]
             wijnvars.set_session_locatie(self.request, l_id)
-        ws_id = self.request.POST["wijnsoort"]
-        fuzzy_selectie = self.request.POST["fuzzy_selectie"]
-        wijnvars.set_session_wijnsoort_id(self.request, ws_id)
-        wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        if wijnvars.get_bool_wijnsoort(self.request):
+            ws_id = self.request.POST["wijnsoort"]
+            wijnvars.set_session_wijnsoort_id(self.request, ws_id)
+        if wijnvars.get_bool_fuzzy(self.request):
+            fuzzy_selectie = self.request.POST["fuzzy_selectie"]
+            wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
         url = wijnvars.get_session_return_url(self.request)
         return HttpResponseRedirect(reverse(url))
 
@@ -255,7 +267,7 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/voorraadvakken_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, True, False, False)
+        wijnvars.set_filter_options(self.request, False, True, True, False, True, True)
         l = wijnvars.get_session_locatie(self.request)
         vakken_list = (
             Vak.objects.filter(locatie=l)
@@ -427,7 +439,7 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
             aantal_vakken_int = int(aantal_vakken)
         except ValueError:
             aantal_vakken_int = 0
-        for i in range(1, aantal_vakken_int):
+        for i in range(1, aantal_vakken_int + 1):
             v_nieuw_vak_id = self.request.POST["nieuw_vak_id" + str(i)]
             v_aantal_verplaatsen = self.request.POST["aantal_verplaatsen" + str(i)]
             if v_aantal_verplaatsen:
@@ -447,7 +459,7 @@ class MutatieListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.order_by("-datum")
@@ -506,7 +518,7 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_uit_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(in_uit="U").order_by("-datum")
@@ -565,7 +577,7 @@ class MutatieInListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_in_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True)
+        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(in_uit="I").order_by("-datum")
@@ -692,7 +704,7 @@ class MutatieCreateView(LoginRequiredMixin, CreateView):
             initial["locatie"] = voorraad.locatie
             initial["vak"] = voorraad.vak
             initial["in_uit"] = "U"
-            initial["actie"] = "V"
+            initial["actie"] = "A"
             initial["datum"] = datetime.now()
         elif ontvangst_id is not None:
             initial["ontvangst"] = ontvangst_id
@@ -725,7 +737,7 @@ class OntvangstListView(LoginRequiredMixin, ListView):
     context_object_name = "ontvangst_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, False, True, False)
+        wijnvars.set_filter_options(self.request, True, False, True, True, True, True)
         ontvangst_list = Ontvangst.objects.all()
         d = wijnvars.get_session_deelnemer(self.request)
         if d:
@@ -935,6 +947,13 @@ class OntvangstVoorraadView(LoginRequiredMixin, ListView):
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )
             return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
+        elif "Afboeken" in self.request.POST:
+            o_id = voorraad.ontvangst.id
+            url = reverse(
+                "WijnVoorraad:mutatie-create",
+                kwargs=dict(ontvangst_id=o_id, voorraad_id=v_id),
+            )
+            return HttpResponseRedirect(url)
         elif "Verplaatsen" in self.request.POST:
             url = reverse("WijnVoorraad:verplaatsen", kwargs=dict(pk=v_id))
             return HttpResponseRedirect(url)
@@ -947,7 +966,9 @@ class WijnListView(LoginRequiredMixin, ListView):
     context_object_name = "wijn_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, False, False, False)
+        wijnvars.set_filter_options(
+            self.request, False, False, False, False, True, True
+        )
         wijn_list = Wijn.objects.all()
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
         if ws_id:
@@ -1207,3 +1228,374 @@ class AIview(View):
 
         # Stuur een antwoord terug
         return JsonResponse({"message": response})
+
+
+class BestellingCreateView(LoginRequiredMixin, CreateView):
+    form_class = BestellingCreateForm
+    model = Bestelling
+    template_name = "WijnVoorraad/bestelling_create.html"
+    success_url = reverse_lazy("WijnVoorraad:bestellinglist")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Nieuwe bestelling"
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["deelnemer"] = wijnvars.get_session_deelnemer_id(self.request)
+        return initial
+
+    def post(self, request, *args, **kwargs):
+        if "SaveAndDetails" in self.request.POST:
+            super().post(request, *args, **kwargs)
+            b = self.object
+            url = reverse(
+                "WijnVoorraad:bestellingregelsselecteren",
+                kwargs=dict(bestelling_id=b.id),
+            )
+            return HttpResponseRedirect(url)
+        else:
+            return super().post(request, *args, **kwargs)
+
+
+class BestellingDetailView(LoginRequiredMixin, DetailView):
+    model = Bestelling
+    context_object_name = "bestelling"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        br = BestellingRegel.objects.filter(bestelling=self.object)
+        regels = []
+        VerzameldeOnverwerkteRegels = False
+        AllVerzameld = True
+        AllVerwerkt = True
+        for regel in br:
+            if regel.isVerzameld:
+                if regel.verwerkt == "N":
+                    VerzameldeOnverwerkteRegels = True
+                else:
+                    AllVerwerkt = False
+            else:
+                AllVerzameld = False
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=regel.ontvangst,
+                    locatie=regel.bestelling.vanLocatie,
+                    vak=regel.vak,
+                )
+                regel.aantal_vrd = vrd.aantal
+                regel.aantal_vrd_rsv = vrd.aantal_rsv
+            except WijnVoorraad.DoesNotExist:
+                regel.aantal_vrd = 0
+                regel.aantal_vrd_rsv = 0
+            regels.append(regel)
+        context["regels"] = regels
+        context["VerzameldeOnverwerkteRegels"] = VerzameldeOnverwerkteRegels
+        context["AllVerzameld"] = AllVerzameld
+        context["AllVerwerkt"] = AllVerwerkt
+        context["title"] = "Bestelling"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "VerwijderRegel" in self.request.POST:
+            o_id = request.POST.get("bestellingregel_id")
+            bestellingregel = BestellingRegel.objects.get(pk=o_id)
+            b_id = bestellingregel.bestelling.id
+            try:
+                bestellingregel.delete()
+                messages.success(request, "Bestellingregel is verwijderd")
+            except:
+                messages.error(
+                    request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                )
+            url = reverse("WijnVoorraad:bestellingdetail", kwargs=dict(pk=b_id))
+            return HttpResponseRedirect(url)
+        else:
+            o_id = self.request.POST["object_id"]
+            if o_id:
+                bestelling = Bestelling.objects.get(pk=o_id)
+                if "Verwijder" in self.request.POST:
+                    try:
+                        bestelling.delete()
+                        messages.success(request, "Bestelling is verwijderd")
+                        url = reverse("WijnVoorraad:bestellinglist")
+                    except:
+                        messages.error(
+                            request,
+                            "Verwijderen is niet mogelijk. Gerelateerde gegevens?",
+                        )
+                        url = reverse(
+                            "WijnVoorraad:bestellingdetail", kwargs=dict(pk=o_id)
+                        )
+                elif "Afboeken" in self.request.POST:
+                    try:
+                        bestelling.afboeken()
+                        messages.success(
+                            request, "Verzamelde bestellingregels zijn afgeboekt"
+                        )
+                    except ValidationError as e:
+                        messages.error(request, e.message)
+                    url = reverse("WijnVoorraad:bestellingdetail", kwargs=dict(pk=o_id))
+                else:
+                    url = reverse("WijnVoorraad:bestellingdetail", kwargs=dict(pk=o_id))
+                return HttpResponseRedirect(url)
+            else:
+                return super().get(request, *args, **kwargs)
+
+
+class BestellingListView(LoginRequiredMixin, ListView):
+    model = Bestelling
+    context_object_name = "bestelling_list"
+
+    def get_queryset(self):
+        wijnvars.set_filter_options(self.request, True, True, True, True, False, False)
+        bestelling_list = Bestelling.objects.all()
+        d = wijnvars.get_session_deelnemer(self.request)
+        l = wijnvars.get_session_locatie(self.request)
+        if d:
+            bestelling_list = bestelling_list.filter(deelnemer=d)
+        if l:
+            bestelling_list = bestelling_list.filter(vanLocatie=l)
+        return bestelling_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:bestellinglist"
+        )
+        context["title"] = "Bestellingen"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        wijnvars.handle_filter_options_post(request)
+        url = reverse("WijnVoorraad:bestellinglist")
+        return HttpResponseRedirect(url)
+
+
+class BestellingUpdateView(LoginRequiredMixin, UpdateView):
+    form_class = BestellingUpdateForm
+    model = Bestelling
+    template_name = "WijnVoorraad/general_create_update.html"
+
+    def get_success_url(self) -> str:
+        return reverse_lazy(
+            "WijnVoorraad:bestellingdetail",
+            kwargs={"pk": self.object.id},
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Update bestelling"
+        return context
+
+
+class BestellingRegelsSelecteren(LoginRequiredMixin, ListView):
+    model = WijnVoorraad
+    template_name = "WijnVoorraad/bestellingregels_selecteren.html"
+    context_object_name = "bestel_list"
+    success_url = reverse_lazy("WijnVoorraad:voorraadlist")
+
+    def get_queryset(self):
+        wijnvars.set_filter_options(
+            self.request, False, False, False, False, True, True
+        )
+        b_id = self.kwargs["bestelling_id"]
+        b = Bestelling.objects.get(pk=b_id)
+        d = Deelnemer.objects.get(pk=b.deelnemer.id)
+        l = Locatie.objects.get(pk=b.vanLocatie.id)
+        voorraad_list = WijnVoorraad.objects.filter(deelnemer=d, locatie=l).order_by(
+            Lower("wijn__domein"), Lower("wijn__naam"), "ontvangst__datumOntvangst"
+        )
+
+        ws_id = wijnvars.get_session_wijnsoort_id(self.request)
+        if ws_id:
+            voorraad_list = voorraad_list.filter(wijn__wijnsoort__id=ws_id)
+
+        fuzzy_selectie = wijnvars.get_session_fuzzy_selectie(self.request)
+        if fuzzy_selectie:
+            voorraad_list = (
+                voorraad_list.filter(wijn__naam__icontains=fuzzy_selectie)
+                | voorraad_list.filter(wijn__domein__icontains=fuzzy_selectie)
+                | voorraad_list.filter(
+                    wijn__wijnsoort__omschrijving__icontains=fuzzy_selectie
+                )
+                | voorraad_list.filter(wijn__jaar__icontains=fuzzy_selectie)
+                | voorraad_list.filter(wijn__land__icontains=fuzzy_selectie)
+                | voorraad_list.filter(wijn__streek__icontains=fuzzy_selectie)
+                | voorraad_list.filter(wijn__classificatie__icontains=fuzzy_selectie)
+                | voorraad_list.filter(wijn__opmerking__icontains=fuzzy_selectie)
+                | voorraad_list.filter(ontvangst__leverancier__icontains=fuzzy_selectie)
+                | voorraad_list.filter(ontvangst__opmerking__icontains=fuzzy_selectie)
+                # | voorraad_list.filter(
+                #     wijn__wijnDruivensoorten__omschrijving__icontains=fuzzy_selectie
+                # )
+            )
+        bestel_list = []
+        for vrd in voorraad_list:
+            try:
+                br = BestellingRegel.objects.get(
+                    bestelling=b, ontvangst=vrd.ontvangst, vak=vrd.vak
+                )
+                vrd.bestellingregel_id = br.id
+                vrd.aantal_bestellen = br.aantal
+            except:
+                vrd.bestellingregel_id = ""
+                vrd.aantal_bestellen = ""
+            bestel_list.append(vrd)
+        return bestel_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:bestellingregelsselecteren"
+        )
+        bestelling_id = self.kwargs["bestelling_id"]
+        bestelling = Bestelling.objects.get(pk=bestelling_id)
+        context["bestelling"] = bestelling
+        context["title"] = "Bestelling selecteren"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "FilterPost" in request.POST:
+            wijnvars.handle_filter_options_post(request)
+            b_id = self.kwargs["bestelling_id"]
+            url = reverse(
+                "WijnVoorraad:bestellingregelsselecteren",
+                kwargs=dict(bestelling_id=b_id),
+            )
+        else:
+            b_id = request.POST.get("bestelling_id")
+            bestelling = Bestelling.objects.get(pk=b_id)
+            aantal_vrd = request.POST["aantal_vrd"]
+            try:
+                aantal_vrd_int = int(aantal_vrd)
+            except ValueError:
+                aantal_vrd_int = 0
+            aantal_regels = 0
+            for i in range(1, aantal_vrd_int + 1):
+                v_id = request.POST["voorraad_id" + str(i)]
+                v_aantal_bestellen = request.POST["aantal_bestellen" + str(i)]
+                br_id = request.POST.get("bestellingregel_id" + str(i))
+                if br_id:
+                    br = BestellingRegel.objects.get(pk=br_id)
+                    if v_aantal_bestellen:
+                        if br.aantal != int(v_aantal_bestellen):
+                            br.aantal = v_aantal_bestellen
+                            br.save()
+                            aantal_regels += 1
+                    else:
+                        br.delete()
+                        aantal_regels += 1
+                elif v_aantal_bestellen:
+                    voorraad = WijnVoorraad.objects.get(pk=v_id)
+                    v_nieuwe_bestelregel = BestellingRegel()
+                    v_nieuwe_bestelregel.bestelling = bestelling
+                    v_nieuwe_bestelregel.ontvangst = voorraad.ontvangst
+                    v_nieuwe_bestelregel.vak = voorraad.vak
+                    v_nieuwe_bestelregel.aantal = v_aantal_bestellen
+                    v_nieuwe_bestelregel.save()
+                    aantal_regels += 1
+            messages.success(request, "%s bestelregel(s) verwerkt" % (aantal_regels,))
+            url = reverse("WijnVoorraad:bestellingdetail", kwargs=dict(pk=b_id))
+        return HttpResponseRedirect(url)
+
+
+class BestellingRegelUpdateView(LoginRequiredMixin, UpdateView):
+    form_class = BestellingRegelUpdateForm
+    model = BestellingRegel
+    template_name = "WijnVoorraad/general_create_update.html"
+
+    def get_success_url(self) -> str:
+        return reverse_lazy(
+            "WijnVoorraad:bestellingdetail",
+            kwargs={"pk": self.object.bestelling.id},
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Update bestellingregel"
+        return context
+
+
+class BestellingVerzamelen(LoginRequiredMixin, ListView):
+    model = BestellingRegel
+    template_name = "WijnVoorraad/bestelling_verzamelen.html"
+    context_object_name = "bestelregel_list"
+    success_url = reverse_lazy("WijnVoorraad:voorraadlist")
+
+    def get_queryset(self):
+        wijnvars.set_filter_options(
+            self.request, False, True, True, False, False, False
+        )
+        l = wijnvars.get_session_locatie(self.request)
+        br = BestellingRegel.objects.filter(
+            bestelling__vanLocatie=l, bestelling__datumAfgesloten__isnull=True
+        ).order_by(
+            Lower("ontvangst__wijn__domein"),
+            Lower("ontvangst__wijn__naam"),
+            "ontvangst__datumOntvangst",
+        )
+
+        bestelregel_list = []
+        for regel in br:
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=regel.ontvangst,
+                    locatie=regel.bestelling.vanLocatie,
+                    vak=regel.vak,
+                )
+                regel.aantal_vrd = vrd.aantal
+            except WijnVoorraad.DoesNotExist:
+                regel.aantal_vrd = 0
+            bestelregel_list.append(regel)
+
+        return bestelregel_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:bestellingverzamelen"
+        )
+        l = wijnvars.get_session_locatie(self.request)
+        bestelling_list = Bestelling.objects.filter(
+            vanLocatie=l, datumAfgesloten__isnull=True
+        )
+        context["bestelling_list"] = bestelling_list
+        context["title"] = "Bestellingen verzamelen"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "FilterPost" in request.POST:
+            wijnvars.handle_filter_options_post(request)
+            url = reverse(
+                "WijnVoorraad:bestellingverzamelen",
+            )
+        else:
+            aantal_rgls = request.POST["aantal_rgls"]
+            try:
+                aantal_rgls_int = int(aantal_rgls)
+            except ValueError:
+                aantal_rgls_int = 0
+            for i in range(1, aantal_rgls_int + 1):
+                br_id = request.POST["bestellingregel_id" + str(i)]
+                br_isVerzameld = request.POST.get("isVerzameld" + str(i))
+                br_aantal_correctie = request.POST["aantal_correctie" + str(i)]
+                br_opmerking = request.POST["opmerking" + str(i)]
+                if br_id:
+                    br = BestellingRegel.objects.get(pk=br_id)
+                    br.isVerzameld = br_isVerzameld == "True"
+                    if br_aantal_correctie:
+                        br.aantal_correctie = int(br_aantal_correctie)
+                    else:
+                        br.aantal_correctie = None
+                    br.opmerking = br_opmerking
+                    try:
+                        br.save()
+                    except ValidationError as e:
+                        messages.error(request, e.message)
+            if messages.get_messages(request):
+                url = reverse("WijnVoorraad:bestellingverzamelen")
+            else:
+                url = reverse("WijnVoorraad:bestellinglist")
+        return HttpResponseRedirect(url)

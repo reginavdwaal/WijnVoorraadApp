@@ -232,4 +232,35 @@ urlpatterns = [
     ),
     path("", views.VoorraadListView.as_view(), name="voorraadlist"),
     path("AI-zoeken/", views.AIview.as_view(), name="AI-zoeken"),
+    path("bestellingen/", views.BestellingListView.as_view(), name="bestellinglist"),
+    path(
+        "bestelling/<int:pk>/",
+        views.BestellingDetailView.as_view(),
+        name="bestellingdetail",
+    ),
+    path(
+        "bestelling/create",
+        views.BestellingCreateView.as_view(),
+        name="bestelling-create",
+    ),
+    path(
+        "bestelling/update/<int:pk>/",
+        views.BestellingUpdateView.as_view(),
+        name="bestelling-update",
+    ),
+    path(
+        "bestellingregelsselecteren/<int:bestelling_id>",
+        views.BestellingRegelsSelecteren.as_view(),
+        name="bestellingregelsselecteren",
+    ),
+    path(
+        "bestellingregel/update/<int:pk>/",
+        views.BestellingRegelUpdateView.as_view(),
+        name="bestellingregel-update",
+    ),
+    path(
+        "bestellingverzamelen/",
+        views.BestellingVerzamelen.as_view(),
+        name="bestellingverzamelen",
+    ),
 ]

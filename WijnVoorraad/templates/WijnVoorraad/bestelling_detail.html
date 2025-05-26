@@ -1,0 +1,177 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:bestellinglist' %}">Bestellingen</a>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="detail-block">
+        <div class="detail-row">
+            <label class="detail-column-label">Deelnemer</label> 
+            <label class="detail-column">{{  bestelling.deelnemer.naam }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Datum aangemaakt</label>
+            <label class="detail-column">{{ bestelling.datumAangemaakt }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Van locatie</label>
+            <label class="detail-column">
+                {{  bestelling.vanLocatie.omschrijving }}
+                &nbsp;
+                <a href="{% url 'WijnVoorraad:locatiedetail' bestelling.vanLocatie.id %}"
+                    title="Details bekijken">
+                    <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+                </a>
+            </label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Opmerking</label>
+            <label class="detail-column">{{ bestelling.opmerking }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Datum afgesloten</label>
+            <label class="detail-column">{{ bestelling.datumAfgesloten|default:"-" }}</label>
+        </div>
+    </div>  <!-- end detail-block -->
+</div>  <!-- end content-main -->
+<br class="clear">
+<div id="content-footer">
+    <div class="buttons-block">
+        <form id="update-form" method="get" action="{% url 'WijnVoorraad:bestelling-update' object.id  %}">
+            {% csrf_token %}
+            <input type="submit" name="Update" value="Wijzigen"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    <div class="buttons-block">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name='object_id' id="object_id" value="{{object.id}}"></input>
+            <input type="submit" name="Verwijder" value="Verwijder"></input>
+        </form>
+    </div>  <!-- end buttons-block -->
+    {% if not bestelling.datumAfgesloten %}
+        <div class="buttons-block">
+            <form method="get" action="{% url 'WijnVoorraad:bestellingregelsselecteren' object.id %}">
+                {% csrf_token %}
+                <input type="submit" name="Selecteren" value="Voorraad selecteren"></input>
+            </form>
+        </div>  <!-- end buttons-block -->
+    {% endif %}
+    {% if VerzameldeOnverwerkteRegels %}
+        <div class="buttons-block">
+            <form method="post" %}">
+                {% csrf_token %}
+                <input type="hidden" name='object_id' id="object_id" value="{{object.id}}"></input>
+                <input type="submit" name="Afboeken" value="Afboeken"></input>
+            </form>
+        </div>  <!-- end buttons-block -->
+        {% if not AllVerzameld %}
+        <div class="warning"> Let op: alleen verzamelde onverwerkte regels worden verwerkt </div>
+        {% endif %}
+    {% endif %}
+
+    <br class="clear">
+
+    <h2>Bestelling regels</h2>
+    <table>
+        {% for m in regels %}
+            {% if m == regels|first %} 
+            <thead>
+                <tr>
+                    <th>
+                        Wijn
+                    </th>
+                    <th>
+                        Ontvangstdatum
+                    </th>
+                    <th>
+                        Vak
+                    </th>
+                    <th>
+                        Aantal
+                    </th>
+                    <th>
+                        Verzameld
+                    </th>
+                    <th>
+                        Aantal correctie
+                    </th>
+                    <th>
+                        Voorraad
+                    </th>
+                    <th>
+                        Vewerkt
+                    </th>
+                    <th>
+                        Opmerking
+                    </th>
+                    <th>
+                    </th>
+                    <th>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% endif %}
+            <tr>
+                <td class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.volle_naam }}</a>
+                </td>
+                <td class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
+                    <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.datumOntvangst }}</a>
+                </td>
+                <td>
+                    {{ m.vak.code|default:"---" }}
+                </td>
+                <td>
+                    {{ m.aantal }}
+                </td>
+                <td>
+                    <input type="checkbox" name="isVerzameld{{ forloop.counter }}" id="isVerzameld{{ forloop.counter }}" value="True"
+                    disabled {% if m.isVerzameld %}checked{% endif %}/>
+                </td>
+                <td>
+                    {{ m.aantal_correctie|default_if_none:"" }}
+                </td>
+                {% if not bestelling.datumAfgesloten %}
+                    <td>
+                        <div {% if m.aantal > m.aantal_vrd %} class="accent" {% endif %}>
+                        {{ m.aantal_vrd }}
+                        {% if m.aantal_vrd_rsv > 0 %}
+                            (-{{ m.aantal_vrd_rsv }})
+                        {% endif %}
+                        </div>
+                    </td>
+                {% endif %}
+                <td>
+                    {{ m.get_verwerkt_display }}
+                </td>
+                <td>
+                    {{ m.opmerking }}
+                </td>
+                <td>
+                    <form id="update-form" method="get" action="{% url 'WijnVoorraad:bestellingregel-update' m.id  %}">
+                        {% csrf_token %}
+                        <input type="submit" name="Update" value="Wijzigen"></input>
+                    </form>
+                </td>
+                <td>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name='bestellingregel_id' id="bestellingregel_id" value="{{ m.id }}"></input>
+                        <input type="submit" name="VerwijderRegel" value="Verwijder"></input>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tbody>
+            <p>Er zijn GEEN bestellingregels.</p>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>  <!-- end content-footer -->
+{% endblock %}

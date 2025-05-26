@@ -37,6 +37,9 @@
                         </td>
                         <td style="vertical-align: middle; text-align: center">
                             {{ v.aantal }}
+                            {% if v.aantal_rsv > 0 %}
+                                (-{{ v.aantal_rsv }})
+                            {% endif %}
                         </td>
                         <td>
                             <input type="hidden" name='voorraad_id' id="voorraad{{ forloop.counter }}" value="{{v.id}}">

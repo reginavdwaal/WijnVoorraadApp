@@ -225,6 +225,16 @@ def get_bool_locatie(request):
     return bool_locatie
 
 
+def get_bool_wijnsoort(request):
+    bool_wijnsoort = request.session.get("bool_wijnsoort", None)
+    return bool_wijnsoort
+
+
+def get_bool_fuzzy(request):
+    bool_fuzzy = request.session.get("bool_fuzzy", None)
+    return bool_fuzzy
+
+
 def get_allow_all_deelnemers(request):
     allow_all_deelnemers = request.session.get("allow_all_deelnemers", None)
     return allow_all_deelnemers
@@ -236,10 +246,18 @@ def get_allow_all_locaties(request):
 
 
 def set_filter_options(
-    request, bool_deelnemer, bool_locatie, allow_all_deelnemers, allow_all_locaties
+    request,
+    bool_deelnemer,
+    bool_locatie,
+    allow_all_deelnemers,
+    allow_all_locaties,
+    bool_wijnsoort,
+    bool_fuzzy,
 ):
     request.session["bool_deelnemer"] = bool_deelnemer
     request.session["bool_locatie"] = bool_locatie
+    request.session["bool_wijnsoort"] = bool_wijnsoort
+    request.session["bool_fuzzy"] = bool_fuzzy
     request.session["allow_all_deelnemers"] = allow_all_deelnemers
     request.session["allow_all_locaties"] = allow_all_locaties
     if not allow_all_deelnemers and get_session_deelnemer_id(request) is None:
@@ -271,7 +289,7 @@ def handle_filter_options_post(request):
     elif "clearfilterFuzzy" in request.POST:
         set_session_fuzzy_selectie(request, None)
     else:
-        fuzzy_selectie = request.POST["fuzzy_selectie"]
+        fuzzy_selectie = request.POST.get("fuzzy_selectie")
         set_session_fuzzy_selectie(request, fuzzy_selectie)
         ws_rood = request.POST.get("ws_rood")
         if ws_rood:
@@ -308,22 +326,24 @@ def set_context_filter_options(context, request, return_url):
             "text": get_session_locatie_omschrijving(request),
         }
         context["active_filters"].append(add_filter)
-    ws_id = get_session_wijnsoort_id(request)
-    if ws_id:
-        add_filter = {
-            "type": "Wijnsoort",
-            "text": get_session_wijnsoort_omschrijving(request).capitalize(),
-        }
-        context["active_filters"].append(add_filter)
+    if get_bool_wijnsoort(request):
+        ws_id = get_session_wijnsoort_id(request)
+        if ws_id:
+            add_filter = {
+                "type": "Wijnsoort",
+                "text": get_session_wijnsoort_omschrijving(request).capitalize(),
+            }
+            context["active_filters"].append(add_filter)
 
-    fuzzy_selectie = get_session_fuzzy_selectie(request)
-    if fuzzy_selectie:
-        context["fuzzy_selectie"] = fuzzy_selectie
-        add_filter = {
-            "type": "Fuzzy",
-            "text": fuzzy_selectie,
-        }
-        context["active_filters"].append(add_filter)
+    if get_bool_fuzzy(request):
+        fuzzy_selectie = get_session_fuzzy_selectie(request)
+        if fuzzy_selectie:
+            context["fuzzy_selectie"] = fuzzy_selectie
+            add_filter = {
+                "type": "Fuzzy",
+                "text": fuzzy_selectie,
+            }
+            context["active_filters"].append(add_filter)
 
     if get_session_deelnemer(request) is None:
         context["deelnemer_filter"] = False

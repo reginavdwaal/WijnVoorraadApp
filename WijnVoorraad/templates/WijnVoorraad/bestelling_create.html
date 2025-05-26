@@ -1,0 +1,12 @@
+{% extends "./base_form.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:bestellinglist' %}">Bestellingen</a>
+{% endblock %}
+
+{% block form_buttons %}
+    <input type="submit" name="Save" value="Opslaan">
+    <input type="submit" name="SaveAndDetails" value="Opslaan en naar voorraad">
+{% endblock %}

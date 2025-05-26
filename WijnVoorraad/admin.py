@@ -1,7 +1,13 @@
 from django.contrib import admin
 
+admin.site.site_title = "WijnVoorraad"
+admin.site.site_header = "WijnVoorraad"
+admin.site.index_title = "WijnVoorraad beheer"
+
 from .models import AIUsage, WijnSoort, DruivenSoort, Locatie, Vak, Deelnemer
 from .models import Wijn, WijnDruivensoort, Ontvangst, WijnVoorraad, VoorraadMutatie
+from .models import Bestelling, BestellingRegel
+
 
 class VakInline(admin.TabularInline):
     model = Vak
@@ -49,8 +55,18 @@ class OntvangstAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Ontvangst, OntvangstAdmin)
-
 admin.site.register(WijnVoorraad)
-
 admin.site.register(VoorraadMutatie)
 admin.site.register(AIUsage)
+
+
+class RegelsInline(admin.TabularInline):
+    model = BestellingRegel
+    extra = 5
+
+
+class BestellingAdmin(admin.ModelAdmin):
+    inlines = [RegelsInline]
+
+
+admin.site.register(Bestelling, BestellingAdmin)

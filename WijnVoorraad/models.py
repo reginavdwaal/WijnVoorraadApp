@@ -266,11 +266,13 @@ class VoorraadMutatie(models.Model):
     ONTVANGST = "O"
     VERPLAATSING = "V"
     DRINK = "D"
+    AFBOEKING = "A"
     actie_choices = [
         (KOOP, "Koop"),
         (ONTVANGST, "Ontvangst"),
         (VERPLAATSING, "Verplaatsing"),
         (DRINK, "Drink"),
+        (AFBOEKING, "Afboeking"),
     ]
     actie = models.CharField(max_length=1, choices=actie_choices)
 
@@ -359,6 +361,20 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = aantal
         mutatie.save()
 
+    @staticmethod
+    def afboeken(ontvangst, locatie, vak, aantal):
+        mutatie = VoorraadMutatie()
+        mutatie.ontvangst = ontvangst
+        mutatie.locatie = locatie
+        if vak is not None:
+            mutatie.vak = vak
+        mutatie.in_uit = "U"
+        mutatie.actie = "A"
+        mutatie.datum = datetime.now()
+        mutatie.aantal = aantal
+        mutatie.clean()
+        mutatie.save()
+
     class Meta:
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"
@@ -406,6 +422,7 @@ class WijnVoorraad(models.Model):
     locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
     vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
     aantal = models.IntegerField(default=0)
+    aantal_rsv = models.IntegerField(default=0)
 
     def __str__(self):
         if self.vak:
@@ -542,6 +559,111 @@ class WijnVoorraad(models.Model):
                         ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
                     )
 
+    def check_voorraad_rsv(BestellingRegel, old_regel):
+        vrd_old = None
+        vrd_new = None
+        if old_regel is not None:
+            if old_regel.aantal_correctie is not None:
+                aantal_old = old_regel.aantal_correctie
+            else:
+                aantal_old = old_regel.aantal
+            try:
+                vrd_old = WijnVoorraad.objects.get(
+                    ontvangst=old_regel.ontvangst,
+                    locatie=old_regel.bestelling.vanLocatie,
+                    vak=old_regel.vak,
+                )
+            except WijnVoorraad.DoesNotExist:
+                aantal_old = 0
+        if BestellingRegel is not None:
+            if BestellingRegel.aantal_correctie is not None:
+                aantal_new = BestellingRegel.aantal_correctie
+            else:
+                aantal_new = BestellingRegel.aantal
+            try:
+                vrd_new = WijnVoorraad.objects.get(
+                    ontvangst=BestellingRegel.ontvangst,
+                    locatie=BestellingRegel.bestelling.vanLocatie,
+                    vak=BestellingRegel.vak,
+                )
+            except WijnVoorraad.DoesNotExist:
+                aantal_new = 0
+
+        if (
+            old_regel is not None
+            and BestellingRegel is not None
+            and vrd_old is not None
+            and vrd_new is not None
+            and vrd_old == vrd_new
+        ):
+            if vrd_old.aantal_rsv - aantal_old + aantal_new > vrd_old.aantal:
+                raise ValidationError(
+                    ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                )
+        else:
+            if old_regel is not None and vrd_old is not None:
+                if vrd_old.aantal_rsv - aantal_old > vrd_old.aantal:
+                    raise ValidationError(
+                        ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                    )
+            if BestellingRegel is not None:
+                if vrd_new is not None:
+                    if vrd_new.aantal_rsv + aantal_new > vrd_new.aantal:
+                        raise ValidationError(
+                            ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                        )
+                else:
+                    if aantal_new > 0:
+                        raise ValidationError(
+                            ("Onjuiste bestelling. Er is geen voorraad!")
+                        )
+
+    def Bijwerken_rsv(BestellingRegel, old_regel):
+        if old_regel is not None:
+            if old_regel.verwerkt == "N":
+                WijnVoorraad.Bijwerken_rsv_eraf(old_regel)
+
+        if BestellingRegel is not None:
+            if BestellingRegel.verwerkt == "N":
+                WijnVoorraad.Bijwerken_rsv_erbij(BestellingRegel)
+
+    def Bijwerken_rsv_erbij(BestellingRegel):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=BestellingRegel.ontvangst,
+                locatie=BestellingRegel.bestelling.vanLocatie,
+                vak=BestellingRegel.vak,
+            )
+            if BestellingRegel.aantal_correctie is not None:
+                aantal = BestellingRegel.aantal_correctie
+            else:
+                aantal = BestellingRegel.aantal
+            vrd.aantal_rsv = F("aantal_rsv") + aantal
+            vrd.save()
+        except WijnVoorraad.DoesNotExist:
+            if BestellingRegel.aantal_correctie is not None:
+                aantal = BestellingRegel.aantal_correctie
+            else:
+                aantal = BestellingRegel.aantal
+            if aantal > 0:
+                raise ValidationError(("Onjuiste bestelling. Er is geen voorraad!"))
+
+    def Bijwerken_rsv_eraf(BestellingRegel):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=BestellingRegel.ontvangst,
+                locatie=BestellingRegel.bestelling.vanLocatie,
+                vak=BestellingRegel.vak,
+            )
+            if BestellingRegel.aantal_correctie is not None:
+                aantal = BestellingRegel.aantal_correctie
+            else:
+                aantal = BestellingRegel.aantal
+            vrd.aantal_rsv = F("aantal_rsv") - aantal
+            vrd.save()
+        except WijnVoorraad.DoesNotExist:
+            pass
+
     class Meta:
         ordering = ["wijn", "deelnemer", "locatie", "vak"]
         verbose_name = "Wijnvoorraad"
@@ -550,6 +672,120 @@ class WijnVoorraad(models.Model):
             models.UniqueConstraint(
                 name="unique_wijnvoorraad",
                 fields=["wijn", "deelnemer", "locatie", "vak"],
+                deferrable=Deferrable.DEFERRED,
+            )
+        ]
+
+
+class Bestelling(models.Model):
+    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
+    datumAangemaakt = models.DateField(default=datetime.now)
+    vanLocatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
+    opmerking = models.CharField(max_length=200, blank=True)
+    datumAfgesloten = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return "%s - %s - %s " % (
+            self.deelnemer,
+            self.datumAangemaakt.strftime("%d-%m-%Y"),
+            self.vanLocatie,
+        )
+
+    def afboeken(self):
+        br = BestellingRegel.objects.filter(
+            bestelling=self, isVerzameld=True, verwerkt="N"
+        )
+        for regel in br:
+            regel.afboeken()
+
+    def check_afsluiten(self):
+        br1 = BestellingRegel.objects.filter(bestelling=self, isVerzameld=False)
+        br2 = BestellingRegel.objects.filter(bestelling=self, verwerkt="N")
+        if br1.count() == 0 and br2.count() == 0:
+            self.datumAfgesloten = datetime.now()
+            self.save()
+        elif self.datumAfgesloten:
+            self.datumAfgesloten = None
+            self.save()
+
+    class Meta:
+        ordering = ["-datumAangemaakt", "deelnemer", "vanLocatie"]
+        verbose_name_plural = "bestellingen"
+
+
+class BestellingRegel(models.Model):
+    bestelling = models.ForeignKey(Bestelling, on_delete=models.PROTECT)
+    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
+    vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
+    aantal = models.IntegerField(default=0)
+    opmerking = models.CharField(max_length=200, blank=True)
+    isVerzameld = models.BooleanField(default=False)
+    aantal_correctie = models.IntegerField(null=True, blank=True)
+
+    NIET = "N"
+    AFGEBOEKT = "A"
+    VERPLAATST = "V"
+    verwerkt_choices = [
+        (NIET, ""),
+        (AFGEBOEKT, "Afgeboekt"),
+        (VERPLAATST, "Verplaatst"),
+    ]
+    verwerkt = models.CharField(max_length=1, default="N", choices=verwerkt_choices)
+
+    def __str__(self):
+        return "%s - %s " % (
+            self.bestelling,
+            self.ontvangst.wijn,
+        )
+
+    def clean(self, *args, **kwargs):
+        try:
+            old_regel = BestellingRegel.objects.get(pk=self.pk)
+        except:
+            old_regel = None
+        WijnVoorraad.check_voorraad_rsv(self, old_regel)
+        super().clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        try:
+            old_regel = BestellingRegel.objects.get(pk=self.pk)
+        except:
+            old_regel = None
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        WijnVoorraad.Bijwerken_rsv(self, old_regel)
+        self.bestelling.check_afsluiten()
+
+    def delete(self, *args, **kwargs):
+        bestelling = self.bestelling
+        try:
+            old_regel = BestellingRegel.objects.get(pk=self.pk)
+        except:
+            old_regel = None
+        WijnVoorraad.check_voorraad_rsv(None, old_regel)
+        WijnVoorraad.Bijwerken_rsv(None, old_regel)
+        super().delete(*args, **kwargs)  # Call the "real" delete() method.
+        bestelling.check_afsluiten()
+
+    def afboeken(self):
+        if self.verwerkt == "N":
+            if self.aantal_correctie is not None:
+                aantal = self.aantal_correctie
+            else:
+                aantal = self.aantal
+            if aantal > 0:
+                VoorraadMutatie.afboeken(
+                    self.ontvangst, self.bestelling.vanLocatie, self.vak, aantal
+                )
+            self.verwerkt = "A"
+            self.save()
+
+    class Meta:
+        ordering = ["bestelling", "ontvangst"]
+        verbose_name_plural = "bestellingregels"
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_bestellingregel",
+                fields=["bestelling", "ontvangst", "vak"],
                 deferrable=Deferrable.DEFERRED,
             )
         ]

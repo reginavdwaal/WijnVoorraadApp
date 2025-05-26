@@ -1,0 +1,79 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:bestellingdetail' bestelling.id %}">Bestelling</a>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div class="detail-block">
+    <div class="detail-row">
+        <label class="detail-column-label">Deelnemer</label> 
+        <label class="detail-column">{{  bestelling.deelnemer.naam }}</label>
+    </div>
+    <div class="detail-row">
+        <label class="detail-column-label">Datum aangemaakt</label>
+        <label class="detail-column">{{ bestelling.datumAangemaakt }}</label>
+    </div>
+    <div class="detail-row">
+        <label class="detail-column-label">Van locatie</label>
+        <label class="detail-column">
+            {{  bestelling.vanLocatie.omschrijving }}
+            &nbsp;
+            <a href="{% url 'WijnVoorraad:locatiedetail' bestelling.vanLocatie.id %}"
+                title="Details bekijken">
+                <img src="{% static 'admin/img/icon-viewlink.svg' %}" alt="Details">
+            </a>
+        </label>
+    </div>
+    <div class="detail-row">
+        <label class="detail-column-label">Opmerking</label>
+        <label class="detail-column">{{ bestelling.opmerking }}</label>
+    </div>
+  </div>  <!-- end detail-block -->
+  {% include 'WijnVoorraad/component_filter.html' with show_filters=True %}
+  <div>
+    <form method="post">{% csrf_token %}
+    <input type="hidden" name='bestelling_id' id="bestelling_id" value="{{bestelling.id}}">
+    <input type="hidden" name='aantal_vrd' id="aantal_vrd" value="{{bestel_list|length}}">
+    <input type="submit" name="Save" id="Save" value="Opslaan">
+      <table class="wijnvoorraad">
+        {% for v in bestel_list %}
+        <tr class="wijnvoorraad_row {{ v.wijn.wijnsoort.style_css_class }}">
+          <td class="col-11 col-s-10">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}">
+              <b>{{ v.wijn.volle_naam }}</b>
+            </a>
+          </td>
+          <td class="col-1 col-s-2">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
+               tabindex="-1">#{{ v.aantal }}</a>
+          </td>
+          <td class="col-11 col-s-10">
+            <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
+               tabindex="-1">
+              {{ v.wijn.wijnsoort.omschrijving }}
+              {% if v.wijn.jaar %}, {{ v.wijn.jaar | default_if_none:"" }}{% endif %}
+              {% if v.wijn.land %}, {{ v.wijn.land }}{% endif %}
+              {% for d in v.wijn.wijnDruivensoorten.all %}, {{ d.omschrijving }}{% endfor %}
+              {% if v.vak %}, Vak: {{ v.vak.code }}{% endif %}
+            </a>
+          </td>
+          <td class="col-1 col-s-2">
+            <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{v.bestellingregel_id}}">
+            <input type="hidden" name='voorraad_id{{ forloop.counter }}' id="voorraad_id{{ forloop.counter }}" value="{{ v.id }}">
+            <input class="aantal" type="number" name='aantal_bestellen{{ forloop.counter }}' value="{{v.aantal_bestellen}}"
+            min="1" max="{{ v.aantal }}" id="aantal_bestellen{{ forloop.counter }}"
+            />
+          </td>
+        </tr>
+      {% empty %}
+        <p>Er is GEEN voorraad.</p>
+      {% endfor %}
+      </table>
+    </form>
+  </div>
+{% endblock %}
+

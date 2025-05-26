@@ -18,7 +18,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.core.exceptions import ValidationError
 from openai import APIError, OpenAI, OpenAIError
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from translate import Translator
 
 from . import wijnvars
@@ -76,9 +76,16 @@ class WineInfo(BaseModel):
     name: str
     grape_varieties: list[str]
     country: str
-    wine_type: WineTypeEnum
+    wine_type: str  # Use str for OpenAI compatibility
     region: str
     classification: str
+
+    # @field_validator("wine_type")
+    # def wine_type_must_be_valid(cls, v):
+    #    valid_types = [e.value for e in WineTypeEnum]
+    #    if v not in valid_types:
+    #        raise ValueError(f"Invalid wine_type: {v}. Allowed: {valid_types}")
+    #    return v
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -1104,6 +1111,16 @@ class AIview(View):
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+        allowed_types = [e.value for e in WineTypeEnum]
+        allowed_types_str = ", ".join(allowed_types)
+        system_prompt = (
+            "You are a wine expert helping to identify wines based on images. "
+            f"The allowed wine types are: {allowed_types_str}. "
+            "Always use one of these values for the wine type field. "
+            "You know the wine type, grape varieties, country, region, and classification of wines. "
+            "You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'"
+        )
+
         message = None
         try:
             image_base = base64.b64encode(my_image.read()).decode("utf-8")
@@ -1114,7 +1131,7 @@ class AIview(View):
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
+                        "content": system_prompt,
                     },
                     {
                         "role": "user",
@@ -1158,6 +1175,12 @@ class AIview(View):
             # Parse the JSON response
             response_content = response.choices[0].message.content
             response_json = json.loads(response_content)
+
+            try:
+                wine_info = WineInfo(**response_json)
+            except ValidationError as e:
+                print("Validation error:", e)
+                # Handle invalid wine_type here
 
             # if debug print the response
             if settings.DEBUG:

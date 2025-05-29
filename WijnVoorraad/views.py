@@ -242,7 +242,7 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
             wijn = voorraad.wijn
-            WijnVoorraad.drinken(voorraad)
+            voorraad.drinken()
             messages.success(
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )
@@ -362,8 +362,8 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                     # Alsnog direct verplaatsen op de nieuwe locatie
                     v_nieuwe_vak = None
                     wijn = voorraad.wijn
-                    WijnVoorraad.verplaatsen(
-                        voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                    voorraad.verplaatsen(
+                        v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                     )
                     messages.success(
                         request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
@@ -390,8 +390,8 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 #
                 v_nieuwe_vak = None
                 wijn = voorraad.wijn
-                WijnVoorraad.verplaatsen(
-                    voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                voorraad.verplaatsen(
+                    v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
                 messages.success(
                     request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
@@ -445,8 +445,8 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
             if v_aantal_verplaatsen:
                 v_nieuwe_vak = Vak.objects.get(pk=v_nieuw_vak_id)
                 v_nieuwe_locatie = v_nieuwe_vak.locatie
-                WijnVoorraad.verplaatsen(
-                    voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                voorraad.verplaatsen(
+                    v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
 
         messages.success(request, "Voorraad van %s verplaatst" % (wijn.volle_naam,))
@@ -644,7 +644,9 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
         mutatie_id = self.request.POST["object_id"]
         if mutatie_id:
             mutatie = VoorraadMutatie.objects.get(pk=mutatie_id)
-            in_out = mutatie.in_uit
+
+            url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id))
+
             if "Verwijder" in self.request.POST:
                 try:
                     WijnVoorraad.check_voorraad_wijziging(None, mutatie)
@@ -653,20 +655,12 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
                     url = self.request.POST["return_url"]
                 except ValidationError as e:
                     messages.error(request, e.message)
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
+
                 except:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
-                else:
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
+
             return HttpResponseRedirect(url)
 
 
@@ -942,7 +936,7 @@ class OntvangstVoorraadView(LoginRequiredMixin, ListView):
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
             wijn = voorraad.wijn
-            WijnVoorraad.drinken(voorraad)
+            voorraad.drinken()
             messages.success(
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )

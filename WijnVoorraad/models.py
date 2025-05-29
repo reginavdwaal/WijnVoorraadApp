@@ -1,11 +1,13 @@
+# pylint: disable=no-member
+
 from django.db import models
 from datetime import datetime
 from django.db.models import Deferrable
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
-from django.db.models import F, Q, Sum
+from django.db.models import F, Sum
 from django.db.models.query import QuerySet
 from django_group_by import GroupByMixin
+from django.conf import settings
 
 # Create your models here.
 
@@ -24,7 +26,7 @@ class WijnSoort(models.Model):
     style_css_class = models.CharField(max_length=100, blank=True, choices=css_choices)
 
     def __str__(self):
-        return self.omschrijving
+        return f"{self.omschrijving}"
 
     class Meta:
         ordering = ["omschrijving"]
@@ -36,7 +38,7 @@ class DruivenSoort(models.Model):
     omschrijving = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
-        return self.omschrijving
+        return f"{self.omschrijving}"
 
     class Meta:
         ordering = ["omschrijving"]
@@ -49,7 +51,7 @@ class Locatie(models.Model):
     aantal_kolommen = models.IntegerField(default=1)
 
     def __str__(self):
-        return self.omschrijving
+        return f"{self.omschrijving}"
 
     class Meta:
         ordering = ["omschrijving"]
@@ -81,24 +83,23 @@ class Deelnemer(models.Model):
         Locatie, on_delete=models.SET_NULL, blank=True, null=True
     )
     users = models.ManyToManyField(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name="deelnemers",
         related_query_name="deelnemer",
     )
 
     def __str__(self):
-        return self.naam
+        return f"{self.naam}"
 
     class Meta:
         ordering = ["naam"]
 
 
 class Wijn(models.Model):
-    domein = models.CharField(max_length=200)
-    naam = models.CharField(max_length=200)
-    wijnsoort = models.ForeignKey(WijnSoort, on_delete=models.PROTECT)
 
+    @staticmethod
     def validate_jaartal(jaartal):
+        # Validator to ensure the year is between 1901 and 2499.
         if not (1900 < jaartal < 2500):
             raise ValidationError(
                 (
@@ -106,6 +107,10 @@ class Wijn(models.Model):
                 ),
                 params={"jaartal": jaartal},
             )
+
+    domein = models.CharField(max_length=200)
+    naam = models.CharField(max_length=200)
+    wijnsoort = models.ForeignKey(WijnSoort, on_delete=models.PROTECT)
 
     jaar = models.PositiveSmallIntegerField(
         null=True, blank=True, validators=[validate_jaartal]
@@ -136,9 +141,6 @@ class Wijn(models.Model):
 
     def __str__(self):
         return self.volle_naam
-
-    def jaar_str(jaar):
-        return str(jaar)
 
     def check_afsluiten(self):
         vrd_aantal = WijnVoorraad.objects.filter(wijn=self).aggregate(
@@ -206,7 +208,7 @@ class WijnDruivensoort(models.Model):
     druivensoort = models.ForeignKey(DruivenSoort, on_delete=models.PROTECT)
 
     def __str__(self):
-        return "%s - %s" % (self.wijn.volle_naam, self.druivensoort.omschrijving)
+        return f"{self.wijn.volle_naam} - {self.druivensoort.omschrijving}"
 
     class Meta:
         ordering = ["wijn", "druivensoort"]
@@ -237,7 +239,7 @@ class Ontvangst(models.Model):
         )
 
     def create_copy(self):
-        orig_ontvangst_id = self.id
+        # orig_ontvangst_id = self.id
         nieuwe_ontvangst = self
         nieuwe_ontvangst.pk = None
         nieuwe_ontvangst.datumOntvangst = datetime.now()
@@ -338,6 +340,7 @@ class VoorraadMutatie(models.Model):
         mutatie.aantal = 1
         mutatie.save()
 
+    @staticmethod
     def verplaatsen(ontvangst, locatie_oud, vak_oud, locatie_nieuw, vak_nieuw, aantal):
         mutatie = VoorraadMutatie()
         mutatie.ontvangst = ontvangst
@@ -400,7 +403,7 @@ class AIUsage(models.Model):
 
     # pylint: disable=no-member
 
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     model = models.CharField(max_length=200)
     response_time = models.DateTimeField()
     response_content = models.TextField()
@@ -439,12 +442,11 @@ class WijnVoorraad(models.Model):
                 self.locatie.omschrijving,
             )
 
-    def drinken(WijnVoorraad):
-        VoorraadMutatie.drinken(
-            WijnVoorraad.ontvangst, WijnVoorraad.locatie, WijnVoorraad.vak
-        )
+    def drinken(self):
+        VoorraadMutatie.drinken(self.ontvangst, self.locatie, self.vak)
 
-    def Bijwerken(VoorraadMutatie, old_mutatie):
+    @staticmethod
+    def Bijwerken(new_mutatie, old_mutatie):
         if old_mutatie is not None:
             if old_mutatie.in_uit == "I":
                 # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
@@ -453,35 +455,37 @@ class WijnVoorraad(models.Model):
                 # de oude UIT-boeking draaien we terug door deze te verwerken als IN boeking
                 WijnVoorraad.Bijwerken_mutatie_IN(old_mutatie)
 
-        if VoorraadMutatie is not None:
+        if new_mutatie is not None:
             # Als er een nieuwe mutatie is: gewoon verwerken
-            if VoorraadMutatie.in_uit == "I":
-                WijnVoorraad.Bijwerken_mutatie_IN(VoorraadMutatie)
+            if new_mutatie.in_uit == "I":
+                WijnVoorraad.Bijwerken_mutatie_IN(new_mutatie)
             else:
-                WijnVoorraad.Bijwerken_mutatie_UIT(VoorraadMutatie)
+                WijnVoorraad.Bijwerken_mutatie_UIT(new_mutatie)
 
-    def Bijwerken_mutatie_IN(VoorraadMutatie):
+    @staticmethod
+    def Bijwerken_mutatie_IN(voorraad_mutatie: VoorraadMutatie):
         try:
             vrd = WijnVoorraad.objects.get(
-                ontvangst=VoorraadMutatie.ontvangst,
-                locatie=VoorraadMutatie.locatie,
-                vak=VoorraadMutatie.vak,
+                ontvangst=voorraad_mutatie.ontvangst,
+                locatie=voorraad_mutatie.locatie,
+                vak=voorraad_mutatie.vak,
             )
-            vrd.aantal = F("aantal") + VoorraadMutatie.aantal
+            vrd.aantal = F("aantal") + voorraad_mutatie.aantal
         except WijnVoorraad.DoesNotExist:
             vrd = WijnVoorraad(
-                wijn=VoorraadMutatie.ontvangst.wijn,
-                deelnemer=VoorraadMutatie.ontvangst.deelnemer,
-                ontvangst=VoorraadMutatie.ontvangst,
-                locatie=VoorraadMutatie.locatie,
-                vak=VoorraadMutatie.vak,
-                aantal=VoorraadMutatie.aantal,
+                wijn=voorraad_mutatie.ontvangst.wijn,
+                deelnemer=voorraad_mutatie.ontvangst.deelnemer,
+                ontvangst=voorraad_mutatie.ontvangst,
+                locatie=voorraad_mutatie.locatie,
+                vak=voorraad_mutatie.vak,
+                aantal=voorraad_mutatie.aantal,
             )
         vrd.save()
         vrd.refresh_from_db()
         wijn = vrd.wijn
         wijn.check_afsluiten()
 
+    @staticmethod
     def Bijwerken_mutatie_UIT(VoorraadMutatie):
         try:
             vrd = WijnVoorraad.objects.get(
@@ -507,16 +511,17 @@ class WijnVoorraad(models.Model):
             vrd.delete()
         wijn.check_afsluiten()
 
-    def verplaatsen(WijnVoorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
+    def verplaatsen(self, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
         VoorraadMutatie.verplaatsen(
-            WijnVoorraad.ontvangst,
-            WijnVoorraad.locatie,
-            WijnVoorraad.vak,
+            self.ontvangst,
+            self.locatie,
+            self.vak,
             v_nieuwe_locatie,
             v_nieuwe_vak,
             v_aantal_verplaatsen,
         )
 
+    @staticmethod
     def check_voorraad_wijziging(VoorraadMutatie, old_mutatie):
         if old_mutatie is not None:
             if old_mutatie.in_uit == "I":
@@ -559,9 +564,12 @@ class WijnVoorraad(models.Model):
                         ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
                     )
 
-    def check_voorraad_rsv(BestellingRegel, old_regel):
+    @staticmethod
+    def check_voorraad_rsv(bestelling_regel, old_regel):
         vrd_old = None
         vrd_new = None
+        aantal_old = 0
+        aantal_new = 0
         if old_regel is not None:
             if old_regel.aantal_correctie is not None:
                 aantal_old = old_regel.aantal_correctie
@@ -575,23 +583,23 @@ class WijnVoorraad(models.Model):
                 )
             except WijnVoorraad.DoesNotExist:
                 aantal_old = 0
-        if BestellingRegel is not None:
-            if BestellingRegel.aantal_correctie is not None:
-                aantal_new = BestellingRegel.aantal_correctie
+        if bestelling_regel is not None:
+            if bestelling_regel.aantal_correctie is not None:
+                aantal_new = bestelling_regel.aantal_correctie
             else:
-                aantal_new = BestellingRegel.aantal
+                aantal_new = bestelling_regel.aantal
             try:
                 vrd_new = WijnVoorraad.objects.get(
-                    ontvangst=BestellingRegel.ontvangst,
-                    locatie=BestellingRegel.bestelling.vanLocatie,
-                    vak=BestellingRegel.vak,
+                    ontvangst=bestelling_regel.ontvangst,
+                    locatie=bestelling_regel.bestelling.vanLocatie,
+                    vak=bestelling_regel.vak,
                 )
             except WijnVoorraad.DoesNotExist:
                 aantal_new = 0
 
         if (
             old_regel is not None
-            and BestellingRegel is not None
+            and bestelling_regel is not None
             and vrd_old is not None
             and vrd_new is not None
             and vrd_old == vrd_new
@@ -606,7 +614,7 @@ class WijnVoorraad(models.Model):
                     raise ValidationError(
                         ("Onjuiste bestelling. Er is niet voldoende voorraad!")
                     )
-            if BestellingRegel is not None:
+            if bestelling_regel is not None:
                 if vrd_new is not None:
                     if vrd_new.aantal_rsv + aantal_new > vrd_new.aantal:
                         raise ValidationError(
@@ -618,6 +626,7 @@ class WijnVoorraad(models.Model):
                             ("Onjuiste bestelling. Er is geen voorraad!")
                         )
 
+    @staticmethod
     def Bijwerken_rsv(BestellingRegel, old_regel):
         if old_regel is not None:
             if old_regel.verwerkt == "N":
@@ -627,6 +636,7 @@ class WijnVoorraad(models.Model):
             if BestellingRegel.verwerkt == "N":
                 WijnVoorraad.Bijwerken_rsv_erbij(BestellingRegel)
 
+    @staticmethod
     def Bijwerken_rsv_erbij(BestellingRegel):
         try:
             vrd = WijnVoorraad.objects.get(
@@ -648,6 +658,7 @@ class WijnVoorraad(models.Model):
             if aantal > 0:
                 raise ValidationError(("Onjuiste bestelling. Er is geen voorraad!"))
 
+    @staticmethod
     def Bijwerken_rsv_eraf(BestellingRegel):
         try:
             vrd = WijnVoorraad.objects.get(

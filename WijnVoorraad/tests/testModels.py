@@ -35,7 +35,7 @@ class testWijnSoort(TestCase):
         WijnSoort.objects.create(omschrijving="A.Rood")
         WijnSoort.objects.create(omschrijving="C.Rood")
 
-        for wijnsoort in WijnSoort.objects.all().first:
+        for wijnsoort in WijnSoort.objects.all():
             print(wijnsoort)
 
 

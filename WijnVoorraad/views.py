@@ -18,7 +18,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.core.exceptions import ValidationError
 from openai import APIError, OpenAI, OpenAIError
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from translate import Translator
 
 from . import wijnvars
@@ -82,9 +82,16 @@ class WineInfo(BaseModel):
     name: str
     grape_varieties: list[str]
     country: str
-    wine_type: WineTypeEnum
+    wine_type: str  # Use str for OpenAI compatibility
     region: str
     classification: str
+
+    # @field_validator("wine_type")
+    # def wine_type_must_be_valid(cls, v):
+    #    valid_types = [e.value for e in WineTypeEnum]
+    #    if v not in valid_types:
+    #        raise ValueError(f"Invalid wine_type: {v}. Allowed: {valid_types}")
+    #    return v
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -235,7 +242,7 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
             wijn = voorraad.wijn
-            WijnVoorraad.drinken(voorraad)
+            voorraad.drinken()
             messages.success(
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )
@@ -355,8 +362,8 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                     # Alsnog direct verplaatsen op de nieuwe locatie
                     v_nieuwe_vak = None
                     wijn = voorraad.wijn
-                    WijnVoorraad.verplaatsen(
-                        voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                    voorraad.verplaatsen(
+                        v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                     )
                     messages.success(
                         request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
@@ -383,8 +390,8 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 #
                 v_nieuwe_vak = None
                 wijn = voorraad.wijn
-                WijnVoorraad.verplaatsen(
-                    voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                voorraad.verplaatsen(
+                    v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
                 messages.success(
                     request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
@@ -438,8 +445,8 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
             if v_aantal_verplaatsen:
                 v_nieuwe_vak = Vak.objects.get(pk=v_nieuw_vak_id)
                 v_nieuwe_locatie = v_nieuwe_vak.locatie
-                WijnVoorraad.verplaatsen(
-                    voorraad, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
+                voorraad.verplaatsen(
+                    v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
 
         messages.success(request, "Voorraad van %s verplaatst" % (wijn.volle_naam,))
@@ -637,7 +644,9 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
         mutatie_id = self.request.POST["object_id"]
         if mutatie_id:
             mutatie = VoorraadMutatie.objects.get(pk=mutatie_id)
-            in_out = mutatie.in_uit
+
+            url = reverse("WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id))
+
             if "Verwijder" in self.request.POST:
                 try:
                     WijnVoorraad.check_voorraad_wijziging(None, mutatie)
@@ -646,20 +655,12 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
                     url = self.request.POST["return_url"]
                 except ValidationError as e:
                     messages.error(request, e.message)
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
+
                 except:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
-                else:
-                    url = reverse(
-                        "WijnVoorraad:mutatiedetail", kwargs=dict(pk=mutatie_id)
-                    )
+
             return HttpResponseRedirect(url)
 
 
@@ -935,7 +936,7 @@ class OntvangstVoorraadView(LoginRequiredMixin, ListView):
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
             wijn = voorraad.wijn
-            WijnVoorraad.drinken(voorraad)
+            voorraad.drinken()
             messages.success(
                 request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
             )
@@ -1125,6 +1126,16 @@ class AIview(View):
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+        allowed_types = [e.value for e in WineTypeEnum]
+        allowed_types_str = ", ".join(allowed_types)
+        system_prompt = (
+            "You are a wine expert helping to identify wines based on images. "
+            f"The allowed wine types are: {allowed_types_str}. "
+            "Always use one of these values for the wine type field. "
+            "You know the wine type, grape varieties, country, region, and classification of wines. "
+            "You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'"
+        )
+
         message = None
         try:
             image_base = base64.b64encode(my_image.read()).decode("utf-8")
@@ -1135,7 +1146,7 @@ class AIview(View):
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a wine expert helping to identify wines based on images. You know the wine type, grape varieties, country, region, and classification of wines. You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'",
+                        "content": system_prompt,
                     },
                     {
                         "role": "user",
@@ -1179,6 +1190,12 @@ class AIview(View):
             # Parse the JSON response
             response_content = response.choices[0].message.content
             response_json = json.loads(response_content)
+
+            try:
+                wine_info = WineInfo(**response_json)
+            except ValidationError as e:
+                print("Validation error:", e)
+                # Handle invalid wine_type here
 
             # if debug print the response
             if settings.DEBUG:

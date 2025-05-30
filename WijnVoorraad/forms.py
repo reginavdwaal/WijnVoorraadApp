@@ -357,3 +357,17 @@ class BestellingRegelUpdateForm(forms.ModelForm):
         model = BestellingRegel
         # fields = ["bestelling", "ontvangst", "vak", "aantal", "opmerking"]
         fields = "__all__"
+
+
+class VakForm(forms.ModelForm):
+    class Meta:
+        model = Vak
+        fields = ["code", "capaciteit", "locatie"]
+        widgets = {
+            "locatie": forms.HiddenInput(),
+        }
+        # hide label for locatie field
+        labels = {
+            "locatie": "",
+            "code": "Vak",
+        }

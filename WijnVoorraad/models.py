@@ -72,7 +72,6 @@ class Vak(models.Model):
             models.UniqueConstraint(
                 name="unique_code_binnen_locatie",
                 fields=["locatie", "code"],
-                deferrable=Deferrable.DEFERRED,
             )
         ]
 
@@ -97,8 +96,7 @@ class Deelnemer(models.Model):
 
 class Wijn(models.Model):
 
-    @staticmethod
-    def validate_jaartal(jaartal):
+    def validate_jaartal(jaartal):  # pylint: disable=no-self-argument
         # Validator to ensure the year is between 1901 and 2499.
         if not (1900 < jaartal < 2500):
             raise ValidationError(
@@ -294,7 +292,7 @@ class VoorraadMutatie(models.Model):
     def clean(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
-        except:
+        except VoorraadMutatie.DoesNotExist:
             old_mutatie = None
         WijnVoorraad.check_voorraad_wijziging(self, old_mutatie)
         super().clean(*args, **kwargs)
@@ -302,7 +300,7 @@ class VoorraadMutatie(models.Model):
     def save(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
-        except:
+        except VoorraadMutatie.DoesNotExist:
             old_mutatie = None
         super().save(*args, **kwargs)  # Call the "real" save() method.
         WijnVoorraad.Bijwerken(self, old_mutatie)
@@ -310,7 +308,7 @@ class VoorraadMutatie(models.Model):
     def delete(self, *args, **kwargs):
         try:
             old_mutatie = VoorraadMutatie.objects.get(pk=self.pk)
-        except:
+        except VoorraadMutatie.DoesNotExist:
             old_mutatie = None
         WijnVoorraad.check_voorraad_wijziging(None, old_mutatie)
         WijnVoorraad.Bijwerken(None, old_mutatie)
@@ -417,277 +415,6 @@ class AIUsage(models.Model):
         )
 
 
-class WijnVoorraad(models.Model):
-    objects = WijnVoorraadQuerySet.as_manager()
-    wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
-    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
-    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
-    locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
-    vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
-    aantal = models.IntegerField(default=0)
-    aantal_rsv = models.IntegerField(default=0)
-
-    def __str__(self):
-        if self.vak:
-            return "%s - %s - %s (%s)" % (
-                self.wijn.volle_naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
-                self.vak.code,
-            )
-        else:
-            return "%s - %s - %s" % (
-                self.wijn.volle_naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
-            )
-
-    def drinken(self):
-        VoorraadMutatie.drinken(self.ontvangst, self.locatie, self.vak)
-
-    @staticmethod
-    def Bijwerken(new_mutatie, old_mutatie):
-        if old_mutatie is not None:
-            if old_mutatie.in_uit == "I":
-                # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
-                WijnVoorraad.Bijwerken_mutatie_UIT(old_mutatie)
-            else:
-                # de oude UIT-boeking draaien we terug door deze te verwerken als IN boeking
-                WijnVoorraad.Bijwerken_mutatie_IN(old_mutatie)
-
-        if new_mutatie is not None:
-            # Als er een nieuwe mutatie is: gewoon verwerken
-            if new_mutatie.in_uit == "I":
-                WijnVoorraad.Bijwerken_mutatie_IN(new_mutatie)
-            else:
-                WijnVoorraad.Bijwerken_mutatie_UIT(new_mutatie)
-
-    @staticmethod
-    def Bijwerken_mutatie_IN(voorraad_mutatie: VoorraadMutatie):
-        try:
-            vrd = WijnVoorraad.objects.get(
-                ontvangst=voorraad_mutatie.ontvangst,
-                locatie=voorraad_mutatie.locatie,
-                vak=voorraad_mutatie.vak,
-            )
-            vrd.aantal = F("aantal") + voorraad_mutatie.aantal
-        except WijnVoorraad.DoesNotExist:
-            vrd = WijnVoorraad(
-                wijn=voorraad_mutatie.ontvangst.wijn,
-                deelnemer=voorraad_mutatie.ontvangst.deelnemer,
-                ontvangst=voorraad_mutatie.ontvangst,
-                locatie=voorraad_mutatie.locatie,
-                vak=voorraad_mutatie.vak,
-                aantal=voorraad_mutatie.aantal,
-            )
-        vrd.save()
-        vrd.refresh_from_db()
-        wijn = vrd.wijn
-        wijn.check_afsluiten()
-
-    @staticmethod
-    def Bijwerken_mutatie_UIT(VoorraadMutatie):
-        try:
-            vrd = WijnVoorraad.objects.get(
-                ontvangst=VoorraadMutatie.ontvangst,
-                locatie=VoorraadMutatie.locatie,
-                vak=VoorraadMutatie.vak,
-            )
-            vrd.aantal = F("aantal") - VoorraadMutatie.aantal
-        except WijnVoorraad.DoesNotExist:
-            vrd = WijnVoorraad(
-                wijn=VoorraadMutatie.ontvangst.wijn,
-                deelnemer=VoorraadMutatie.ontvangst.deelnemer,
-                ontvangst=VoorraadMutatie.ontvangst,
-                locatie=VoorraadMutatie.locatie,
-                vak=VoorraadMutatie.vak,
-                aantal=-VoorraadMutatie.aantal,
-            )
-
-        vrd.save()
-        vrd.refresh_from_db()
-        wijn = vrd.wijn
-        if vrd.aantal == 0:
-            vrd.delete()
-        wijn.check_afsluiten()
-
-    def verplaatsen(self, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
-        VoorraadMutatie.verplaatsen(
-            self.ontvangst,
-            self.locatie,
-            self.vak,
-            v_nieuwe_locatie,
-            v_nieuwe_vak,
-            v_aantal_verplaatsen,
-        )
-
-    @staticmethod
-    def check_voorraad_wijziging(VoorraadMutatie, old_mutatie):
-        if old_mutatie is not None:
-            if old_mutatie.in_uit == "I":
-                wijziging_aantal = old_mutatie.aantal * -1
-            else:
-                wijziging_aantal = old_mutatie.aantal
-            try:
-                vrd = WijnVoorraad.objects.get(
-                    ontvangst=old_mutatie.ontvangst,
-                    locatie=old_mutatie.locatie,
-                    vak=old_mutatie.vak,
-                )
-                if vrd.aantal + wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    )
-            except WijnVoorraad.DoesNotExist:
-                if wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    )
-        if VoorraadMutatie is not None:
-            if VoorraadMutatie.in_uit == "I":
-                wijziging_aantal = VoorraadMutatie.aantal
-            else:
-                wijziging_aantal = VoorraadMutatie.aantal * -1
-            try:
-                vrd = WijnVoorraad.objects.get(
-                    ontvangst=VoorraadMutatie.ontvangst,
-                    locatie=VoorraadMutatie.locatie,
-                    vak=VoorraadMutatie.vak,
-                )
-                if vrd.aantal + wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    )
-            except WijnVoorraad.DoesNotExist:
-                if wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    )
-
-    @staticmethod
-    def check_voorraad_rsv(bestelling_regel, old_regel):
-        vrd_old = None
-        vrd_new = None
-        aantal_old = 0
-        aantal_new = 0
-        if old_regel is not None:
-            if old_regel.aantal_correctie is not None:
-                aantal_old = old_regel.aantal_correctie
-            else:
-                aantal_old = old_regel.aantal
-            try:
-                vrd_old = WijnVoorraad.objects.get(
-                    ontvangst=old_regel.ontvangst,
-                    locatie=old_regel.bestelling.vanLocatie,
-                    vak=old_regel.vak,
-                )
-            except WijnVoorraad.DoesNotExist:
-                aantal_old = 0
-        if bestelling_regel is not None:
-            if bestelling_regel.aantal_correctie is not None:
-                aantal_new = bestelling_regel.aantal_correctie
-            else:
-                aantal_new = bestelling_regel.aantal
-            try:
-                vrd_new = WijnVoorraad.objects.get(
-                    ontvangst=bestelling_regel.ontvangst,
-                    locatie=bestelling_regel.bestelling.vanLocatie,
-                    vak=bestelling_regel.vak,
-                )
-            except WijnVoorraad.DoesNotExist:
-                aantal_new = 0
-
-        if (
-            old_regel is not None
-            and bestelling_regel is not None
-            and vrd_old is not None
-            and vrd_new is not None
-            and vrd_old == vrd_new
-        ):
-            if vrd_old.aantal_rsv - aantal_old + aantal_new > vrd_old.aantal:
-                raise ValidationError(
-                    ("Onjuiste bestelling. Er is niet voldoende voorraad!")
-                )
-        else:
-            if old_regel is not None and vrd_old is not None:
-                if vrd_old.aantal_rsv - aantal_old > vrd_old.aantal:
-                    raise ValidationError(
-                        ("Onjuiste bestelling. Er is niet voldoende voorraad!")
-                    )
-            if bestelling_regel is not None:
-                if vrd_new is not None:
-                    if vrd_new.aantal_rsv + aantal_new > vrd_new.aantal:
-                        raise ValidationError(
-                            ("Onjuiste bestelling. Er is niet voldoende voorraad!")
-                        )
-                else:
-                    if aantal_new > 0:
-                        raise ValidationError(
-                            ("Onjuiste bestelling. Er is geen voorraad!")
-                        )
-
-    @staticmethod
-    def Bijwerken_rsv(BestellingRegel, old_regel):
-        if old_regel is not None:
-            if old_regel.verwerkt == "N":
-                WijnVoorraad.Bijwerken_rsv_eraf(old_regel)
-
-        if BestellingRegel is not None:
-            if BestellingRegel.verwerkt == "N":
-                WijnVoorraad.Bijwerken_rsv_erbij(BestellingRegel)
-
-    @staticmethod
-    def Bijwerken_rsv_erbij(BestellingRegel):
-        try:
-            vrd = WijnVoorraad.objects.get(
-                ontvangst=BestellingRegel.ontvangst,
-                locatie=BestellingRegel.bestelling.vanLocatie,
-                vak=BestellingRegel.vak,
-            )
-            if BestellingRegel.aantal_correctie is not None:
-                aantal = BestellingRegel.aantal_correctie
-            else:
-                aantal = BestellingRegel.aantal
-            vrd.aantal_rsv = F("aantal_rsv") + aantal
-            vrd.save()
-        except WijnVoorraad.DoesNotExist:
-            if BestellingRegel.aantal_correctie is not None:
-                aantal = BestellingRegel.aantal_correctie
-            else:
-                aantal = BestellingRegel.aantal
-            if aantal > 0:
-                raise ValidationError(("Onjuiste bestelling. Er is geen voorraad!"))
-
-    @staticmethod
-    def Bijwerken_rsv_eraf(BestellingRegel):
-        try:
-            vrd = WijnVoorraad.objects.get(
-                ontvangst=BestellingRegel.ontvangst,
-                locatie=BestellingRegel.bestelling.vanLocatie,
-                vak=BestellingRegel.vak,
-            )
-            if BestellingRegel.aantal_correctie is not None:
-                aantal = BestellingRegel.aantal_correctie
-            else:
-                aantal = BestellingRegel.aantal
-            vrd.aantal_rsv = F("aantal_rsv") - aantal
-            vrd.save()
-        except WijnVoorraad.DoesNotExist:
-            pass
-
-    class Meta:
-        ordering = ["wijn", "deelnemer", "locatie", "vak"]
-        verbose_name = "Wijnvoorraad"
-        verbose_name_plural = "wijnvoorraad"
-        constraints = [
-            models.UniqueConstraint(
-                name="unique_wijnvoorraad",
-                fields=["wijn", "deelnemer", "locatie", "vak"],
-                deferrable=Deferrable.DEFERRED,
-            )
-        ]
-
-
 class Bestelling(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     datumAangemaakt = models.DateField(default=datetime.now)
@@ -752,7 +479,7 @@ class BestellingRegel(models.Model):
     def clean(self, *args, **kwargs):
         try:
             old_regel = BestellingRegel.objects.get(pk=self.pk)
-        except:
+        except BestellingRegel.DoesNotExist:
             old_regel = None
         WijnVoorraad.check_voorraad_rsv(self, old_regel)
         super().clean(*args, **kwargs)
@@ -760,7 +487,7 @@ class BestellingRegel(models.Model):
     def save(self, *args, **kwargs):
         try:
             old_regel = BestellingRegel.objects.get(pk=self.pk)
-        except:
+        except BestellingRegel.DoesNotExist:
             old_regel = None
         super().save(*args, **kwargs)  # Call the "real" save() method.
         WijnVoorraad.Bijwerken_rsv(self, old_regel)
@@ -770,8 +497,9 @@ class BestellingRegel(models.Model):
         bestelling = self.bestelling
         try:
             old_regel = BestellingRegel.objects.get(pk=self.pk)
-        except:
+        except BestellingRegel.DoesNotExist:
             old_regel = None
+
         WijnVoorraad.check_voorraad_rsv(None, old_regel)
         WijnVoorraad.Bijwerken_rsv(None, old_regel)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
@@ -797,6 +525,282 @@ class BestellingRegel(models.Model):
             models.UniqueConstraint(
                 name="unique_bestellingregel",
                 fields=["bestelling", "ontvangst", "vak"],
+                deferrable=Deferrable.DEFERRED,
+            )
+        ]
+
+
+class WijnVoorraad(models.Model):
+    objects = WijnVoorraadQuerySet.as_manager()
+    wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
+    deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
+    ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
+    locatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
+    vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
+    aantal = models.IntegerField(default=0)
+    aantal_rsv = models.IntegerField(default=0)
+
+    def __str__(self):
+        if self.vak:
+            return "%s - %s - %s (%s)" % (
+                self.wijn.volle_naam,
+                self.deelnemer.naam,
+                self.locatie.omschrijving,
+                self.vak.code,
+            )
+        else:
+            return "%s - %s - %s" % (
+                self.wijn.volle_naam,
+                self.deelnemer.naam,
+                self.locatie.omschrijving,
+            )
+
+    def drinken(self):
+        VoorraadMutatie.drinken(self.ontvangst, self.locatie, self.vak)
+
+    @staticmethod
+    def Bijwerken(new_mutatie, old_mutatie):
+        if old_mutatie is not None:
+            if old_mutatie.in_uit == "I":
+                # de oude IN-boeking draaien we terug door deze te verwerken als UIT boeking
+                WijnVoorraad.Bijwerken_mutatie_UIT(old_mutatie)
+            else:
+                # de oude UIT-boeking draaien we terug door deze te verwerken als IN boeking
+                WijnVoorraad.Bijwerken_mutatie_IN(old_mutatie)
+
+        if new_mutatie is not None:
+            # Als er een nieuwe mutatie is: gewoon verwerken
+            if new_mutatie.in_uit == "I":
+                WijnVoorraad.Bijwerken_mutatie_IN(new_mutatie)
+            else:
+                WijnVoorraad.Bijwerken_mutatie_UIT(new_mutatie)
+
+    @staticmethod
+    def Bijwerken_mutatie_IN(mutatie: VoorraadMutatie):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=mutatie.ontvangst,
+                locatie=mutatie.locatie,
+                vak=mutatie.vak,
+            )
+            vrd.aantal = F("aantal") + mutatie.aantal
+        except WijnVoorraad.DoesNotExist:
+            vrd = WijnVoorraad(
+                wijn=mutatie.ontvangst.wijn,
+                deelnemer=mutatie.ontvangst.deelnemer,
+                ontvangst=mutatie.ontvangst,
+                locatie=mutatie.locatie,
+                vak=mutatie.vak,
+                aantal=mutatie.aantal,
+            )
+        vrd.save()
+        vrd.refresh_from_db()
+        wijn = vrd.wijn
+        wijn.check_afsluiten()
+
+    @staticmethod
+    def Bijwerken_mutatie_UIT(mutatie: VoorraadMutatie):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=mutatie.ontvangst,
+                locatie=mutatie.locatie,
+                vak=mutatie.vak,
+            )
+            vrd.aantal = F("aantal") - mutatie.aantal
+        except WijnVoorraad.DoesNotExist:
+            vrd = WijnVoorraad(
+                wijn=mutatie.ontvangst.wijn,
+                deelnemer=mutatie.ontvangst.deelnemer,
+                ontvangst=mutatie.ontvangst,
+                locatie=mutatie.locatie,
+                vak=mutatie.vak,
+                aantal=-mutatie.aantal,
+            )
+
+        vrd.save()
+        vrd.refresh_from_db()
+        wijn = vrd.wijn
+        if vrd.aantal == 0:
+            vrd.delete()
+        wijn.check_afsluiten()
+
+    def verplaatsen(self, v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen):
+        VoorraadMutatie.verplaatsen(
+            self.ontvangst,
+            self.locatie,
+            self.vak,
+            v_nieuwe_locatie,
+            v_nieuwe_vak,
+            v_aantal_verplaatsen,
+        )
+
+    @staticmethod
+    def check_voorraad_wijziging(
+        mutatie: VoorraadMutatie, old_mutatie: VoorraadMutatie
+    ):
+        if old_mutatie is not None:
+            if old_mutatie.in_uit == "I":
+                wijziging_aantal = old_mutatie.aantal * -1
+            else:
+                wijziging_aantal = old_mutatie.aantal
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=old_mutatie.ontvangst,
+                    locatie=old_mutatie.locatie,
+                    vak=old_mutatie.vak,
+                )
+                if vrd.aantal + wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
+            except WijnVoorraad.DoesNotExist as e:
+                if wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    ) from e
+
+        if mutatie is not None:
+            if mutatie.in_uit == "I":
+                wijziging_aantal = mutatie.aantal
+            else:
+                wijziging_aantal = mutatie.aantal * -1
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=mutatie.ontvangst,
+                    locatie=mutatie.locatie,
+                    vak=mutatie.vak,
+                )
+                if vrd.aantal + wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    )
+            except WijnVoorraad.DoesNotExist as e:
+                if wijziging_aantal < 0:
+                    raise ValidationError(
+                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
+                    ) from e
+
+    @staticmethod
+    def check_voorraad_rsv(bestelling_regel, old_regel):
+        vrd_old = None
+        vrd_new = None
+        aantal_old = 0
+        aantal_new = 0
+        if old_regel is not None:
+            if old_regel.aantal_correctie is not None:
+                aantal_old = old_regel.aantal_correctie
+            else:
+                aantal_old = old_regel.aantal
+            try:
+                vrd_old = WijnVoorraad.objects.get(
+                    ontvangst=old_regel.ontvangst,
+                    locatie=old_regel.bestelling.vanLocatie,
+                    vak=old_regel.vak,
+                )
+            except WijnVoorraad.DoesNotExist:
+                aantal_old = 0
+        if bestelling_regel is not None:
+            if bestelling_regel.aantal_correctie is not None:
+                aantal_new = bestelling_regel.aantal_correctie
+            else:
+                aantal_new = bestelling_regel.aantal
+            try:
+                vrd_new = WijnVoorraad.objects.get(
+                    ontvangst=bestelling_regel.ontvangst,
+                    locatie=bestelling_regel.bestelling.vanLocatie,
+                    vak=bestelling_regel.vak,
+                )
+            except WijnVoorraad.DoesNotExist:
+                aantal_new = 0
+
+        if (
+            old_regel is not None
+            and bestelling_regel is not None
+            and vrd_old is not None
+            and vrd_new is not None
+            and vrd_old == vrd_new
+        ):
+            if vrd_old.aantal_rsv - aantal_old + aantal_new > vrd_old.aantal:
+                raise ValidationError(
+                    ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                )
+        else:
+            if old_regel is not None and vrd_old is not None:
+                if vrd_old.aantal_rsv - aantal_old > vrd_old.aantal:
+                    raise ValidationError(
+                        ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                    )
+            if bestelling_regel is not None:
+                if vrd_new is not None:
+                    if vrd_new.aantal_rsv + aantal_new > vrd_new.aantal:
+                        raise ValidationError(
+                            ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                        )
+                else:
+                    if aantal_new > 0:
+                        raise ValidationError(
+                            ("Onjuiste bestelling. Er is geen voorraad!")
+                        )
+
+    @staticmethod
+    def Bijwerken_rsv(new_regel: BestellingRegel, old_regel: BestellingRegel):
+        if old_regel is not None:
+            if old_regel.verwerkt == "N":
+                WijnVoorraad.Bijwerken_rsv_eraf(old_regel)
+
+        if new_regel is not None:
+            if new_regel.verwerkt == "N":
+                WijnVoorraad.Bijwerken_rsv_erbij(new_regel)
+
+    @staticmethod
+    def Bijwerken_rsv_erbij(regel: BestellingRegel):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=regel.ontvangst,
+                locatie=regel.bestelling.vanLocatie,
+                vak=regel.vak,
+            )
+            if regel.aantal_correctie is not None:
+                aantal = regel.aantal_correctie
+            else:
+                aantal = regel.aantal
+            vrd.aantal_rsv = F("aantal_rsv") + aantal
+            vrd.save()
+        except WijnVoorraad.DoesNotExist as e:
+            if regel.aantal_correctie is not None:
+                aantal = regel.aantal_correctie
+            else:
+                aantal = regel.aantal
+            if aantal > 0:
+                raise ValidationError(
+                    ("Onjuiste bestelling. Er is geen voorraad!")
+                ) from e
+
+    @staticmethod
+    def Bijwerken_rsv_eraf(regel: BestellingRegel):
+        try:
+            vrd = WijnVoorraad.objects.get(
+                ontvangst=regel.ontvangst,
+                locatie=regel.bestelling.vanLocatie,
+                vak=regel.vak,
+            )
+            if regel.aantal_correctie is not None:
+                aantal = regel.aantal_correctie
+            else:
+                aantal = regel.aantal
+            vrd.aantal_rsv = F("aantal_rsv") - aantal
+            vrd.save()
+        except WijnVoorraad.DoesNotExist:
+            pass
+
+    class Meta:
+        ordering = ["wijn", "deelnemer", "locatie", "vak"]
+        verbose_name = "Wijnvoorraad"
+        verbose_name_plural = "wijnvoorraad"
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_wijnvoorraad",
+                fields=["wijn", "deelnemer", "locatie", "vak"],
                 deferrable=Deferrable.DEFERRED,
             )
         ]

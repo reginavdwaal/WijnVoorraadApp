@@ -18,7 +18,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.core.exceptions import ValidationError
 from openai import APIError, OpenAI, OpenAIError
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from translate import Translator
 
 from . import wijnvars

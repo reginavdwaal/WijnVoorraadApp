@@ -1,5 +1,6 @@
 """Views voor de stam gegevens zoals Gebruiker, Wijn etc"""
 
+from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
@@ -8,7 +9,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib import messages
 
-from WijnVoorraad.forms import DeelnemerForm, GebruikerForm
+from WijnVoorraad.forms import DeelnemerForm, GebruikerForm, VakForm
 from WijnVoorraad.models import Deelnemer, DruivenSoort, Locatie, Vak, WijnSoort
 
 
@@ -24,6 +25,7 @@ class GebruikerDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Gebruiker"
         return context
+
 
 class GebruikerUpdateView(LoginRequiredMixin, UpdateView):
     """Update view class gebruiker"""
@@ -61,6 +63,7 @@ class GebruikerUpdateView(LoginRequiredMixin, UpdateView):
         self.request.user.deelnemers.add(*deelnemers)
         return super().form_valid(form)
 
+
 class VakUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor bijwerken Vak"""
 
@@ -79,11 +82,13 @@ class VakUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update vak"
         return context
 
+
 class VakCreateView(LoginRequiredMixin, CreateView):
     """Standaard view class voor vak aanmaken"""
 
     model = Vak
-    fields = ["code", "capaciteit"]
+    form_class = VakForm
+    # fields = ["code", "capaciteit"]
     template_name = "WijnVoorraad/general_create_update.html"
 
     def get_success_url(self) -> str:
@@ -99,13 +104,13 @@ class VakCreateView(LoginRequiredMixin, CreateView):
         context["title"] = "Nieuw vak"
         return context
 
-    def form_valid(self, form, **kwargs):
+    def get_initial(self):
+        """Voegt locatie id toe aan initial data"""
+        initial = super().get_initial()
+        initial["locatie"] = self.kwargs.get("locatie_id")
 
-        self.object = form.save(commit=False)
-        self.object.locatie = Locatie.objects.get(pk=self.kwargs.get("locatie_id"))
+        return initial
 
-        super(VakCreateView, self).form_valid(form)
-        return HttpResponseRedirect(self.get_success_url())
 
 class VakDetailView(LoginRequiredMixin, DetailView):
     """Standaard view class voor vak aanmaken"""
@@ -123,19 +128,24 @@ class VakDetailView(LoginRequiredMixin, DetailView):
         if vak_id:
             vak = Vak.objects.get(pk=vak_id)
             locatie_id = vak.locatie.id
-            if 'Verwijder' in self.request.POST:
+            if "Verwijder" in self.request.POST:
                 try:
                     vak.delete()
                     messages.success(request, "Vak is verwijderd")
-                    url = reverse("WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id))
+                    url = reverse(
+                        "WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id)
+                    )
                 except:
-                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
                     url = reverse("WijnVoorraad:vakdetail", kwargs=dict(pk=vak_id))
             else:
                 url = reverse("WijnVoorraad:vakdetail", kwargs=dict(pk=vak_id))
         else:
             url = reverse("WijnVoorraad:locatielist")
         return HttpResponseRedirect(url)
+
 
 class LocatieUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor Locatie bijwerken"""
@@ -155,6 +165,7 @@ class LocatieUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update locatie"
         return context
 
+
 class LocatieCreateView(LoginRequiredMixin, CreateView):
     """Standaard view class voor locatie aanmaken"""
 
@@ -168,6 +179,7 @@ class LocatieCreateView(LoginRequiredMixin, CreateView):
         context["title"] = "Nieuwe locatie"
         return context
 
+
 class LocatieListView(LoginRequiredMixin, ListView):
     """Standaard view class voor locatie overzicht"""
 
@@ -178,6 +190,7 @@ class LocatieListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Locaties"
         return context
+
 
 class LocatieDetailView(LoginRequiredMixin, DetailView):
     """Standaard view class voor loactie details"""
@@ -195,19 +208,24 @@ class LocatieDetailView(LoginRequiredMixin, DetailView):
         locatie_id = self.request.POST["object_id"]
         if locatie_id:
             locatie = Locatie.objects.get(pk=locatie_id)
-            if 'Verwijder' in self.request.POST:
+            if "Verwijder" in self.request.POST:
                 try:
                     locatie.delete()
                     messages.success(request, "Locatie is verwijderd")
                     url = reverse("WijnVoorraad:locatielist")
                 except:
-                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
-                    url = reverse("WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id))
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
+                    url = reverse(
+                        "WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id)
+                    )
             else:
                 url = reverse("WijnVoorraad:locatiedetail", kwargs=dict(pk=locatie_id))
         else:
             url = reverse("WijnVoorraad:locatielist")
         return HttpResponseRedirect(url)
+
 
 class WijnSoortUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor wijnsoort bijwerken"""
@@ -227,6 +245,7 @@ class WijnSoortUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update wijnsoort"
         return context
 
+
 class WijnSoortCreateView(LoginRequiredMixin, CreateView):
     """Standaard view class voor wijnsoort aanmaken"""
 
@@ -239,6 +258,7 @@ class WijnSoortCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe wijnsoort"
         return context
+
 
 class WijnSoortDetailView(LoginRequiredMixin, DetailView):
     """Standaard view class voor wijnsoort details"""
@@ -255,19 +275,26 @@ class WijnSoortDetailView(LoginRequiredMixin, DetailView):
         wijnsoort_id = self.request.POST["object_id"]
         if wijnsoort_id:
             wijnsoort = WijnSoort.objects.get(pk=wijnsoort_id)
-            if 'Verwijder' in self.request.POST:
+            if "Verwijder" in self.request.POST:
                 try:
                     wijnsoort.delete()
                     messages.success(request, "Wijnsoort is verwijderd")
                     url = reverse("WijnVoorraad:wijnsoortlist")
                 except:
-                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
-                    url = reverse("WijnVoorraad:wijnsoortdetail", kwargs=dict(pk=wijnsoort_id))
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
+                    url = reverse(
+                        "WijnVoorraad:wijnsoortdetail", kwargs=dict(pk=wijnsoort_id)
+                    )
             else:
-                url = reverse("WijnVoorraad:wijnsoortdetail", kwargs=dict(pk=wijnsoort_id))
+                url = reverse(
+                    "WijnVoorraad:wijnsoortdetail", kwargs=dict(pk=wijnsoort_id)
+                )
         else:
             url = reverse("WijnVoorraad:wijnsoortlist")
         return HttpResponseRedirect(url)
+
 
 class WijnSoortListView(LoginRequiredMixin, ListView):
     """Standaard view class voor wijnsoort overzicht"""
@@ -279,6 +306,7 @@ class WijnSoortListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Wijnsoorten"
         return context
+
 
 class DruivenSoortUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor bijwerken druiven soort"""
@@ -298,6 +326,7 @@ class DruivenSoortUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update druivensoort"
         return context
 
+
 class DruivenSoortCreateView(LoginRequiredMixin, CreateView):
     """Standaard view class voor aanmaken druiven soort"""
 
@@ -310,6 +339,7 @@ class DruivenSoortCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe druivensoort"
         return context
+
 
 class DruivenSoortDetailView(LoginRequiredMixin, DetailView):
     """Standaard view class voor druiven soort details"""
@@ -326,18 +356,26 @@ class DruivenSoortDetailView(LoginRequiredMixin, DetailView):
         druivensoort_id = self.request.POST["object_id"]
         if druivensoort_id:
             druivensoort = DruivenSoort.objects.get(pk=druivensoort_id)
-            if 'Verwijder' in self.request.POST:
+            if "Verwijder" in self.request.POST:
                 try:
                     druivensoort.delete()
                     url = reverse("WijnVoorraad:druivensoortlist")
                 except:
-                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
-                    url = reverse("WijnVoorraad:druivensoortdetail", kwargs=dict(pk=druivensoort_id))
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
+                    url = reverse(
+                        "WijnVoorraad:druivensoortdetail",
+                        kwargs=dict(pk=druivensoort_id),
+                    )
             else:
-                url = reverse("WijnVoorraad:druivensoortdetail", kwargs=dict(pk=druivensoort_id))
+                url = reverse(
+                    "WijnVoorraad:druivensoortdetail", kwargs=dict(pk=druivensoort_id)
+                )
         else:
             url = reverse("WijnVoorraad:druivensoortlist")
         return HttpResponseRedirect(url)
+
 
 class DruivenSoortListView(LoginRequiredMixin, ListView):
     """Standaard view class voor druiven soort overzicht"""
@@ -349,6 +387,7 @@ class DruivenSoortListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Druivensoorten"
         return context
+
 
 class DeelnemerUpdateView(LoginRequiredMixin, UpdateView):
     """Standaard view class voor bijwerken van Deelnemer"""
@@ -368,6 +407,7 @@ class DeelnemerUpdateView(LoginRequiredMixin, UpdateView):
         context["title"] = "Update deelnemer"
         return context
 
+
 class DeelnemerCreateView(LoginRequiredMixin, CreateView):
     """Standaard view class voor aanmaken van Deelnemer"""
 
@@ -380,6 +420,7 @@ class DeelnemerCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Nieuwe deelnemer"
         return context
+
 
 class DeelnemerDetailView(LoginRequiredMixin, DetailView):
     """Standaard view class voor de details van Deelnemer"""
@@ -396,19 +437,26 @@ class DeelnemerDetailView(LoginRequiredMixin, DetailView):
         deelnemer_id = self.request.POST["object_id"]
         if deelnemer_id:
             deelnemer = Deelnemer.objects.get(pk=deelnemer_id)
-            if 'Verwijder' in self.request.POST:
+            if "Verwijder" in self.request.POST:
                 try:
                     deelnemer.delete()
                     messages.success(request, "Deelnemer is verwijderd")
                     url = reverse("WijnVoorraad:deelnemerlist")
                 except:
-                    messages.error(request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?")
-                    url = reverse("WijnVoorraad:deelnemerdetail", kwargs=dict(pk=deelnemer_id))
+                    messages.error(
+                        request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
+                    )
+                    url = reverse(
+                        "WijnVoorraad:deelnemerdetail", kwargs=dict(pk=deelnemer_id)
+                    )
             else:
-                url = reverse("WijnVoorraad:deelnemerdetail", kwargs=dict(pk=deelnemer_id))
+                url = reverse(
+                    "WijnVoorraad:deelnemerdetail", kwargs=dict(pk=deelnemer_id)
+                )
         else:
             url = reverse("WijnVoorraad:deelnemerlist")
         return HttpResponseRedirect(url)
+
 
 class DeelnemerListView(LoginRequiredMixin, ListView):
     """Standaard view class Deelnemer overzicht"""

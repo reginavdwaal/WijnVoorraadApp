@@ -5,6 +5,7 @@ from datetime import datetime
 from django.db.models import Deferrable
 from django.core.exceptions import ValidationError
 from django.db.models import F, Sum
+from django.db.models.functions import Lower
 from django.db.models.query import QuerySet
 from django_group_by import GroupByMixin
 from django.conf import settings
@@ -190,13 +191,12 @@ class Wijn(models.Model):
             raise ValidationError("Teveel kopieën reeds aanwezig")
 
     class Meta:
-        ordering = ["domein", "naam"]
+        ordering = [F("jaar").asc(nulls_last=True), Lower("domein"), Lower("naam")]
         verbose_name_plural = "wijnen"
         constraints = [
             models.UniqueConstraint(
                 name="unique_wijn",
                 fields=["naam", "domein", "jaar"],
-                deferrable=Deferrable.DEFERRED,
             )
         ]
 
@@ -517,6 +517,17 @@ class BestellingRegel(models.Model):
                 )
             self.verwerkt = "A"
             self.save()
+
+    def verplaatsen(self, locatie_nieuw, vak_nieuw, aantal):
+        if self.verwerkt == "N":
+            VoorraadMutatie.verplaatsen(
+                self.ontvangst,
+                self.bestelling.vanLocatie,
+                self.vak,
+                locatie_nieuw,
+                vak_nieuw,
+                aantal,
+            )
 
     class Meta:
         ordering = ["bestelling", "ontvangst"]

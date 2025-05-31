@@ -1,0 +1,92 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block content %}
+<div id="content-main">
+    <table>
+        {% for locatie in locatie_list %}
+            {% if locatie == locatie_list|first %} 
+            <thead>
+            <tr>
+                <th>
+                    Locatie
+                </th>
+                <th>
+                    Aantal records voorraad
+                </th>
+                <th>
+                    Totaal aantal voorraad
+                </th>
+                <th>
+                    Totaal aantal in bestelling
+                </th>
+                <th>
+                    Aantal records mutaties in
+                </th>
+                <th>
+                    Totaal aantal mutaties in
+                </th>
+                <th>
+                    Aantal records mutaties uit
+                </th>
+                <th>
+                    Totaal aantal mutaties uit
+                </th>
+                <th>
+                    Aantal vgl. mutaties
+                </th>
+                <th>
+                    Klopt?
+                </th>
+                <th>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% endif %}
+            <tr>
+                <td>
+                    <a href="{% url 'WijnVoorraad:locatiedetail' locatie.id %}">{{ locatie.omschrijving }}</a>
+                </td>
+                <td>
+                    {{ locatie.aantal_records_vrd|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.tot_aantal_vrd|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.tot_aantal_rsv|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.aantal_records_mut_in|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.tot_aantal_mut_in|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.aantal_records_mut_uit|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.tot_aantal_mut_uit|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.aantal_vrd_mut|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.klopt }}
+                </td>
+                <td>
+                    <form method="post" %}">
+                        {% csrf_token %}
+                        <input type="hidden" name='locatie_id' id="locatie_id" value="{{locatie.id}}">
+                        <input type="submit" name="BijwerkenVrd" value="BijwerkenVrd">
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <p>Er zijn GEEN locaties.</p>
+        {% endfor %}
+    </table>
+</div>  <!-- end content-main -->
+{% endblock content %}

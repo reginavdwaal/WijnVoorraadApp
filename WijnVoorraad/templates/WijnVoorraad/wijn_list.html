@@ -12,6 +12,9 @@
             <thead>
             <tr>
                 <th>
+                    Jaartal
+                </th>
+                <th>
                     Domein
                 </th>
                 <th>
@@ -19,9 +22,6 @@
                 </th>
                 <th>
                     Wijnsoort
-                </th>
-                <th>
-                    Jaartal
                 </th>
                 <th>
                     Land
@@ -44,6 +44,9 @@
             {% endif %}
             <tr class="{{ wijn.wijnsoort.style_css_class }}">
                 <td>
+                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.jaar|default_if_none:"" }}</a>
+                </td>
+                <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.domein}}</a>
                 </td>
                 <td>
@@ -51,9 +54,6 @@
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.wijnsoort.omschrijving }}</a>
-                </td>
-                <td>
-                    <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.jaar|default_if_none:"" }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:wijndetail' wijn.id %}">{{ wijn.land }}</a>

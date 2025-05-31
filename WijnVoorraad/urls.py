@@ -263,4 +263,19 @@ urlpatterns = [
         views.BestellingVerzamelen.as_view(),
         name="bestellingverzamelen",
     ),
+    path(
+        "bestellingregelverplaatsen/<int:pk>",
+        views.BestellingRegelVerplaatsen.as_view(),
+        name="bestellingregelverplaatsen",
+    ),
+    path(
+        "bestellingregelverplaatsinvakken/<int:bestellingregel_id>/<int:nieuwe_locatie_id>/<int:aantal>",
+        views.BestellingregelVerplaatsInVakken.as_view(),
+        name="bestellingregelverplaatsinvakken",
+    ),
+    path(
+        "voorraadcontroleren/",
+        views.VoorraadControleren.as_view(),
+        name="voorraadcontroleren",
+    ),
 ]

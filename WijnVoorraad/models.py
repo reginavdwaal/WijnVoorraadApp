@@ -811,7 +811,6 @@ class WijnVoorraad(models.Model):
         constraints = [
             models.UniqueConstraint(
                 name="unique_wijnvoorraad",
-                fields=["wijn", "deelnemer", "locatie", "vak"],
-                deferrable=Deferrable.DEFERRED,
+                fields=["ontvangst", "locatie", "vak"],
             )
         ]

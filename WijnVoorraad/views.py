@@ -1749,22 +1749,21 @@ class VoorraadControleren(LoginRequiredMixin, ListView):
     success_url = reverse_lazy("WijnVoorraad:voorraadlist")
 
     def get_queryset(self):
-        locaties = Locatie.objects.all()
-        locatie_list = []
-        for locatie in locaties:
-            WijnVoorraadService.ControleerLocatie(locatie)
-            locatie_list.append(locatie)
+        locatie_list = WijnVoorraadService.ControleerAlleLocaties()
         return locatie_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        ontvangst_list = WijnVoorraadService.ControleerAlleOntvangsten()
+        context["ontvangst_list"] = ontvangst_list
         context["title"] = "Voorraad controleren"
-
         return context
 
     def post(self, request, *args, **kwargs):
-        locatie_id = self.request.POST["locatie_id"]
-        # if "BijwerkenVrd" in self.request.POST:
-        #     vrd = WijnVoorraad.objects.filter(locatie__id=locatie.id)
-        #     for v in vrd:
-        #         o = Ontvangst.objects.get(pk=v.ontvangst.id)
+        # locatie_id = self.request.POST.get("locatie_id")
+        ontvangst_id = self.request.POST.get("ontvangst_id")
+        if "BijwerkenVrdOntvangst" in self.request.POST:
+            ontvangst = Ontvangst.objects.get(pk=ontvangst_id)
+            WijnVoorraadService.BijwerkenVrdOntvangst(ontvangst)
+        url = reverse("WijnVoorraad:voorraadcontroleren")
+        return HttpResponseRedirect(url)

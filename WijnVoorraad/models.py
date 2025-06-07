@@ -1,14 +1,15 @@
 # pylint: disable=no-member
 
-from django.db import models
 from datetime import datetime
-from django.db.models import Deferrable
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db.models import F, Sum
+from django.db import models
+from django.db.models import Deferrable, F, Sum
 from django.db.models.functions import Lower
 from django.db.models.query import QuerySet
 from django_group_by import GroupByMixin
-from django.conf import settings
+
 
 # Create your models here.
 
@@ -64,7 +65,7 @@ class Vak(models.Model):
     capaciteit = models.IntegerField(default=1)
 
     def __str__(self):
-        return "%s (%s)" % (self.locatie.omschrijving, self.code)
+        return f"{self.locatie.omschrijving} ({self.code})"
 
     class Meta:
         ordering = ["locatie", "code"]
@@ -134,9 +135,9 @@ class Wijn(models.Model):
     @property
     def volle_naam(self):
         if self.jaar:
-            return "%s %s - %s" % (self.jaar, self.domein, self.naam)
+            return f"{self.jaar} {self.domein} - {self.naam}"
         else:
-            return "%s - %s" % (self.domein, self.naam)
+            return f"{self.domein} - {self.naam}"
 
     def __str__(self):
         return self.volle_naam
@@ -171,7 +172,7 @@ class Wijn(models.Model):
         copy_number = 0
 
         save_success = False
-        while not save_success or copy_number > 15:
+        while not save_success and copy_number < 15:
             if nieuwe_wijn.check_unique():
                 nieuwe_wijn.save()
                 save_success = True
@@ -202,6 +203,13 @@ class Wijn(models.Model):
 
 
 class WijnDruivensoort(models.Model):
+    """
+    Model that links a Wijn (wine) to a DruivenSoort (grape variety).
+
+    This through model enables a many-to-many relationship between wines and grape varieties,
+    enforcing uniqueness for each (wijn, druivensoort) combination.
+    """
+
     wijn = models.ForeignKey(Wijn, on_delete=models.CASCADE)
     druivensoort = models.ForeignKey(DruivenSoort, on_delete=models.PROTECT)
 
@@ -230,11 +238,7 @@ class Ontvangst(models.Model):
     opmerking = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s " % (
-            self.deelnemer.naam,
-            self.wijn.volle_naam,
-            self.datumOntvangst.strftime("%d-%m-%Y"),
-        )
+        return f"{self.deelnemer.naam} - {self.wijn.volle_naam} - {self.datumOntvangst.strftime('%d-%m-%Y')}"
 
     def create_copy(self):
         # orig_ontvangst_id = self.id

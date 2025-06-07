@@ -21,6 +21,7 @@ from django.utils import timezone
 
 # Import the models to be tested
 from WijnVoorraad.models import (
+    AIUsage,
     Deelnemer,
     DruivenSoort,
     Locatie,
@@ -125,6 +126,18 @@ class TestVak(TestCase):
         self.assertEqual(vak.locatie, self.locatie)
         self.assertEqual(vak.code, "A1")
         self.assertEqual(vak.capaciteit, 10)
+
+    # test vak can not be created without a locatie
+    def test_vak_requires_locatie(self):
+        with self.assertRaises(IntegrityError):
+            Vak.objects.create(code="B2", capaciteit=5)
+
+    def test_vak_requires_locatie_no_create(self):
+        with self.assertRaises(IntegrityError):
+            vak = Vak()
+            vak.code = "B2"
+            vak.capaciteit = 5
+            vak.save()  # This should raise an IntegrityError since locatie is required
 
     def test_str_returns_combined_name(self):
         vak = Vak.objects.create(locatie=self.locatie, code="B2", capaciteit=5)
@@ -815,3 +828,58 @@ class TestVoorraadMutatie(TestCase):
             self.assertEqual(new_mutatie.aantal, 1)
             self.assertEqual(new_mutatie.datum, timezone.now().date())
             mock_bijwerken.assert_called_once_with(new_mutatie, None)
+
+
+class TestAIUsage(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create(username="aiuser")
+
+    def test_create_aiusage_with_user(self):
+        """Test that AIUsage can be created with a real user."""
+        usage = AIUsage.objects.create(
+            user=self.user,
+            model="gpt-4",
+            response_time=timezone.now(),
+            response_content="Test response",
+            response_tokens_used=42,
+        )
+        self.assertEqual(usage.user, self.user)
+        self.assertEqual(usage.model, "gpt-4")
+
+    def test_create_aiusage_without_user(self):
+        """Test that AIUsage can not be created without  user."""
+
+        with self.assertRaises(IntegrityError):
+            AIUsage.objects.create(
+                user=None,
+                model="gpt-4",
+                response_time=timezone.now(),
+                response_content="Test response",
+                response_tokens_used=42,
+            )
+
+    def test_user_delete_prevented_if_aiusage_exists(self):
+        """Test that a user cannot be deleted if there is an AIUsage object."""
+        usage = AIUsage.objects.create(
+            user=self.user,
+            model="gpt-4",
+            response_time=timezone.now(),
+            response_content="Test response",
+            response_tokens_used=42,
+        )
+        with self.assertRaises(IntegrityError):
+            self.user.delete()
+        # Ensure the AIUsage instance still exists
+        self.assertTrue(AIUsage.objects.filter(pk=usage.pk).exists())
+
+    def test_model_longer_than_200_raises_error(self):
+        """Test that model longer than 200 characters raises ValidationError."""
+        usage = AIUsage(
+            user=self.user,
+            model="a" * 201,
+            response_time=timezone.now(),
+            response_content="Test response",
+            response_tokens_used=42,
+        )
+        with self.assertRaises(ValidationError):
+            usage.full_clean()

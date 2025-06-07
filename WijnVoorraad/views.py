@@ -2,13 +2,13 @@
 
 import base64
 from datetime import datetime
+from enum import Enum
 import json
 from django.utils import timezone
-from enum import Enum
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import F, Sum, Count
 from django.db.models.functions import Lower
 from django.http import HttpResponseRedirect, JsonResponse
@@ -16,7 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from openai import APIError, OpenAI, OpenAIError
 from pydantic import BaseModel
 from translate import Translator
@@ -93,6 +93,12 @@ class WineInfo(BaseModel):
     #    if v not in valid_types:
     #        raise ValueError(f"Invalid wine_type: {v}. Allowed: {valid_types}")
     #    return v
+
+
+class AdminUserMixin(LoginRequiredMixin, UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.is_staff == True
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -1742,11 +1748,12 @@ class BestellingregelVerplaatsInVakken(LoginRequiredMixin, ListView):
         return HttpResponseRedirect(url)
 
 
-class VoorraadControleren(LoginRequiredMixin, ListView):
+class VoorraadControleren(AdminUserMixin, ListView):
     model = Locatie
     context_object_name = "locatie_list"
     template_name = "WijnVoorraad/voorraad_controleren.html"
     success_url = reverse_lazy("WijnVoorraad:voorraadlist")
+    raise_exception = True
 
     def get_queryset(self):
         locatie_list = WijnVoorraadService.ControleerAlleLocaties()

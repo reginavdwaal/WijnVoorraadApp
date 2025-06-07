@@ -1,4 +1,4 @@
-from django.db.models import F, Sum, Count
+from django.db.models import F, Sum, Count, Case, When
 from .models import (
     AIUsage,
     Deelnemer,
@@ -32,6 +32,18 @@ class WijnVoorraadService:
             aantal_records=Count("id"),
             tot_aantal=Sum("aantal"),
         )
+        bestellingregels = BestellingRegel.objects.filter(
+            bestelling__vanLocatie=locatie,
+            verwerkt="N",
+        ).aggregate(
+            aantal_records=Count("id"),
+            tot_aantal=Sum(
+                Case(
+                    When(aantal_correctie__isnull=False, then=F("aantal_correctie")),
+                    default=F("aantal"),
+                )
+            ),
+        )
 
         # Always use 0 if None
         locatie.aantal_records_vrd = vrd["aantal_records"] or 0
@@ -41,6 +53,8 @@ class WijnVoorraadService:
         locatie.tot_aantal_mut_in = mutaties_in["tot_aantal"] or 0
         locatie.aantal_records_mut_uit = mutaties_uit["aantal_records"] or 0
         locatie.tot_aantal_mut_uit = mutaties_uit["tot_aantal"] or 0
+        locatie.aantal_records_bst = bestellingregels["aantal_records"] or 0
+        locatie.tot_aantal_bst = bestellingregels["tot_aantal"] or 0
 
         # Calculate difference
         locatie.aantal_vrd_mut = locatie.tot_aantal_mut_in - locatie.tot_aantal_mut_uit
@@ -51,6 +65,11 @@ class WijnVoorraadService:
         else:
             locatie.klopt = "Nee"
 
+        if locatie.tot_aantal_rsv == locatie.tot_aantal_bst:
+            locatie.klopt_rsv = "Ja"
+        else:
+            locatie.klopt_rsv = "Nee"
+
         return locatie
 
     @staticmethod
@@ -59,7 +78,7 @@ class WijnVoorraadService:
         locatie_list = []
         for locatie in locaties:
             WijnVoorraadService.ControleerLocatie(locatie)
-            if locatie.klopt == "Nee":
+            if locatie.klopt == "Nee" or locatie.klopt_rsv == "Nee":
                 locatie_list.append(locatie)
         return locatie_list
 
@@ -79,13 +98,29 @@ class WijnVoorraadService:
             aantal_records=Count("id"),
             tot_aantal=Sum("aantal"),
         )
+        bestellingregels = BestellingRegel.objects.filter(
+            ontvangst=ontvangst,
+            verwerkt="N",
+        ).aggregate(
+            aantal_records=Count("id"),
+            tot_aantal=Sum(
+                Case(
+                    When(aantal_correctie__isnull=False, then=F("aantal_correctie")),
+                    default=F("aantal"),
+                )
+            ),
+        )
+
         # Always use 0 if None
         ontvangst.aantal_records_vrd = vrd["aantal_records"] or 0
         ontvangst.tot_aantal_vrd = vrd["tot_aantal_vrd"] or 0
+        ontvangst.tot_aantal_rsv = vrd["tot_aantal_rsv"] or 0
         ontvangst.aantal_records_mut_in = mutaties_in["aantal_records"] or 0
         ontvangst.tot_aantal_mut_in = mutaties_in["tot_aantal"] or 0
         ontvangst.aantal_records_mut_uit = mutaties_uit["aantal_records"] or 0
         ontvangst.tot_aantal_mut_uit = mutaties_uit["tot_aantal"] or 0
+        ontvangst.aantal_records_bst = bestellingregels["aantal_records"] or 0
+        ontvangst.tot_aantal_bst = bestellingregels["tot_aantal"] or 0
 
         # Calculate difference
         ontvangst.aantal_vrd_mut = (
@@ -97,6 +132,11 @@ class WijnVoorraadService:
         else:
             ontvangst.klopt = "Nee"
 
+        if ontvangst.tot_aantal_rsv == ontvangst.tot_aantal_bst:
+            ontvangst.klopt_rsv = "Ja"
+        else:
+            ontvangst.klopt_rsv = "Nee"
+
         return ontvangst
 
     @staticmethod
@@ -105,7 +145,7 @@ class WijnVoorraadService:
         ontvangst_list = []
         for ontvangst in ontvangsten:
             WijnVoorraadService.ControleerOntvangst(ontvangst)
-            if ontvangst.klopt == "Nee":
+            if ontvangst.klopt == "Nee" or ontvangst.klopt_rsv == "Nee":
                 ontvangst_list.append(ontvangst)
         return ontvangst_list
 
@@ -135,7 +175,23 @@ class WijnVoorraadService:
             ).aggregate(
                 tot_aantal_mut_uit=Sum("aantal", default=0),
             )
+            bestellingregels = BestellingRegel.objects.filter(
+                ontvangst=ontvangst,
+                bestelling__vanLocatie=locatie,
+                vak=vak,
+                verwerkt="N",
+            ).aggregate(
+                tot_aantal=Sum(
+                    Case(
+                        When(
+                            aantal_correctie__isnull=False, then=F("aantal_correctie")
+                        ),
+                        default=F("aantal"),
+                    )
+                )
+            )
             aantal_vrd = mut_in["tot_aantal_mut_in"] - mut_uit["tot_aantal_mut_uit"]
+            aantal_rsv = bestellingregels["tot_aantal"] or 0
 
             try:
                 # ophalen van WijnVoorraad for the ontvangst, locatie en vak
@@ -145,9 +201,14 @@ class WijnVoorraadService:
                     vak=vak,
                 )
                 if not vrd.aantal == aantal_vrd:
-                    # Update existing WijnVoorraad
+                    # Update existing WijnVoorraad aantal
                     vrd.aantal = aantal_vrd
+                if not vrd.aantal_rsv == aantal_rsv:
+                    # Update existing WijnVoorraad gereserveerde aantal
+                    vrd.aantal_rsv = aantal_rsv
             except WijnVoorraad.DoesNotExist:
+                # als er geen voorraad is, maar wel een reservering
+                # , dan maken we GEEN voorraadrecord aan.
                 if not aantal_vrd == 0:
                     # Create new WijnVoorraad if it does not exist
                     vrd = WijnVoorraad(
@@ -157,6 +218,7 @@ class WijnVoorraadService:
                         locatie=locatie,
                         vak=vak,
                         aantal=aantal_vrd,
+                        aantal_rsv=aantal_rsv,
                     )
             vrd.save()
             vrd.refresh_from_db()

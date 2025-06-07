@@ -115,3 +115,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = "/WijnVoorraad"
 LOGOUT_REDIRECT_URL = ""
+
+# turn timezone support off
+USE_TZ = False

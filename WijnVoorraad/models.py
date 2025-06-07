@@ -223,7 +223,6 @@ class WijnDruivensoort(models.Model):
             models.UniqueConstraint(
                 name="unique_wijn_druivensoort",
                 fields=["wijn", "druivensoort"],
-                deferrable=Deferrable.DEFERRED,
             )
         ]
 
@@ -285,12 +284,12 @@ class VoorraadMutatie(models.Model):
     omschrijving = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s - %s - %s" % (
-            self.ontvangst.wijn.volle_naam,
-            self.ontvangst.deelnemer.naam,
-            self.in_uit,
-            self.datum.strftime("%d-%m-%Y"),
-            self.pk,
+        return (
+            f"{self.ontvangst.wijn.volle_naam} - "
+            f"{self.ontvangst.deelnemer.naam} - "
+            f"{self.in_uit} - "
+            f"{self.datum.strftime('%d-%m-%Y')} - "
+            f"{self.pk}"
         )
 
     def clean(self, *args, **kwargs):

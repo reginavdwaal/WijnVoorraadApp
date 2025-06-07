@@ -3,8 +3,36 @@
 {% load wijnvoorraad_extras %}
 
 {% block content %}
-<div id="content-main">
-  {% include 'WijnVoorraad/component_filter.html' with show_filters=True %}
+  <div id="content-main">
+    <form method="post" %}">
+      {% csrf_token %}
+      <input type="hidden" name='FilterPost' id="FilterPost" value="FilterPost">
+      <div class="col-3 col-s-12"> 
+        <div class="detail-block">
+          <div class="detail-row">
+            <label for="locaties" class="detail-column-label">Locatie</label>
+            <select name="locatie_id" id="locatie_id" class="detail-column">       
+              {% for l in locatie_list  %}
+                <option value="{{ l.id }}"
+                  {% if l.omschrijving == request.session.locatie_omschrijving %}
+                    selected
+                  {% endif %}
+                >{{ l.omschrijving }}</option>
+              {% endfor %}
+            </select>
+          </div>   <!-- end detail-row -->
+        </div>  <!-- end detail-block -->
+      </div>  <!-- end col -->
+      <div class="col-9 col-s-12">
+        <div class="detail-block">
+          <div class="detail-row">
+            <button type="submit">Wijzig</button>
+          </div>   <!-- end detail-row -->
+        </div>  <!-- end detail-block -->
+      </div>  <!-- end col -->
+    </form>
+  </div>   <!-- end content-row -->
+
   <div>
     <table>
       {% for o in bestelling_list %}

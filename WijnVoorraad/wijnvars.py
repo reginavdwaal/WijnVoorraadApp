@@ -138,26 +138,12 @@ def get_session_wijnsoort_omschrijving(request):
 
 
 def set_session_fuzzy_selectie(request, fuzzy_selectie):
-    if fuzzy_selectie:
-        try:
-            int(fuzzy_selectie)
-            request.session["fuzzy_selectie"] = fuzzy_selectie + "num"
-        except ValueError:
-            request.session["fuzzy_selectie"] = fuzzy_selectie
-    else:
-        request.session["fuzzy_selectie"] = fuzzy_selectie
+    request.session["fuzzy_selectie"] = fuzzy_selectie
     return request
 
 
 def get_session_fuzzy_selectie(request):
     fuzzy_selectie = request.session.get("fuzzy_selectie", None)
-    if fuzzy_selectie:
-        if "num" in fuzzy_selectie:
-            try:
-                num = int(fuzzy_selectie[0:-3])
-                fuzzy_selectie = str(num)
-            except ValueError:
-                pass
     return fuzzy_selectie
 
 

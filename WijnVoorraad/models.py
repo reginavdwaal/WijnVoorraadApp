@@ -191,6 +191,33 @@ class Wijn(models.Model):
         else:
             raise ValidationError("Teveel kopieën reeds aanwezig")
 
+    def check_fuzzy_selectie(self, fuzzy_selectie):
+        voldoet = False
+        if fuzzy_selectie:
+            if fuzzy_selectie.lower() in self.naam.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.domein.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.wijnsoort.omschrijving.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in str(self.jaar):
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.land.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.streek.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.classificatie.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.opmerking.lower():
+                voldoet = True
+            elif self.wijnDruivensoorten.filter(
+                omschrijving__icontains=fuzzy_selectie
+            ).exists():
+                voldoet = True
+        else:
+            voldoet = True
+        return voldoet
+
     class Meta:
         ordering = [F("jaar").asc(nulls_last=True), Lower("domein"), Lower("naam")]
         verbose_name_plural = "wijnen"
@@ -246,6 +273,19 @@ class Ontvangst(models.Model):
         nieuwe_ontvangst.datumOntvangst = datetime.now()
         nieuwe_ontvangst.save()
         return nieuwe_ontvangst.id
+
+    def check_fuzzy_selectie(self, fuzzy_selectie):
+        voldoet = False
+        if fuzzy_selectie:
+            if fuzzy_selectie.lower() in self.leverancier.lower():
+                voldoet = True
+            elif fuzzy_selectie.lower() in self.opmerking.lower():
+                voldoet = True
+            elif self.wijn.check_fuzzy_selectie(fuzzy_selectie):
+                voldoet = True
+        else:
+            voldoet = True
+        return voldoet
 
     class Meta:
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
@@ -316,6 +356,17 @@ class VoorraadMutatie(models.Model):
         WijnVoorraad.check_voorraad_wijziging(None, old_mutatie)
         WijnVoorraad.Bijwerken(None, old_mutatie)
         super().delete(*args, **kwargs)  # Call the "real" delete() method.
+
+    def check_fuzzy_selectie(self, fuzzy_selectie):
+        voldoet = False
+        if fuzzy_selectie:
+            if fuzzy_selectie.lower() in self.omschrijving.lower():
+                voldoet = True
+            elif self.ontvangst.check_fuzzy_selectie(fuzzy_selectie):
+                voldoet = True
+        else:
+            voldoet = True
+        return voldoet
 
     @staticmethod
     def drinken(ontvangst, locatie, vak=None):
@@ -571,6 +622,17 @@ class WijnVoorraad(models.Model):
 
     def drinken(self):
         VoorraadMutatie.drinken(self.ontvangst, self.locatie, self.vak)
+
+    def check_fuzzy_selectie(self, fuzzy_selectie):
+        voldoet = False
+        if fuzzy_selectie:
+            if self.wijn.check_fuzzy_selectie(fuzzy_selectie):
+                voldoet = True
+            elif self.ontvangst.check_fuzzy_selectie(fuzzy_selectie):
+                voldoet = True
+        else:
+            voldoet = True
+        return voldoet
 
     @staticmethod
     def Bijwerken(new_mutatie, old_mutatie):

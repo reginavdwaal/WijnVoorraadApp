@@ -14,31 +14,40 @@
                     Locatie
                 </th>
                 <th>
-                    Aantal records voorraad
+                    Voorraad #records
                 </th>
                 <th>
-                    Totaal aantal voorraad
+                    Voorraad aantal
                 </th>
                 <th>
-                    Totaal aantal in bestelling
+                    Voorraad gereserveerd
                 </th>
                 <th>
-                    Aantal records mutaties in
+                    IN #records
                 </th>
                 <th>
-                    Totaal aantal mutaties in
+                    IN aantal
                 </th>
                 <th>
-                    Aantal records mutaties uit
+                    UIT #records
                 </th>
                 <th>
-                    Totaal aantal mutaties uit
+                    UIT aantal
                 </th>
                 <th>
-                    Aantal vgl. mutaties
+                    IN-UIT aantal (VRD)
                 </th>
                 <th>
-                    Klopt?
+                    Bestelregels #records
+                </th>
+                <th>
+                    Bestelregels aantal (RSV)
+                </th>
+                <th>
+                    Klopt voorraad?
+                </th>
+                <th>
+                    Klopt reservering?
                 </th>
                 <th>
                 </th>
@@ -75,11 +84,20 @@
                     {{ locatie.aantal_vrd_mut|default_if_none:"0" }}
                 </td>
                 <td>
+                    {{ locatie.aantal_records_bst|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ locatie.tot_aantal_bst|default_if_none:"0" }}
+                </td>
+                <td>
                     {{ locatie.klopt }}
+                </td>
+                <td>
+                    {{ locatie.klopt_rsv }}
                 </td>
             </tr>
         {% empty %}
-            <p>Er zijn GEEN locaties.</p>
+            <p>Er zijn GEEN onjuiste locaties.</p>
         {% endfor %}
     </table>
 </div>  <!-- end content-main -->
@@ -101,28 +119,40 @@
                     Wijn
                 </th>
                 <th>
-                    Aantal records voorraad
+                    Voorraad #records
                 </th>
                 <th>
-                    Totaal aantal voorraad
+                    Voorraad aantal
                 </th>
                 <th>
-                    Aantal records mutaties in
+                    Voorraad gereserveerd
                 </th>
                 <th>
-                    Totaal aantal mutaties in
+                    IN #records
                 </th>
                 <th>
-                    Aantal records mutaties uit
+                    IN aantal
                 </th>
                 <th>
-                    Totaal aantal mutaties uit
+                    UIT #records
                 </th>
                 <th>
-                    Aantal vgl. mutaties
+                    UIT aantal
                 </th>
                 <th>
-                    Klopt?
+                    IN-UIT aantal (VRD)
+                </th>
+                <th>
+                    Bestelregels #records
+                </th>
+                <th>
+                    Bestelregels aantal (RSV)
+                </th>
+                <th>
+                    Klopt voorraad?
+                </th>
+                <th>
+                    Klopt reservering?
                 </th>
                 <th>
                 </th>
@@ -148,6 +178,9 @@
                     {{ ontvangst.tot_aantal_vrd|default_if_none:"0" }}
                 </td>
                 <td>
+                    {{ ontvangst.tot_aantal_rsv|default_if_none:"0" }}
+                </td>
+                <td>
                     {{ ontvangst.aantal_records_mut_in|default_if_none:"0" }}
                 </td>
                 <td>
@@ -163,7 +196,16 @@
                     {{ ontvangst.aantal_vrd_mut|default_if_none:"0" }}
                 </td>
                 <td>
+                    {{ ontvangst.aantal_records_bst|default_if_none:"0" }}
+                </td>
+                <td>
+                    {{ ontvangst.tot_aantal_bst|default_if_none:"0" }}
+                </td>
+                <td>
                     {{ ontvangst.klopt }}
+                </td>
+                <td>
+                    {{ ontvangst.klopt_rsv }}
                 </td>
                 <td>
                     <form method="post" %}">
@@ -174,7 +216,7 @@
                 </td>
             </tr>
         {% empty %}
-            <p>Er zijn GEEN locaties.</p>
+            <p>Er zijn GEEN onjuiste ontvangsten.</p>
         {% endfor %}
     </table>
 </div>

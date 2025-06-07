@@ -100,14 +100,18 @@
                     <th>
                         Aantal correctie
                     </th>
-                    <th>
-                        Voorraad
-                    </th>
+                    {% if not bestelling.datumAfgesloten %}
+                        <th>
+                            Voorraad
+                        </th>
+                    {% endif %}
                     <th>
                         Vewerkt
                     </th>
                     <th>
                         Opmerking
+                    </th>
+                    <th>
                     </th>
                     <th>
                     </th>
@@ -139,7 +143,7 @@
                 </td>
                 {% if not bestelling.datumAfgesloten %}
                     <td>
-                        <div {% if m.aantal > m.aantal_vrd %} class="accent" {% endif %}>
+                        <div {% if m.verwerkt == "N" and m.aantal > m.aantal_vrd %} class="accent" {% endif %}>
                         {{ m.aantal_vrd }}
                         {% if m.aantal_vrd_rsv > 0 %}
                             (-{{ m.aantal_vrd_rsv }})
@@ -166,6 +170,14 @@
                         <input type="submit" name="VerwijderRegel" value="Verwijder"></input>
                     </form>
                 </td>
+                {% if m.verwerkt == "N" %}
+                    <td>
+                        <form method="get" action="{% url 'WijnVoorraad:bestellingregelverplaatsen' m.id  %}">
+                            {% csrf_token %}
+                            <input type="submit" name="Verplaatsen" value="Verplaatsen"></input>
+                        </form>
+                    </td>
+                {% endif %}
             </tr>
         {% empty %}
             <tbody>

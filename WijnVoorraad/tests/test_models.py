@@ -1108,27 +1108,36 @@ class TestBestelling(TestCase):
         )
         deelnemer_anders = Deelnemer.objects.create(naam="Andere Deelnemer")
 
-        bestelling1 = self.create_bestelling(
+        best_2_days_ago = self.create_bestelling(
             datum_aangemaakt=timezone.now().date() - datetime.timedelta(days=2)
         )
-        bestelling2 = self.create_bestelling(
+        best_1_day_ago = self.create_bestelling(
             datum_aangemaakt=timezone.now().date() - datetime.timedelta(days=1)
         )
-        bestelling3 = self.create_bestelling(datum_aangemaakt=timezone.now().date())
-        bestelling4 = self.create_bestelling(
+        # defaults: Deelnemer= Test Deelnemer, Locatie= Kelder
+        best_today_default = self.create_bestelling(
+            datum_aangemaakt=timezone.now().date()
+        )
+        best_today_andere_deelnemer = self.create_bestelling(
             deelnemer=deelnemer_anders,
             datum_aangemaakt=timezone.now().date(),
         )
-        bestelling5 = self.create_bestelling(
+        best_today_elders = self.create_bestelling(
             van_locatie=locatie_elders,
             datum_aangemaakt=timezone.now().date(),
         )
 
         # Get all bestellingen and check the order
         bestellingen = list(Bestelling.objects.all())
-        self.assertEqual(bestellingen[0], bestelling4)
-        self.assertEqual(bestellingen[1], bestelling5)
-        self.assertEqual(bestellingen[2], bestelling3)
 
-        self.assertEqual(bestellingen[3], bestelling2)
-        self.assertEqual(bestellingen[4], bestelling1)
+        # Check the order of bestellingen
+        # The expected order is based on the date and then by deelnemer and vanLocatie
+        # based on meta of model Bestelling
+        expected_order = [
+            best_today_andere_deelnemer,
+            best_today_elders,
+            best_today_default,
+            best_1_day_ago,
+            best_2_days_ago,
+        ]
+        self.assertEqual(bestellingen, expected_order)

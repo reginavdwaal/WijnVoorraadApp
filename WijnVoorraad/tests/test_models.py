@@ -22,6 +22,8 @@ from django.utils import timezone
 # Import the models to be tested
 from WijnVoorraad.models import (
     AIUsage,
+    Bestelling,
+    BestellingRegel,
     Deelnemer,
     DruivenSoort,
     Locatie,
@@ -518,6 +520,49 @@ class TestOntvangst(TestCase):
         self.assertEqual(new_ontvangst.wijn, ontvangst.wijn)
         self.assertEqual(new_ontvangst.datumOntvangst, datetime.date.today())
 
+    def test_multiple_ontvangsten_should_be_ordered(self):
+        """Test that multiple Ontvangst instances are ordered by date."""
+        deelnemer_kees = Deelnemer.objects.create(
+            naam="Kees", standaardLocatie=self.locatie
+        )
+        wijn_a = Wijn.objects.create(
+            domein="DomeinX", naam="WijnA", wijnsoort=self.wijnsoort
+        )
+        ontvangst1 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer,
+            wijn=self.wijn,
+            datumOntvangst=timezone.now().date() - datetime.timedelta(days=2),
+        )
+        ontvangst2 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer,
+            wijn=self.wijn,
+            datumOntvangst=timezone.now().date() - datetime.timedelta(days=1),
+        )
+
+        ontvangst3 = Ontvangst.objects.create(
+            deelnemer=deelnemer_kees,
+            wijn=self.wijn,
+            datumOntvangst=timezone.now().date(),
+        )
+        ontvangst4 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer,
+            wijn=self.wijn,
+            datumOntvangst=timezone.now().date(),
+        )
+        ontvangst5 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer,
+            wijn=wijn_a,
+            datumOntvangst=timezone.now().date(),
+        )
+
+        ontvangsten = list(Ontvangst.objects.all())
+
+        self.assertEqual(ontvangsten[0], ontvangst5)
+        self.assertEqual(ontvangsten[1], ontvangst4)
+        self.assertEqual(ontvangsten[2], ontvangst3)
+        self.assertEqual(ontvangsten[3], ontvangst2)
+        self.assertEqual(ontvangsten[4], ontvangst1)
+
 
 class TestVoorraadMutatie(TestCase):
     """Unit tests for the VoorraadMutatie model."""
@@ -883,3 +928,207 @@ class TestAIUsage(TestCase):
         )
         with self.assertRaises(ValidationError):
             usage.full_clean()
+
+
+class TestBestelling(TestCase):
+    """Unit tests for the Bestelling model."""
+
+    def setUp(self):
+        """Set up a user and a standaardLocatie for use in tests."""
+        self.user = get_user_model().objects.create(username="testuser")
+        self.locatie = Locatie.objects.create(omschrijving="Kelder", aantal_kolommen=1)
+        self.deelnemer = Deelnemer.objects.create(
+            naam="Test Deelnemer", standaardLocatie=self.locatie
+        )
+        self.ontvangst = Ontvangst.objects.create(
+            deelnemer=self.deelnemer,
+            wijn=Wijn.objects.create(
+                domein="DomeinTest",
+                naam="WijnTest",
+                wijnsoort=WijnSoort.objects.create(omschrijving="Rood"),
+            ),
+            datumOntvangst=timezone.now().date(),
+        )
+
+    def create_bestelling(
+        self, deelnemer=None, van_locatie=None, datum_aangemaakt=None, opmerking=None
+    ):
+        """
+        Helper to create a Bestelling with optional parameters.
+        """
+
+        bestelling = Bestelling()
+        if deelnemer:
+            bestelling.deelnemer = deelnemer
+        else:
+            bestelling.deelnemer = self.deelnemer
+
+        if van_locatie:
+            bestelling.vanLocatie = van_locatie
+        else:
+            bestelling.vanLocatie = self.locatie
+
+        if datum_aangemaakt:
+            bestelling.datumAangemaakt = datum_aangemaakt
+        if opmerking:
+            bestelling.opmerking = opmerking
+
+        bestelling.save()
+        return bestelling
+
+    def create_bestellingregel(
+        self,
+        bestelling,
+        ontvangst=None,
+        vak=None,
+        aantal=1,
+        opmerking="",
+        isVerzameld=False,
+        aantal_correctie=None,
+        verwerkt="N",
+    ):
+        """
+        Helper to create a BestellingRegel with default values unless specified.
+        """
+        regel = BestellingRegel.objects.create(
+            bestelling=bestelling,
+            ontvangst=ontvangst,
+            vak=vak,
+            aantal=aantal,
+            opmerking=opmerking,
+            isVerzameld=isVerzameld,
+            aantal_correctie=aantal_correctie,
+            verwerkt=verwerkt,
+        )
+        regel.save()
+        return regel
+
+    def test_valid_bestelling_can_be_created(self):
+        """Test that a Bestelling instance can be created with valid data."""
+        bestelling = self.create_bestelling(opmerking="Test bestelling")
+
+        self.assertEqual(bestelling.deelnemer, self.deelnemer)
+        self.assertEqual(bestelling.vanLocatie, self.locatie)
+        self.assertEqual(bestelling.opmerking, "Test bestelling")
+        self.assertIsNotNone(bestelling.datumAangemaakt)
+
+    def test_bestelling_without_deelnemer_raises_error(self):
+        """Test that a Bestelling cannot be created without a deelnemer."""
+        with self.assertRaises(IntegrityError):
+            Bestelling.objects.create(
+                vanLocatie=self.locatie,
+                datumAangemaakt=timezone.now().date(),
+                opmerking="Test bestelling zonder deelnemer",
+            )
+
+    def test_bestelling_without_van_locatie_raises_error(self):
+        """Test that a Bestelling cannot be created without a vanLocatie."""
+        with self.assertRaises(IntegrityError):
+            Bestelling.objects.create(
+                deelnemer=self.deelnemer,
+                datumAangemaakt=timezone.now().date(),
+                opmerking="Test bestelling zonder vanLocatie",
+            )
+
+    def test_bestelling_without_datum_aangemaakt_uses_today(self):
+        """Test that a Bestelling without datumAangemaakt uses today's date."""
+        bestelling = self.create_bestelling()
+
+        self.assertEqual(bestelling.datumAangemaakt, timezone.now().date())
+
+    def test_deelnemer_delete_prevented_if_bestelling_exists(self):
+        """Test that a Deelnemer cannot be deleted if there is a Bestelling object."""
+        bestelling = self.create_bestelling()
+
+        with self.assertRaises(IntegrityError):
+            self.deelnemer.delete()
+        # Ensure the Bestelling instance still exists
+        self.assertTrue(Bestelling.objects.filter(pk=bestelling.pk).exists())
+
+    def test_locatie_delete_prevented_if_bestelling_exists(self):
+        """Test that a Locatie cannot be deleted if there is a Bestelling object."""
+        bestelling = self.create_bestelling()
+
+        with self.assertRaises(IntegrityError):
+            self.locatie.delete()
+        # Ensure the Bestelling instance still exists
+        self.assertTrue(Bestelling.objects.filter(pk=bestelling.pk).exists())
+
+    def test_str_returns_deelnemer_date_location(self):
+        """Test that __str__ returns the correct string."""
+        bestelling = self.create_bestelling(opmerking="Test bestelling")
+        expected = (
+            f"{self.deelnemer.naam} - "
+            f"{bestelling.datumAangemaakt.strftime('%d-%m-%Y')} - "
+            f"{self.locatie.omschrijving} "
+        )
+        self.assertEqual(str(bestelling), expected)
+
+    def test_afboeken_calls_afboeken_for_all_regels_verzameld(self):
+        """Test that afboeken calls afboeken for all regels in the bestelling."""
+        bestelling = self.create_bestelling(opmerking="Test bestelling")
+
+        # Create some regels for the bestelling
+        with (
+            patch("WijnVoorraad.models.BestellingRegel.afboeken") as mock_afboeken,
+            patch(
+                "WijnVoorraad.models.WijnVoorraad.Bijwerken_rsv_erbij",
+                return_value=None,
+            ),
+        ):
+            # Create some regels for the bestelling (mock is active here)
+            self.create_bestellingregel(
+                bestelling, ontvangst=self.ontvangst, aantal=2, isVerzameld=True
+            )
+            self.create_bestellingregel(
+                bestelling, ontvangst=self.ontvangst, aantal=4, isVerzameld=True
+            )
+            self.create_bestellingregel(
+                bestelling, ontvangst=self.ontvangst, aantal=2, isVerzameld=False
+            )
+            self.create_bestellingregel(
+                bestelling,
+                ontvangst=self.ontvangst,
+                aantal=4,
+                isVerzameld=True,
+                verwerkt="A",
+            )
+
+            # Call afboeken on the bestelling
+            bestelling.afboeken()
+            # Check that afboeken was called for each regel
+            self.assertEqual(mock_afboeken.call_count, 2)
+
+    def test_bestellingen_with_regels_are_ordered(self):
+        """Test that Bestellingen with regels are ordered by datumAangemaakt,
+        deelnemer and vanLocatie."""
+
+        locatie_elders = Locatie.objects.create(
+            omschrijving="Elders", aantal_kolommen=1
+        )
+        deelnemer_anders = Deelnemer.objects.create(naam="Andere Deelnemer")
+
+        bestelling1 = self.create_bestelling(
+            datum_aangemaakt=timezone.now().date() - datetime.timedelta(days=2)
+        )
+        bestelling2 = self.create_bestelling(
+            datum_aangemaakt=timezone.now().date() - datetime.timedelta(days=1)
+        )
+        bestelling3 = self.create_bestelling(datum_aangemaakt=timezone.now().date())
+        bestelling4 = self.create_bestelling(
+            deelnemer=deelnemer_anders,
+            datum_aangemaakt=timezone.now().date(),
+        )
+        bestelling5 = self.create_bestelling(
+            van_locatie=locatie_elders,
+            datum_aangemaakt=timezone.now().date(),
+        )
+
+        # Get all bestellingen and check the order
+        bestellingen = list(Bestelling.objects.all())
+        self.assertEqual(bestellingen[0], bestelling4)
+        self.assertEqual(bestellingen[1], bestelling5)
+        self.assertEqual(bestellingen[2], bestelling3)
+
+        self.assertEqual(bestellingen[3], bestelling2)
+        self.assertEqual(bestellingen[4], bestelling1)

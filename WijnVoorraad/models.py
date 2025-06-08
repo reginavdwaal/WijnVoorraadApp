@@ -1,6 +1,6 @@
 # pylint: disable=no-member
 
-from datetime import datetime
+from datetime import date, datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -230,7 +230,7 @@ class WijnDruivensoort(models.Model):
 class Ontvangst(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     wijn = models.ForeignKey(Wijn, on_delete=models.PROTECT)
-    datumOntvangst = models.DateField(default=datetime.now)
+    datumOntvangst = models.DateField(default=date.today)
     leverancier = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
     prijs = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -420,7 +420,7 @@ class AIUsage(models.Model):
 
 class Bestelling(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
-    datumAangemaakt = models.DateField(default=datetime.now)
+    datumAangemaakt = models.DateField(default=date.today)
     vanLocatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
     opmerking = models.CharField(max_length=200, blank=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)

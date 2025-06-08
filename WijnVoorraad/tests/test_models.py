@@ -472,15 +472,15 @@ class TestOntvangst(TestCase):
         self.assertIn("200", str(exc.exception))
 
     def test_ontvangst_opmerkingen_max_length(self):
-        """Test that the opmerking field has a max length of 200 characters."""
+        """Test that the opmerking field has a max length of 4000 characters."""
         with self.assertRaises(ValidationError) as exc:
             ontvangst = Ontvangst(
                 deelnemer=self.deelnemer,
                 wijn=self.wijn,
-                opmerking="O" * 201,  # 201 characters
+                opmerking="O" * 4001,  # 4001 characters
             )
             ontvangst.full_clean()
-        self.assertIn("200", str(exc.exception))
+        self.assertIn("4000", str(exc.exception))
 
     def test_ontvangst_website_max_length(self):
         """Test that the website field has a max length of 200 characters."""

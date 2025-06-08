@@ -119,7 +119,7 @@ class Wijn(models.Model):
     streek = models.CharField(max_length=200, blank=True)
     classificatie = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
-    opmerking = models.CharField(max_length=200, blank=True)
+    opmerking = models.CharField(max_length=4000, blank=True)
     foto = models.ImageField(upload_to="images/", null=True, blank=True)
     datumAangemaakt = models.DateTimeField(auto_now_add=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
@@ -261,7 +261,7 @@ class Ontvangst(models.Model):
     leverancier = models.CharField(max_length=200, blank=True)
     website = models.URLField(max_length=200, blank=True)
     prijs = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    opmerking = models.CharField(max_length=200, blank=True)
+    opmerking = models.CharField(max_length=4000, blank=True)
 
     def __str__(self):
         return f"{self.deelnemer.naam} - {self.wijn.volle_naam} - {self.datumOntvangst.strftime('%d-%m-%Y')}"
@@ -473,7 +473,7 @@ class Bestelling(models.Model):
     deelnemer = models.ForeignKey(Deelnemer, on_delete=models.PROTECT)
     datumAangemaakt = models.DateField(default=date.today)
     vanLocatie = models.ForeignKey(Locatie, on_delete=models.PROTECT)
-    opmerking = models.CharField(max_length=200, blank=True)
+    opmerking = models.CharField(max_length=4000, blank=True)
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
@@ -510,7 +510,7 @@ class BestellingRegel(models.Model):
     ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
     vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
     aantal = models.IntegerField(default=0)
-    opmerking = models.CharField(max_length=200, blank=True)
+    opmerking = models.CharField(max_length=4000, blank=True)
     isVerzameld = models.BooleanField(default=False)
     aantal_correctie = models.IntegerField(null=True, blank=True)
 

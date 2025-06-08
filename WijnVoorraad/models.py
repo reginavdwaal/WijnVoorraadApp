@@ -572,7 +572,7 @@ class BestellingRegel(models.Model):
             self.verwerkt = "A"
             self.save()
 
-    def verplaatsen(self, locatie_nieuw, vak_nieuw, aantal):
+    def verplaatsen(self, locatie_nieuw, vak_nieuw, aantal, bijwerken=True):
         if self.verwerkt == "N":
             VoorraadMutatie.verplaatsen(
                 self.ontvangst,
@@ -582,6 +582,9 @@ class BestellingRegel(models.Model):
                 vak_nieuw,
                 aantal,
             )
+            if bijwerken:
+                self.verwerkt = "V"
+                self.save()
 
     class Meta:
         ordering = ["bestelling", "ontvangst"]

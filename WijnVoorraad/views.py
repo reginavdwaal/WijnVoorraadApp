@@ -1472,6 +1472,7 @@ class BestellingVerzamelen(LoginRequiredMixin, ListView):
         if "FilterPost" in request.POST:
             l_id = request.POST["locatie_id"]
             wijnvars.set_session_locatie(request, l_id)
+            wijnvars.handle_filter_options_post(request)
             url = reverse(
                 "WijnVoorraad:bestellingverzamelen",
             )
@@ -1640,7 +1641,11 @@ class BestellingregelVerplaatsInVakken(LoginRequiredMixin, ListView):
             if v_aantal_verplaatsen:
                 v_nieuwe_vak = Vak.objects.get(pk=v_nieuw_vak_id)
                 v_nieuwe_locatie = v_nieuwe_vak.locatie
-                regel.verplaatsen(v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
+                # bijwerken van de verwerktstatus van de regel pas als alle verplaatsingen klaar zijn
+                bijwerken = False
+                regel.verplaatsen(
+                    v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen, bijwerken
+                )
         regel.verwerkt = "V"
         regel.save()
 

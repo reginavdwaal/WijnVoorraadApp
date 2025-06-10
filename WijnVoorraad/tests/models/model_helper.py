@@ -88,6 +88,9 @@ class SharedTestDataMixin:
         """
         Helper to create a BestellingRegel with default values unless specified.
         """
+        if not ontvangst:
+            ontvangst = self.ontvangst
+
         regel = BestellingRegel.objects.create(
             bestelling=bestelling,
             ontvangst=ontvangst,

@@ -211,6 +211,7 @@ class TestVoorraadMutatie(SharedTestDataMixin, TestCase):
             locatie=self.locatie,
             vak=self.vak_a1,
         )
+
         with patch("WijnVoorraad.models.WijnVoorraad.Bijwerken"):
             voorraad_mutatie.drinken(self.ontvangst, self.locatie, self.vak_a1)
             # Check that a new VoorraadMutatie was created

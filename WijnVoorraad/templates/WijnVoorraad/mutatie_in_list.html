@@ -6,6 +6,7 @@
 <div id="content-main">
     {% url 'WijnVoorraad:mutatie-create' as urlname %}
     {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
+    <div style="overflow-x:auto;">
     <table>
         {% for m in mutatie_list %}
             {% if m == mutatie_list|first %} 
@@ -79,6 +80,7 @@
         {% endfor %}
         </tbody>
     </table>
+</div>
 </div>
 <br class="clear">
 <div id="content-footer">

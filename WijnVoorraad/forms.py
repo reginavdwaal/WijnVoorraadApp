@@ -102,7 +102,7 @@ class OntvangstCreateForm(forms.ModelForm):
     )
     website = forms.CharField(max_length=200, required=False)
     opmerking = forms.CharField(
-        max_length=200,
+        max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"cols": "90"}),
     )
@@ -125,7 +125,7 @@ class OntvangstUpdateForm(forms.ModelForm):
     wijn = forms.ModelChoiceField(Wijn.objects, widget=SelectWithPop)
     website = forms.CharField(max_length=200, required=False)
     opmerking = forms.CharField(
-        max_length=200,
+        max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"cols": "90"}),
     )
@@ -168,7 +168,7 @@ class WijnForm(forms.ModelForm):
     website = forms.CharField(max_length=200, required=False)
     # website = forms.URLInput.attrs={'novalidate': True}
     opmerking = forms.CharField(
-        max_length=200, required=False, widget=forms.Textarea(attrs={"cols": "90"})
+        max_length=4000, required=False, widget=forms.Textarea(attrs={"cols": "90"})
     )
 
     class Meta:
@@ -294,7 +294,7 @@ class BestellingCreateForm(forms.ModelForm):
         Locatie.objects, required=True, widget=SelectWithPop
     )
     opmerking = forms.CharField(
-        max_length=200,
+        max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"cols": "90"}),
     )
@@ -310,7 +310,7 @@ class BestellingUpdateForm(forms.ModelForm):
         Locatie.objects, required=True, widget=SelectWithPop
     )
     opmerking = forms.CharField(
-        max_length=200,
+        max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"cols": "90"}),
     )
@@ -342,7 +342,7 @@ class BestellingRegelUpdateForm(forms.ModelForm):
     isVerzameld = forms.CheckboxInput()
     aantal_correctie = forms.IntegerField(required=False)
     opmerking = forms.CharField(
-        max_length=200,
+        max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"cols": "90"}),
     )

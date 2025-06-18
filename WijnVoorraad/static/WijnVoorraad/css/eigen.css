@@ -114,7 +114,6 @@ input[type=submit].wijnsoort_selected {
 table.wijnvoorraad {
     border-collapse: separate;
     border-spacing: 5px;
-    overflow: hidden;
 }
 
 tr.wijnvoorraad_row {
@@ -172,73 +171,6 @@ table.metkader {
     display: table;
   }
 
-@media only screen and (min-width: 800px) {
-    /* For tablets and desktop: */
-    .fuzzy_selectie {width: 200px;}
-}
-
-@media only screen and (max-width: 800px) {
-    /* For phone: */
-    .fuzzy_selectie {width: 50px;}
-}
-
-/* For mobile phones: */
-[class*="col-"] {
-    width: 100%;
-    float: left;
-    padding: 5px;
-    box-sizing: border-box;
-}
-
-@media only screen and (max-width: 600px) {
-/* For phone: */
-    .col-s-1 {width: 8.33%;}
-    .col-s-2 {width: 16.66%;}
-    .col-s-3 {width: 25%;}
-    .col-s-4 {width: 33.33%;}
-    .col-s-5 {width: 41.66%;}
-    .col-s-6 {width: 50%;}
-    .col-s-7 {width: 58.33%;}
-    .col-s-8 {width: 66.66%;}
-    .col-s-9 {width: 75%;}
-    .col-s-10 {width: 83.33%;}
-    .col-s-11 {width: 91.66%;}
-    .col-s-12 {width: 100%;}
-}
-    
-   
-@media only screen and (min-width: 600px) {
-/* For tablets: */
-    .col-s-1 {width: 8.33%;}
-    .col-s-2 {width: 16.66%;}
-    .col-s-3 {width: 25%;}
-    .col-s-4 {width: 33.33%;}
-    .col-s-5 {width: 41.66%;}
-    .col-s-6 {width: 50%;}
-    .col-s-7 {width: 58.33%;}
-    .col-s-8 {width: 66.66%;}
-    .col-s-9 {width: 75%;}
-    .col-s-10 {width: 83.33%;}
-    .col-s-11 {width: 91.66%;}
-    .col-s-12 {width: 100%;}
-}
-
-@media only screen and (min-width: 768px) {
-/* For desktop: */
-    .col-1 {width: 8.33%;}
-    .col-2 {width: 16.66%;}
-    .col-3 {width: 25%;}
-    .col-4 {width: 33.33%;}
-    .col-5 {width: 41.66%;}
-    .col-6 {width: 50%;}
-    .col-7 {width: 58.33%;}
-    .col-8 {width: 66.66%;}
-    .col-9 {width: 75%;}
-    .col-10 {width: 83.33%;}
-    .col-11 {width: 91.66%;}
-    .col-12 {width: 100%;}
-}
-
 .detail-block {
     display: block;
     width: 100%;
@@ -264,7 +196,9 @@ table.metkader {
 .detail-column-label {
     display: inline-block;
     box-sizing: border-box;
-    width: 35%;   /* 160px; */
+    width: 30%;   /* 160px; */
+    min-width: 160px;
+    max-width: 200px;
     overflow: auto;
     font-weight: bold;
     color: var(--body-fg);
@@ -276,6 +210,30 @@ table.metkader {
     float: left;
     padding: 0px 4px 0px 0px; 
     border: none; 
+}
+
+.table-row {
+    box-sizing: border-box;
+    display: block;
+    border: 1px solid #ffffff;
+}
+
+.table-row::after {
+    content: "";
+    clear: both;
+    display: table;
+  }
+
+tr.table-row td {
+    border-bottom: 1px none;
+}
+
+.table-row td a {
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 4px;
+    padding-bottom: 10px;
+    display: flex;
 }
 
 .clear_style {
@@ -373,3 +331,95 @@ ul.messagelist li.warning {
 .ai_image {
     max-height: 130px;
 }
+
+@media only screen and (min-width: 800px) {
+    /* For tablets and desktop: */
+    .fuzzy_selectie {width: 200px;}
+}
+
+@media only screen and (max-width: 800px) {
+    /* For phone: */
+    .fuzzy_selectie {width: 50px;}
+}
+
+/* For mobile phones: */
+[class*="col-"] {
+    width: 100%;
+    float: left;
+    padding: 0px 3px;
+    box-sizing: border-box;
+}
+
+@media only screen and (max-width: 600px) {
+/* For phone: */
+    .col-s-1 {width: 5%;}
+    .col-s-2 {width: 10%;}
+    .col-s-3 {width: 15%;}
+    .col-s-4 {width: 20%;}
+    .col-s-5 {width: 25%;}
+    .col-s-6 {width: 30%;}
+    .col-s-7 {width: 35%;}
+    .col-s-8 {width: 40%;}
+    .col-s-9 {width: 45%;}
+    .col-s-10 {width: 50%;}
+    .col-s-11 {width: 55%;}
+    .col-s-12 {width: 60%;}
+    .col-s-13 {width: 65%;}
+    .col-s-14 {width: 70%;}
+    .col-s-15 {width: 75%;}
+    .col-s-16 {width: 80%;}
+    .col-s-17 {width: 85%;}
+    .col-s-18 {width: 90%;}
+    .col-s-19 {width: 95%;}
+    .col-s-20 {width: 100%;}
+}
+    
+   
+@media only screen and (min-width: 600px) {
+/* For tablets: */
+    .col-s-1 {width: 5%;}
+    .col-s-2 {width: 10%;}
+    .col-s-3 {width: 15%;}
+    .col-s-4 {width: 20%;}
+    .col-s-5 {width: 25%;}
+    .col-s-6 {width: 30%;}
+    .col-s-7 {width: 35%;}
+    .col-s-8 {width: 40%;}
+    .col-s-9 {width: 45%;}
+    .col-s-10 {width: 50%;}
+    .col-s-11 {width: 55%;}
+    .col-s-12 {width: 60%;}
+    .col-s-13 {width: 65%;}
+    .col-s-14 {width: 70%;}
+    .col-s-15 {width: 75%;}
+    .col-s-16 {width: 80%;}
+    .col-s-17 {width: 85%;}
+    .col-s-18 {width: 90%;}
+    .col-s-19 {width: 95%;}
+    .col-s-20 {width: 100%;}
+}
+
+@media only screen and (min-width: 768px) {
+/* For desktop: */
+    .col-1 {width: 5%;}
+    .col-2 {width: 10%;}
+    .col-3 {width: 15%;}
+    .col-4 {width: 20%;}
+    .col-5 {width: 25%;}
+    .col-6 {width: 30%;}
+    .col-7 {width: 35%;}
+    .col-8 {width: 40%;}
+    .col-9 {width: 45%;}
+    .col-10 {width: 50%;}
+    .col-11 {width: 55%;}
+    .col-12 {width: 60%;}
+    .col-13 {width: 65%;}
+    .col-14 {width: 70%;}
+    .col-15 {width: 75%;}
+    .col-16 {width: 80%;}
+    .col-17 {width: 85%;}
+    .col-18 {width: 90%;}
+    .col-19 {width: 95%;}
+    .col-20 {width: 100%;}
+}
+

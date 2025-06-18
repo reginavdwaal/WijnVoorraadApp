@@ -6,6 +6,7 @@
 <div id="content-main">
     {% url 'WijnVoorraad:bestelling-create' as urlname %}
     {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
+    <div style="overflow-x:auto;">
     <table>
         {% for o in bestelling_list %}
             {% if o == bestelling_list|first %} 
@@ -51,6 +52,7 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">

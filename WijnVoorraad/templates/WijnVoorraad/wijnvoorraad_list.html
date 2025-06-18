@@ -9,12 +9,12 @@
     <table class="wijnvoorraad">
       {% for v in voorraad_list %}
         <tr class="wijnvoorraad_row {{ v.wijn.wijnsoort.style_css_class }}">
-          <td class="col-12 col-s-12">
+          <td class="col-20 col-s-20">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}">
               <b>{{ v.wijn.volle_naam }}</b>
             </a>
           </td>
-          <td class="col-11 col-s-10">
+          <td class="col-18 col-s-17">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">
               {{ v.wijn.wijnsoort.omschrijving }}
@@ -23,7 +23,7 @@
               {% for d in v.wijn.wijnDruivensoorten.all %}, {{ d.omschrijving }}{% endfor %}
             </a>
           </td>
-          <td class="col-1 col-s-2">
+          <td class="col-2 col-s-3">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">#{{ v.aantal }}</a>
           </td>

@@ -375,6 +375,7 @@ class VoorraadMutatie(models.Model):
         mutatie.actie = "D"
         mutatie.datum = datetime.now()
         mutatie.aantal = 1
+        mutatie.omschrijving = "Drinken"
         mutatie.save()
 
     @staticmethod
@@ -386,6 +387,7 @@ class VoorraadMutatie(models.Model):
         mutatie.actie = "K"
         mutatie.datum = datetime.now()
         mutatie.aantal = 1
+        mutatie.omschrijving = "Voorraad +1"
         mutatie.save()
 
     @staticmethod
@@ -399,6 +401,9 @@ class VoorraadMutatie(models.Model):
         mutatie.actie = "V"
         mutatie.datum = datetime.now()
         mutatie.aantal = aantal
+        mutatie.omschrijving = "Verplaatsing naar " + locatie_nieuw.omschrijving
+        if vak_nieuw is not None:
+            mutatie.omschrijving = mutatie.omschrijving + " - " + vak_nieuw.code
         mutatie.save()
 
         mutatie = VoorraadMutatie()
@@ -410,6 +415,9 @@ class VoorraadMutatie(models.Model):
         mutatie.actie = "V"
         mutatie.datum = datetime.now()
         mutatie.aantal = aantal
+        mutatie.omschrijving = "Verplaatsing van " + locatie_oud.omschrijving
+        if vak_oud is not None:
+            mutatie.omschrijving = mutatie.omschrijving + " - " + vak_oud.code
         mutatie.save()
 
     @staticmethod
@@ -423,10 +431,12 @@ class VoorraadMutatie(models.Model):
         mutatie.actie = "A"
         mutatie.datum = datetime.now()
         mutatie.aantal = aantal
+        mutatie.omschrijving = "Afboeken"
         mutatie.clean()
         mutatie.save()
 
     class Meta:
+        ordering = ["ontvangst", "datum", "in_uit"]
         verbose_name = "voorraadmutatie"
         verbose_name_plural = "voorraadmutaties"
 

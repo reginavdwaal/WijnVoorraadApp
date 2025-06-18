@@ -52,7 +52,7 @@
                 <div id="header_bar">
                   <div class="dropdownmenu">
                     <button class="dropdownmenu-button" type="submit">
-                      <img src="{% static '/WijnVoorraad/img/dataicon.png' %}"
+                      <img src="{% static '/WijnVoorraad/img/menuicon.png' %}"
                            width="30"
                            height="30"
                            alt="Menu" />
@@ -71,7 +71,7 @@
                       <a href="{% url 'WijnVoorraad:bestellingverzamelen' %}">Bestellingen verzamelen</a>
                       <a href="{% url 'WijnVoorraad:voorraadvakkenlist' %}">Actuele voorraad vakken</a>
                       {% if user.is_staff %}
-                        <a href="{% url 'WijnVoorraad:voorraadcontroleren' %}">VRD Controleren (Admin)</a>
+                        <a href="{% url 'WijnVoorraad:voorraadcontroleren' %}">Voorraad controleren (Admin)</a>
                         <a href="{% url 'admin:index' %}">Beheer (Admin)</a>
                       {% endif %}
                     </div>

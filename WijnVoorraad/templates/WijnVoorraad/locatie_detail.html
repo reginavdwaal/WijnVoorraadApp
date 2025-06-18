@@ -38,6 +38,7 @@
     <br class="clear">
 
     <h2>Vakken</h2>
+    <div style="overflow-x:auto;">
     <table>
         {% for v in vakken %}
             {% if v == vakken|first %}
@@ -73,6 +74,7 @@
         </tr>
         </tbody>
     </table>
+    </div>  <!-- end overflow-x -->
     <br>
     <form id="create-form" method="get" action="{% url 'WijnVoorraad:vak-create' locatie.id %}">
         {% csrf_token %}

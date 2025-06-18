@@ -100,6 +100,7 @@
     <br class="clear">
 
     <h2>Voorraadmutaties</h2>
+    <div style="overflow-x:auto;">
     <table>
         {% for m in mutaties %}
             {% if m == mutaties|first %} 
@@ -159,5 +160,6 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>  <!-- end overflow-x -->
 </div>  <!-- end content-footer -->
 {% endblock %}

@@ -1178,6 +1178,12 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         br = BestellingRegel.objects.filter(bestelling=self.object)
+        vakken = Vak.objects.filter(locatie=self.object.vanLocatie)
+        if vakken:
+            loc_heeft_vakken = True
+        else:
+            loc_heeft_vakken = False
+        context["loc_heeft_vakken"] = loc_heeft_vakken
         regels = []
         VerzameldeOnverwerkteRegels = False
         AllVerzameld = True
@@ -1460,10 +1466,16 @@ class BestellingVerzamelen(LoginRequiredMixin, ListView):
         )
         wijnvars.set_context_locatie_list(context)
         l = wijnvars.get_session_locatie(self.request)
+        vakken = Vak.objects.filter(locatie=l)
+        if vakken:
+            loc_heeft_vakken = True
+        else:
+            loc_heeft_vakken = False
         bestelling_list = Bestelling.objects.filter(
             vanLocatie=l, datumAfgesloten__isnull=True
         )
         context["locatie"] = l
+        context["loc_heeft_vakken"] = loc_heeft_vakken
         context["bestelling_list"] = bestelling_list
         context["title"] = "Bestellingen verzamelen"
         return context

@@ -8,7 +8,7 @@
 
 <div id="content-main">
     <div class="content-row">
-        <div class="col-4 col-s-10">
+        <div class="col-6 col-s-20">
             <table class="metkader" width="100%">
                 {% for v in voorraad_list %}
                     {% if v == voorraad_list|first %}
@@ -62,7 +62,11 @@
                 </tbody>
             </table>
         </div> <!-- end col -->
-        <div class="col-6 col-s-8">
+        {% if wijn.foto  %}
+            <div class="col-8 col-s-11">
+        {% else %}
+            <div class="col-14 col-s-11">
+        {% endif %}
             <div class="detail-block">
                 <div class="detail-row">
                     <label class="detail-column-label">Deelnemer</label>
@@ -197,7 +201,7 @@
             </div>  <!-- end detail-block -->
         </div> <!-- end col -->
         {% if wijn.foto  %}
-            <div class="col-3 col-s-4">
+            <div class="col-6 col-s-9">
                 <div class="detail-block">
                     <img src="{{ wijn.foto.url }}" alt="Foto" style="max-height: 300px" />
                 </div>  <!-- end detail-block -->

@@ -6,6 +6,7 @@
 <div id="content-main">
     {% url 'WijnVoorraad:wijn-create' as urlname %}
     {% include 'WijnVoorraad/component_filter.html' with addoption=urlname show_filters=True %}
+    <div style="overflow-x:auto;">
     <table>
         {% for wijn in wijn_list %}
             {% if wijn == wijn_list|first %} 
@@ -77,6 +78,7 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>  <!-- end overflow-x -->
 </div>  <!-- end content-main -->
 <br class="clear">
 <div id="content-footer">

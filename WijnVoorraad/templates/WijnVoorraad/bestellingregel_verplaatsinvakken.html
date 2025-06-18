@@ -41,6 +41,7 @@
     <input type="text" name='aantal_verplaatsen_totaal' id="aantal_verplaatsen_totaal" disabled>
     <label for="aantal_verplaatsen_nog">Nog te verdelen</label>
     <input type="text" name='aantal_verplaatsen_nog' id="aantal_verplaatsen_nog" value="{{aantal_verplaatsen_org}}" disabled>
+    <div style="overflow-x:auto;">
     <table>
         {% for v in vakken_list %}
             {% if v == vakken_list|first %} 
@@ -94,5 +95,6 @@
         </tr>
         </tbody>
     </table>
+    </div>
 </form>
 {% endblock %}

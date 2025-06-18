@@ -77,6 +77,7 @@
     <br class="clear">
 
     <h2>Bestelling regels</h2>
+    <div style="overflow-x:auto;">
     <table>
         {% for m in regels %}
             {% if m == regels|first %} 
@@ -88,9 +89,11 @@
                     <th>
                         Ontvangstdatum
                     </th>
-                    <th>
-                        Vak
-                    </th>
+                    {% if loc_heeft_vakken %}
+                        <th>
+                            Vak
+                        </th>
+                    {% endif %}
                     <th>
                         Aantal
                     </th>
@@ -128,9 +131,11 @@
                 <td class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
                     <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.datumOntvangst }}</a>
                 </td>
-                <td>
-                    {{ m.vak.code|default:"---" }}
-                </td>
+                {% if loc_heeft_vakken %}
+                    <td>
+                        {{ m.vak.code|default:"---" }}
+                    </td>
+                {% endif %}
                 <td>
                     {{ m.aantal }}
                 </td>
@@ -185,5 +190,6 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>   <!-- end overflow-x -->
 </div>  <!-- end content-footer -->
 {% endblock %}

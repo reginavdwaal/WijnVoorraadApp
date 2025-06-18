@@ -39,19 +39,20 @@
     <input type="hidden" name='bestelling_id' id="bestelling_id" value="{{bestelling.id}}">
     <input type="hidden" name='aantal_vrd' id="aantal_vrd" value="{{bestel_list|length}}">
     <input type="submit" name="Save" id="Save" value="Opslaan">
-      <table class="wijnvoorraad">
+    <div style="overflow-x:auto;">
+    <table class="wijnvoorraad">
         {% for v in bestel_list %}
         <tr class="wijnvoorraad_row {{ v.wijn.wijnsoort.style_css_class }}">
-          <td class="col-11 col-s-10">
+          <td class="col-18 col-s-16">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}">
               <b>{{ v.wijn.volle_naam }}</b>
             </a>
           </td>
-          <td class="col-1 col-s-2">
+          <td class="col-2 col-s-4">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">#{{ v.aantal }}</a>
           </td>
-          <td class="col-11 col-s-10">
+          <td class="col-18 col-s-16">
             <a href="{% url 'WijnVoorraad:voorraaddetail' v.locatie.id v.wijn.id v.ontvangst.id %}"
                tabindex="-1">
               {{ v.wijn.wijnsoort.omschrijving }}
@@ -61,7 +62,7 @@
               {% if v.vak %}, Vak: {{ v.vak.code }}{% endif %}
             </a>
           </td>
-          <td class="col-1 col-s-2">
+          <td class="col-2 col-s-4">
             <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{v.bestellingregel_id}}">
             <input type="hidden" name='voorraad_id{{ forloop.counter }}' id="voorraad_id{{ forloop.counter }}" value="{{ v.id }}">
             <input class="aantal" type="number" name='aantal_bestellen{{ forloop.counter }}' value="{{v.aantal_bestellen}}"
@@ -73,6 +74,7 @@
         <p>Er is GEEN voorraad.</p>
       {% endfor %}
       </table>
+    </div>
     </form>
   </div>
 {% endblock %}

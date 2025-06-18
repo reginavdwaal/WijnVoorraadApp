@@ -5,6 +5,7 @@
 {% block content %}
 <div id="content-main">
     <h2>Onjuiste locaties</h2>
+    <div style="overflow-x:auto;">
     <table>
         {% for locatie in locatie_list %}
             {% if locatie == locatie_list|first %} 
@@ -100,10 +101,12 @@
             <p>Er zijn GEEN onjuiste locaties.</p>
         {% endfor %}
     </table>
+</div>
 </div>  <!-- end content-main -->
 <br class="clear">
 <div>
     <h2>Onjuiste ontvangsten</h2>
+    <div style="overflow-x:auto;">
     <table>
         {% for ontvangst in ontvangst_list %}
             {% if ontvangst == ontvangst_list|first %} 
@@ -219,5 +222,6 @@
             <p>Er zijn GEEN onjuiste ontvangsten.</p>
         {% endfor %}
     </table>
+    </div>
 </div>
 {% endblock content %}

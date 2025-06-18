@@ -4,26 +4,26 @@
 
 {% block content %}
   <div id="content-main">
-    <form method="post" %}">
+    <form method="post">
       {% csrf_token %}
       <input type="hidden" name='FilterPost' id="FilterPost" value="FilterPost">
-      <div class="col-3 col-s-12"> 
+      <div class="col-5 col-s-15"> 
         <div class="detail-block">
           <div class="detail-row">
             <label for="locaties" class="detail-column-label">Locatie</label>
             <select name="locatie_id" id="locatie_id" class="detail-column">       
-              {% for l in locatie_list  %}
-                <option value="{{ l.id }}"
-                  {% if l.omschrijving == request.session.locatie_omschrijving %}
-                    selected
-                  {% endif %}
-                >{{ l.omschrijving }}</option>
-              {% endfor %}
+            {% for l in locatie_list %}
+              <option value="{{ l.id }}"
+                {% if l.omschrijving == request.session.locatie_omschrijving %}
+                  selected
+                {% endif %}
+              >{{ l.omschrijving }}</option>
+            {% endfor %}
             </select>
           </div>   <!-- end detail-row -->
         </div>  <!-- end detail-block -->
       </div>  <!-- end col -->
-      <div class="col-9 col-s-12">
+      <div class="col-10 col-s-15">
         <div class="detail-block">
           <div class="detail-row">
             <button type="submit">Wijzig</button>
@@ -31,9 +31,9 @@
         </div>  <!-- end detail-block -->
       </div>  <!-- end col -->
     </form>
-  </div>   <!-- end content-row -->
-
-  <div>
+  </div> <!-- end content-main -->   
+  <div id="content-main">
+  <div style="overflow-x:auto;">  
     <table>
       {% for o in bestelling_list %}
           {% if o == bestelling_list|first %} 
@@ -68,72 +68,79 @@
           <p>Er zijn GEEN bestellingen.</p>
       {% endfor %}
       </tbody>
-  </table>
+    </table>
+  </div>  <!-- end overflow-x -->
+
   <form method="post">{% csrf_token %}
     <input type="hidden" name='aantal_rgls' id="aantal_rgls" value="{{bestelregel_list|length}}">
     <h2>Bestelregels</h2>
+      <div style="overflow-x:auto;">  
       <table>
         {% for m in bestelregel_list %}
           {% if m == bestelregel_list|first %} 
             <thead>
               <tr>
-                <th>
+                <th class="col-4 col-s-10">
                   Wijn
                 </th>
-                <th>
+                <th class="col-4 col-s-10">
                   Deelnemer
                 </th>
-                <th>
-                  Vak
-                </th>
-                <th>
+                {% if loc_heeft_vakken %}
+                  <th class="col-1 col-s-2">
+                    Vak
+                  </th>
+                {% endif %}
+                <th class="col-1 col-s-2">
                   Aantal
                 </th>
-                <th>
+                <th class="col-2 col-s-4">
                   Verzameld
                 </th>
-                <th>
-                  Aantal correctie
+                <th class="col-2 col-s-4">
+                  Correctie
                 </th>
-                <th>
+                <th class="col-2 col-s-4">
                   Voorraad
                 </th>
-                <th>
+                <th class="col-3 col-s-4">
                   Opmerking
                 </th>
               </tr>
             </thead>
-          <tbody>
-        {% endif %}
-        <tr>
-          <td class = "{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
+            <tbody>
+          {% endif %}
+        <tr class="table-row">
+          <td class="col-4 col-s-10 {{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
             <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.volle_naam }}</a>
           </td>
-          <td>
-            {{ m.bestelling.deelnemer.naam }}
+          <td class="col-4 col-s-10">
+            <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.bestelling.deelnemer.naam }}</a>
           </td>
-          <td>
-            {{ m.vak.code|default:"---" }}
-          </td>
-          <td>
+          {% if loc_heeft_vakken %}
+            <td class="col-1 col-s-2">
+              {{ m.vak.code|default:"---" }}
+            </td>
+          {% endif %}
+          <td class="col-1 col-s-2">
             {{ m.aantal }}
           </td>
-          <td>
-          <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{ m.id }}">
-          <input type="checkbox" name="isVerzameld{{ forloop.counter }}" id="isVerzameld{{ forloop.counter }}" value="True"
+          <td class="col-2 col-s-4">
+            <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{ m.id }}">
+            <input type="checkbox" name="isVerzameld{{ forloop.counter }}" id="isVerzameld{{ forloop.counter }}" value="True"
             {% if m.isVerzameld %}checked{% endif %}/>
           </td>
-          <td>
+          <td class="col-2 col-s-4">
             <input type="number" name='aantal_correctie{{ forloop.counter }}' value="{{ m.aantal_correctie }}"
                   min="0" max="{{ m.aantal_vrd }}" id="aantal_correctie{{ forloop.counter }}"/>
           </td>
-          <td>
-            <div {% if m.aantal > m.aantal_vrd %} class="accent" {% endif %}>
+          <td class="col-2 col-s-4">
+            <div class="{% if m.aantal > m.aantal_vrd %} &nbsp accent {% endif %}">
               {{ m.aantal_vrd }}
-              </div>
+            </div>
           </td>
-          <td>
-            <input size='60' type="text" name='opmerking{{ forloop.counter }}' id="opmerking{{ forloop.counter }}"
+          <td class="col-3 col-s-4">
+            <input size="60" type="text" name='opmerking{{ forloop.counter }}' id="opmerking{{ forloop.counter }}"
             value="{{ m.opmerking }}" />
          </td>
         </tr>
@@ -141,8 +148,9 @@
         <p>Er zijn GEEN bestellingen.</p>
       {% endfor %}
     </table>
+    </div>   <!-- end overflow-x -->
     <input type="submit" name="Save" id="Save" value="Opslaan">
   </form>
-  </div>
+  </div>    <!-- end content-main -->
 {% endblock %}
 

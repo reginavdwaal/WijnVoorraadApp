@@ -9,7 +9,7 @@
         <form method="post" %}">
         {% csrf_token %}
           <input type="hidden" name='FilterPost' id="FilterPost" value="FilterPost">
-            <div class="col-3 col-s-12"> 
+            <div class="col-6 col-s-20"> 
                 <div class="detail-block">
                     <div class="detail-row">
                         <label for="locaties" class="detail-column-label">Locatie</label>
@@ -25,7 +25,7 @@
                     </div>   <!-- end detail-row -->
                 </div>  <!-- end detail-block -->
             </div>  <!-- end col -->
-            <div class="col-9 col-s-12">
+            <div class="col-14 col-s-20">
                 <div class="detail-block">
                     <div class="detail-row">
                         <button type="submit">Wijzig</button>
@@ -36,7 +36,7 @@
     </div>   <!-- end content-row -->
 
     <div class="content-row"> 
-        <div class="col-4 col-s-8">
+        <div class="col-6 col-s-10">
         <div class="detail-block">
 
         <table>
@@ -71,7 +71,7 @@
         </div>  <!-- end detail-block -->
         </div> <!-- end col -->
 
-        <div class="col-8 col-s-4">
+        <div class="col-14 col-s-10">
         <div class="detail-block">
         <table>
         {% for w in summary_wijnsoort_list %}
@@ -104,7 +104,7 @@
     </div>   <!-- end content-row -->
     <br class="clear">
 
-    <div class="content-row"> 
+    <div class="content-row" style="overflow-x:auto;"> 
         <table>
         {% for v in vakken_list %}
             {% if v == vakken_list|first %} 
@@ -160,6 +160,7 @@
     <br class="clear">
     <div class="content-row"> 
         <h2>Zonder vak</h2>
+        <div style="overflow-x:auto;">
         <table>
             <thead>
                 <tr>
@@ -192,6 +193,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>  <!-- end overflow -->
     </div>   <!-- end content-row -->
 
     </div>   <!-- end content-main -->

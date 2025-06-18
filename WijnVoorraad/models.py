@@ -192,31 +192,25 @@ class Wijn(models.Model):
             raise ValidationError("Teveel kopieën reeds aanwezig")
 
     def check_fuzzy_selectie(self, fuzzy_selectie):
-        voldoet = False
-        if fuzzy_selectie:
-            if fuzzy_selectie.lower() in self.naam.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.domein.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.wijnsoort.omschrijving.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in str(self.jaar):
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.land.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.streek.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.classificatie.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.opmerking.lower():
-                voldoet = True
-            elif self.wijnDruivensoorten.filter(
-                omschrijving__icontains=fuzzy_selectie
-            ).exists():
-                voldoet = True
-        else:
-            voldoet = True
-        return voldoet
+        """Check if the wine matches the fuzzy selection criteria."""
+        if not fuzzy_selectie:
+            return True
+        fs = fuzzy_selectie.lower()
+        fields = [
+            self.naam,
+            self.domein,
+            self.wijnsoort.omschrijving,
+            str(self.jaar),
+            self.land,
+            self.streek,
+            self.classificatie,
+            self.opmerking,
+        ]
+        if any(fs in (field or "").lower() for field in fields):
+            return True
+        if self.wijnDruivensoorten.filter(omschrijving__icontains=fs).exists():
+            return True
+        return False
 
     class Meta:
         ordering = [F("jaar").asc(nulls_last=True), Lower("domein"), Lower("naam")]
@@ -275,17 +269,19 @@ class Ontvangst(models.Model):
         return nieuwe_ontvangst.id
 
     def check_fuzzy_selectie(self, fuzzy_selectie):
-        voldoet = False
-        if fuzzy_selectie:
-            if fuzzy_selectie.lower() in self.leverancier.lower():
-                voldoet = True
-            elif fuzzy_selectie.lower() in self.opmerking.lower():
-                voldoet = True
-            elif self.wijn.check_fuzzy_selectie(fuzzy_selectie):
-                voldoet = True
-        else:
-            voldoet = True
-        return voldoet
+        if not fuzzy_selectie:
+            return True
+
+        fs = fuzzy_selectie.lower()
+        fields = [
+            self.leverancier,
+            self.opmerking,
+        ]
+        if any(fs in (field or "").lower() for field in fields):
+            return True
+
+        if self.wijn.check_fuzzy_selectie(fuzzy_selectie):
+            return True
 
     class Meta:
         ordering = ["-datumOntvangst", "deelnemer", "wijn"]
@@ -494,7 +490,7 @@ class Bestelling(models.Model):
         br1 = BestellingRegel.objects.filter(bestelling=self, isVerzameld=False)
         br2 = BestellingRegel.objects.filter(bestelling=self, verwerkt="N")
         if br1.count() == 0 and br2.count() == 0:
-            self.datumAfgesloten = datetime.now()
+            self.datumAfgesloten = date.today()
             self.save()
         elif self.datumAfgesloten:
             self.datumAfgesloten = None

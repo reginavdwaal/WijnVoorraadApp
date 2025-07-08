@@ -376,6 +376,7 @@ class VoorraadMutatie(models.Model):
         mutatie.datum = datetime.now()
         mutatie.aantal = 1
         mutatie.omschrijving = "Drinken"
+        mutatie.clean()
         mutatie.save()
 
     @staticmethod
@@ -497,9 +498,8 @@ class Bestelling(models.Model):
             regel.afboeken()
 
     def check_afsluiten(self):
-        br1 = BestellingRegel.objects.filter(bestelling=self, isVerzameld=False)
-        br2 = BestellingRegel.objects.filter(bestelling=self, verwerkt="N")
-        if br1.count() == 0 and br2.count() == 0:
+        br = BestellingRegel.objects.filter(bestelling=self, verwerkt="N")
+        if br.count() == 0:
             self.datumAfgesloten = date.today()
             self.save()
         elif self.datumAfgesloten:
@@ -516,7 +516,7 @@ class BestellingRegel(models.Model):
     ontvangst = models.ForeignKey(Ontvangst, on_delete=models.PROTECT)
     vak = models.ForeignKey(Vak, on_delete=models.PROTECT, null=True, blank=True)
     aantal = models.IntegerField(default=0)
-    opmerking = models.CharField(max_length=4000, blank=True)
+    opmerking = models.CharField(max_length=4000, null=True, blank=True)
     isVerzameld = models.BooleanField(default=False)
     aantal_correctie = models.IntegerField(null=True, blank=True)
 
@@ -681,6 +681,8 @@ class WijnVoorraad(models.Model):
         vrd.save()
         vrd.refresh_from_db()
         wijn = vrd.wijn
+        if vrd.aantal == 0:
+            vrd.delete()
         wijn.check_afsluiten()
 
     @staticmethod

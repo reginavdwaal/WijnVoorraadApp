@@ -157,9 +157,10 @@ class TestBestelling(SharedTestDataMixin, TestCase):
         ]
         self.assertEqual(bestellingen, expected_order)
 
-    def test_afsluiten_should_set_date_if_no_lines_not_verwerkt_and_not_verzameld(self):
+    @patch("WijnVoorraad.models.WijnVoorraad.Bijwerken_rsv_erbij", return_value=True)
+    def test_afsluiten_should_set_date_if_no_lines_not_verwerkt(self, _):
         """Test that afsluiten sets datumAfgesloten if no lines are not
-        verwerkt and not verzameld."""
+        verwerkt."""
         bestelling = self.create_bestelling(opmerking="Test afsluiten")
 
         # Initially, datumAfgesloten should be None
@@ -171,12 +172,23 @@ class TestBestelling(SharedTestDataMixin, TestCase):
         # Check that datumAfgesloten is set to today
         self.assertEqual(bestelling.datumAfgesloten, timezone.now().date())
 
+        self.create_bestellingregel(
+            bestelling,
+            ontvangst=self.ontvangst,
+            aantal=2,
+            is_verzameld=False,
+            verwerkt="N",
+        )
+
+        # Call afsluiten
+        bestelling.check_afsluiten()
+
+        # Check that datumAfgesloten is set to None
+        self.assertIsNone(bestelling.datumAfgesloten)
+
     @patch("WijnVoorraad.models.WijnVoorraad.Bijwerken_rsv_erbij", return_value=True)
-    def test_afsluiten_should_not_date_if_some_lines_not_verwerkt_and__none_not_verzameld(
-        self, _
-    ):
-        """Test that afsluiten does not set datumAfgesloten if some lines are not verwerkt
-        and none are verzameld."""
+    def test_afsluiten_should_not_date_if_some_lines_not_verwerkt(self, _):
+        """Test that afsluiten does not set datumAfgesloten if some lines are not verwerkt."""
         bestelling = self.create_bestelling(opmerking="Test afsluiten")
 
         # Create a regel that is not verzameld and not verwerkt
@@ -192,7 +204,7 @@ class TestBestelling(SharedTestDataMixin, TestCase):
             ontvangst=self.ontvangst,
             aantal=2,
             is_verzameld=False,
-            verwerkt="Y",
+            verwerkt="V",
         )
 
         # Initially, datumAfgesloten should be None
@@ -205,11 +217,13 @@ class TestBestelling(SharedTestDataMixin, TestCase):
         self.assertIsNone(bestelling.datumAfgesloten)
 
     @patch("WijnVoorraad.models.WijnVoorraad.Bijwerken_rsv_erbij", return_value=True)
-    def test_afsluiten_should_not_date_if_lines_verwerkt_and_one_not_verzameld(self, _):
-        # Test that afsluiten does not set datumAfgesloten if all lines are verwerkt
-        # and one is verzameld.
+    def test_afsluiten_should_set_date_if_lines_verwerkt(self, _):
+        # Test that afsluiten does set datumAfgesloten if all lines are verwerkt
 
         bestelling = self.create_bestelling(opmerking="Test afsluiten")
+
+        # Initially, datumAfgesloten should be None
+        self.assertIsNone(bestelling.datumAfgesloten)
 
         # Create a regel that is not verzameld and not verwerkt
         self.create_bestellingregel(
@@ -217,21 +231,19 @@ class TestBestelling(SharedTestDataMixin, TestCase):
             ontvangst=self.ontvangst,
             aantal=2,
             is_verzameld=True,
-            verwerkt="Y",
+            verwerkt="A",
         )
+
         self.create_bestellingregel(
             bestelling,
             ontvangst=self.ontvangst,
             aantal=2,
             is_verzameld=False,
-            verwerkt="Y",
+            verwerkt="A",
         )
-
-        # Initially, datumAfgesloten should be None
-        self.assertIsNone(bestelling.datumAfgesloten)
 
         # Call afsluiten
         bestelling.check_afsluiten()
 
-        # Check that datumAfgesloten is still None
-        self.assertIsNone(bestelling.datumAfgesloten)
+        # Check that datumAfgesloten is set to today
+        self.assertEqual(bestelling.datumAfgesloten, timezone.now().date())

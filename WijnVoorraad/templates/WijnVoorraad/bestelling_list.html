@@ -24,6 +24,15 @@
                     Van locatie
                 </th>
                 <th>
+                    # flessen
+                </th>
+                <th>
+                    # verzameld
+                </th>
+                <th>
+                    # verwerkt
+                </th>
+                <th>
                     Datum afgesloten
                 </th>
             </tr>
@@ -41,6 +50,15 @@
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.vanLocatie.omschrijving}}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.tot_aantal|default_if_none:"" }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.aantal_verzameld|default_if_none:"" }}</a>
+                </td>
+                <td>
+                    <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.aantal_verwerkt|default_if_none:"" }}</a>
                 </td>
                 <td>
                     <a href="{% url 'WijnVoorraad:bestellingdetail' o.id %}">{{ o.datumAfgesloten|default:"-"}}</a>

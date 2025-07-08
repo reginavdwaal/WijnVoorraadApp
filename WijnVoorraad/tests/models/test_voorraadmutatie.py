@@ -186,7 +186,8 @@ class TestVoorraadMutatie(SharedTestDataMixin, TestCase):
         voorraad_mutatie = VoorraadMutatie.objects.create(
             ontvangst=self.ontvangst,
             aantal=10,
-            actie="toevoegen",
+            in_uit="I",
+            actie="K",
             datum=timezone.now().date(),
             locatie=self.locatie,
         )
@@ -206,7 +207,8 @@ class TestVoorraadMutatie(SharedTestDataMixin, TestCase):
         voorraad_mutatie = VoorraadMutatie.objects.create(
             ontvangst=self.ontvangst,
             aantal=10,
-            actie="toevoegen",
+            in_uit="I",
+            actie="K",
             datum=timezone.now().date(),
             locatie=self.locatie,
             vak=self.vak_a1,

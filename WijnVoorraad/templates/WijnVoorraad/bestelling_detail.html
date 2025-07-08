@@ -33,6 +33,10 @@
             <label class="detail-column">{{ bestelling.opmerking }}</label>
         </div>
         <div class="detail-row">
+            <label class="detail-column-label"># flessen</label>
+            <label class="detail-column">{{ tot_aantal }}</label>
+        </div>
+        <div class="detail-row">
             <label class="detail-column-label">Datum afgesloten</label>
             <label class="detail-column">{{ bestelling.datumAfgesloten|default:"-" }}</label>
         </div>
@@ -60,6 +64,14 @@
                 <input type="submit" name="Selecteren" value="Voorraad selecteren"></input>
             </form>
         </div>  <!-- end buttons-block -->
+        {% if not AllVerzameld %}
+            <div class="buttons-block">
+                <form method="get" action="{% url 'WijnVoorraad:bestellingverzamelendetail' object.id %}">
+                    {% csrf_token %}
+                    <input type="submit" name="Verzamelen" value="Verzamelen"></input>
+                </form>
+            </div>  <!-- end buttons-block -->
+        {% endif %}
     {% endif %}
     {% if VerzameldeOnverwerkteRegels %}
         <div class="buttons-block">
@@ -160,7 +172,7 @@
                     {{ m.get_verwerkt_display }}
                 </td>
                 <td>
-                    {{ m.opmerking }}
+                    {{ m.opmerking|default_if_none:"" }}
                 </td>
                 <td>
                     <form id="update-form" method="get" action="{% url 'WijnVoorraad:bestellingregel-update' m.id  %}">

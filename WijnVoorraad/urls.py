@@ -259,9 +259,14 @@ urlpatterns = [
         name="bestellingregel-update",
     ),
     path(
-        "bestellingverzamelen/",
-        views.BestellingVerzamelen.as_view(),
-        name="bestellingverzamelen",
+        "bestellingenverzamelen/",
+        views.BestellingenVerzamelen.as_view(),
+        name="bestellingenverzamelen",
+    ),
+    path(
+        "bestellingverzamelendetail/<int:pk>/",
+        views.BestellingVerzamelenDetail.as_view(),
+        name="bestellingverzamelendetail",
     ),
     path(
         "bestellingregelverplaatsen/<int:pk>",

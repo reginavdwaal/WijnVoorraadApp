@@ -1,0 +1,122 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block breadcrumbs_extra %}
+&rsaquo;<a href="{% url 'WijnVoorraad:bestellingenverzamelen' %}">Bestellingen verzamelen</a>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <div class="detail-block">
+        <div class="detail-row">
+            <label class="detail-column-label">Van locatie</label>
+            <label class="detail-column">
+                {{  bestelling.vanLocatie.omschrijving }}
+            </label>
+        </div>
+          <div class="detail-row">
+            <label class="detail-column-label">Deelnemer</label> 
+            <label class="detail-column">{{  bestelling.deelnemer.naam }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label">Opmerking</label>
+            <label class="detail-column">{{ bestelling.opmerking }}</label>
+        </div>
+        <div class="detail-row">
+            <label class="detail-column-label"># flessen</label>
+            <label class="detail-column">{{ tot_aantal }}</label>
+        </div>
+    </div>  <!-- end detail-block -->
+  <div class="buttons-block">
+    <form method="get" action="{% url 'WijnVoorraad:bestellingdetail' bestelling.id %}">
+      {% csrf_token %}
+      <input type="submit" name="Afronden" value="Afronden"></input>
+    </form>
+  </div>  <!-- end buttons-block -->
+</div>  <!-- end content-main -->
+
+<div id="content-main">
+<form method="post">{% csrf_token %}
+    <input type="hidden" name='aantal_rgls' id="aantal_rgls" value="{{ bestelregel_list|length }}">
+    <h2>Bestelregels</h2>
+      <div style="overflow-x:auto;">  
+      <table>
+        {% for m in bestelregel_list %}
+          {% if m == bestelregel_list|first %} 
+            <thead>
+              <tr>
+                <th>
+                  Wijn
+                </th>
+                {% if loc_heeft_vakken %}
+                  <th>
+                    Vak
+                  </th>
+                {% endif %}
+                <th>
+                  Aantal
+                </th>
+                <th>
+                  Verzameld
+                </th>
+                <th>
+                  Correctie
+                </th>
+                <th>
+                  Voorraad
+                </th>
+                <th>
+                  Opmerking
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+          {% endif %}
+        <tr>
+          <td class="{{ m.ontvangst.wijn.wijnsoort.style_css_class }}">
+            <input type="hidden" name='bestellingregel_id{{ forloop.counter }}' id="bestellingregel_id{{ forloop.counter }}" value="{{ m.id }}">
+            <a href="{% url 'WijnVoorraad:ontvangstdetail' m.ontvangst.id %}">{{ m.ontvangst.wijn.volle_naam }}</a>
+          </td>
+          {% if loc_heeft_vakken %}
+            <td>
+              {{ m.vak.code|default:"---" }}
+            </td>
+          {% endif %}
+          <td>
+            {{ m.aantal }}
+          </td>
+          {% if m.verwerkt == "N" %}
+            <td>
+              <input type="checkbox" name="isVerzameld{{ forloop.counter }}" id="isVerzameld{{ forloop.counter }}" value="True"
+              {% if m.isVerzameld %}checked{% endif %}/>
+            </td>
+            <td>
+              <input type="number" name='aantal_correctie{{ forloop.counter }}' value="{{ m.aantal_correctie }}"
+                    min="0" max="{{ m.aantal_vrd }}" id="aantal_correctie{{ forloop.counter }}"/>
+            </td>
+            <td>
+              <div class="{% if m.aantal > m.aantal_vrd %} &nbsp accent {% endif %}">
+                {{ m.aantal_vrd }}
+              </div>
+            </td>
+            <td>
+              <input size="60" type="text" name='opmerking{{ forloop.counter }}' id="opmerking{{ forloop.counter }}"
+              value="{{ m.opmerking }}" />
+           </td>
+          {% else %}
+            <td colspan=4">
+              Is al verwerkt
+            </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <p>Er zijn GEEN bestellingen.</p>
+      {% endfor %}
+    </table>
+    </div>   <!-- end overflow-x -->
+    <input type="submit" name="Save" id="Save" value="Opslaan">
+  </form>
+  </div>    <!-- end content-main -->
+{% endblock %}
+

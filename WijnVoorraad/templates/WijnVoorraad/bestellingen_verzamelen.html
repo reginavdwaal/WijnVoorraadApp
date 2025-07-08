@@ -1,0 +1,82 @@
+{% extends "./base.html" %}
+{% load i18n static %}
+{% load wijnvoorraad_extras %}
+
+{% block content %}
+  <div id="content-main">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name='FilterPost' id="FilterPost" value="FilterPost">
+      <div class="form-row">
+        <label for="locaties" class="detail-column-label">Locatie</label>
+        <select name="locatie_id" id="locatie_id" class="detail-column">       
+        {% for l in locatie_list %}
+          <option value="{{ l.id }}"
+            {% if l.omschrijving == request.session.locatie_omschrijving %}
+              selected
+            {% endif %}
+          >{{ l.omschrijving }}</option>
+        {% endfor %}
+        </select>
+        <button type="submit">Wijzig</button>
+      </div>   <!-- form-row -->
+    </form>
+  <br class="clear">
+  <div style="overflow-x:auto;">  
+    <table>
+      {% for o in bestelling_list %}
+          {% if o == bestelling_list|first %} 
+          <thead>
+          <tr>
+              <th>
+                  Deelnemer
+              </th>
+              <th>
+                  Datum aangemaakt
+              </th>
+              <th>
+                  # flessen
+              </th>
+              <th>
+                  # verzameld
+              </th>
+              <th>
+                  # verwerkt
+              </th>
+              <th>
+                Opmerking
+              </th>
+          </tr>
+          </thead>
+          <tbody>
+          {% endif %}
+          <tr>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.deelnemer.naam }}</a>
+              </td>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.datumAangemaakt }}</a>
+              </td>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.tot_aantal|default_if_none:"" }}</a>
+              </td>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.aantal_verzameld|default_if_none:"" }}</a>
+              </td>
+              <td>
+                  <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.aantal_verwerkt|default_if_none:"" }}</a>
+              </td>
+              <td>
+                <a href="{% url 'WijnVoorraad:bestellingverzamelendetail' o.id %}">{{ o.opmerking }}</a>
+            </td>
+        </tr>
+      {% empty %}
+          <tbody>
+          <p>Er zijn GEEN bestellingen.</p>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>  <!-- end overflow-x -->
+  </div>    <!-- end content-main -->
+{% endblock %}
+

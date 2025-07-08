@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import F, Sum, Count
+from django.db.models import F, Sum, Count, Case, When
 from django.db.models.functions import Lower
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
@@ -236,11 +236,22 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
         voorraad = WijnVoorraad.objects.get(pk=v_id)
         if "Drinken" in self.request.POST:
             wijn = voorraad.wijn
-            voorraad.drinken()
-            messages.success(
-                request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
-            )
-            return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
+            try:
+                voorraad.drinken()
+                messages.success(
+                    request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
+                )
+                url = reverse("WijnVoorraad:voorraadlist")
+            except ValidationError as e:
+                messages.error(request, e.message)
+                l = self.kwargs["locatie_id"]
+                w = self.kwargs["wijn_id"]
+                o = self.kwargs["ontvangst_id"]
+                url = reverse(
+                    "WijnVoorraad:voorraaddetail",
+                    kwargs=dict(locatie_id=l, wijn_id=w, ontvangst_id=o),
+                )
+            return HttpResponseRedirect(url)
         elif "Afboeken" in self.request.POST:
             o_id = voorraad.ontvangst.id
             url = reverse(
@@ -1177,7 +1188,10 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        br = BestellingRegel.objects.filter(bestelling=self.object)
+        br = BestellingRegel.objects.filter(bestelling=self.object).order_by(
+            "ontvangst__wijn",
+            "ontvangst__datumOntvangst",
+        )
         vakken = Vak.objects.filter(locatie=self.object.vanLocatie)
         if vakken:
             loc_heeft_vakken = True
@@ -1208,7 +1222,21 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
                 regel.aantal_vrd = 0
                 regel.aantal_vrd_rsv = 0
             regels.append(regel)
+
+        br_aggr = br.aggregate(
+            tot_aantal=Sum(
+                Case(
+                    When(
+                        aantal_correctie__isnull=False,
+                        then=F("aantal_correctie"),
+                    ),
+                    default=F("aantal"),
+                )
+            ),
+        )
+
         context["regels"] = regels
+        context["tot_aantal"] = br_aggr["tot_aantal"]
         context["VerzameldeOnverwerkteRegels"] = VerzameldeOnverwerkteRegels
         context["AllVerzameld"] = AllVerzameld
         context["AllVerwerkt"] = AllVerwerkt
@@ -1264,17 +1292,74 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
 
 class BestellingListView(LoginRequiredMixin, ListView):
     model = Bestelling
+    template_name = "WijnVoorraad/bestelling_list.html"
     context_object_name = "bestelling_list"
 
     def get_queryset(self):
         wijnvars.set_filter_options(self.request, True, True, True, True, False, False)
-        bestelling_list = Bestelling.objects.all()
+        bestellingen = Bestelling.objects.all()
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         if d:
-            bestelling_list = bestelling_list.filter(deelnemer=d)
+            bestellingen = bestellingen.filter(deelnemer=d)
         if l:
-            bestelling_list = bestelling_list.filter(vanLocatie=l)
+            bestellingen = bestellingen.filter(vanLocatie=l)
+
+        bestelling_list = []
+        for bestelling in bestellingen:
+            bestellingregels = BestellingRegel.objects.filter(
+                bestelling=bestelling,
+            ).aggregate(
+                tot_aantal=Sum(
+                    Case(
+                        When(
+                            aantal_correctie__isnull=False,
+                            then=F("aantal_correctie"),
+                        ),
+                        default=F("aantal"),
+                    )
+                ),
+            )
+
+            br_verzameld = BestellingRegel.objects.filter(
+                bestelling=bestelling,
+                verwerkt="N",
+                isVerzameld=True,
+            ).aggregate(
+                aantal_verzameld=Sum(
+                    Case(
+                        When(
+                            aantal_correctie__isnull=False,
+                            then=F("aantal_correctie"),
+                        ),
+                        default=F("aantal"),
+                    )
+                ),
+            )
+
+            br_verwerkt = (
+                BestellingRegel.objects.filter(
+                    bestelling=bestelling,
+                )
+                .exclude(verwerkt="N")
+                .aggregate(
+                    aantal_verwerkt=Sum(
+                        Case(
+                            When(
+                                aantal_correctie__isnull=False,
+                                then=F("aantal_correctie"),
+                            ),
+                            default=F("aantal"),
+                        )
+                    ),
+                )
+            )
+
+            bestelling.tot_aantal = bestellingregels["tot_aantal"] or 0
+            bestelling.aantal_verzameld = br_verzameld["aantal_verzameld"]
+            bestelling.aantal_verwerkt = br_verwerkt["aantal_verwerkt"]
+            bestelling_list.append(bestelling)
+
         return bestelling_list
 
     def get_context_data(self, **kwargs):
@@ -1400,6 +1485,7 @@ class BestellingRegelsSelecteren(LoginRequiredMixin, ListView):
                     v_nieuwe_bestelregel.ontvangst = voorraad.ontvangst
                     v_nieuwe_bestelregel.vak = voorraad.vak
                     v_nieuwe_bestelregel.aantal = v_aantal_bestellen
+                    v_nieuwe_bestelregel.opmerking = ""
                     v_nieuwe_bestelregel.save()
                     aantal_regels += 1
             messages.success(request, "%s bestelregel(s) verwerkt" % (aantal_regels,))
@@ -1424,10 +1510,10 @@ class BestellingRegelUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class BestellingVerzamelen(LoginRequiredMixin, ListView):
-    model = BestellingRegel
-    template_name = "WijnVoorraad/bestelling_verzamelen.html"
-    context_object_name = "bestelregel_list"
+class BestellingenVerzamelen(LoginRequiredMixin, ListView):
+    model = Bestelling
+    template_name = "WijnVoorraad/bestellingen_verzamelen.html"
+    context_object_name = "bestelling_list"
     success_url = reverse_lazy("WijnVoorraad:voorraadlist")
 
     def get_queryset(self):
@@ -1435,10 +1521,109 @@ class BestellingVerzamelen(LoginRequiredMixin, ListView):
             self.request, False, True, True, False, False, False
         )
         l = wijnvars.get_session_locatie(self.request)
+        bestellingen = Bestelling.objects.filter(
+            vanLocatie=l, datumAfgesloten__isnull=True
+        )
+        bestelling_list = []
+        for bestelling in bestellingen:
+            bestellingregels = BestellingRegel.objects.filter(
+                bestelling=bestelling,
+            ).aggregate(
+                tot_aantal=Sum(
+                    Case(
+                        When(
+                            aantal_correctie__isnull=False,
+                            then=F("aantal_correctie"),
+                        ),
+                        default=F("aantal"),
+                    )
+                ),
+            )
+
+            br_verzameld = BestellingRegel.objects.filter(
+                bestelling=bestelling,
+                verwerkt="N",
+                isVerzameld=True,
+            ).aggregate(
+                aantal_verzameld=Sum(
+                    Case(
+                        When(
+                            aantal_correctie__isnull=False,
+                            then=F("aantal_correctie"),
+                        ),
+                        default=F("aantal"),
+                    )
+                ),
+            )
+
+            br_verwerkt = (
+                BestellingRegel.objects.filter(
+                    bestelling=bestelling,
+                )
+                .exclude(verwerkt="N")
+                .aggregate(
+                    aantal_verwerkt=Sum(
+                        Case(
+                            When(
+                                aantal_correctie__isnull=False,
+                                then=F("aantal_correctie"),
+                            ),
+                            default=F("aantal"),
+                        )
+                    ),
+                )
+            )
+
+            bestelling.tot_aantal = bestellingregels["tot_aantal"] or 0
+            bestelling.aantal_verzameld = br_verzameld["aantal_verzameld"]
+            bestelling.aantal_verwerkt = br_verwerkt["aantal_verwerkt"]
+            bestelling_list.append(bestelling)
+
+        return bestelling_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wijnvars.set_context_filter_options(
+            context, self.request, "WijnVoorraad:bestellingenverzamelen"
+        )
+        wijnvars.set_context_locatie_list(context)
+        l = wijnvars.get_session_locatie(self.request)
+        vakken = Vak.objects.filter(locatie=l)
+        if vakken:
+            loc_heeft_vakken = True
+        else:
+            loc_heeft_vakken = False
+        context["locatie"] = l
+        context["loc_heeft_vakken"] = loc_heeft_vakken
+        context["title"] = "Bestellingen verzamelen"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "FilterPost" in request.POST:
+            l_id = request.POST["locatie_id"]
+            wijnvars.set_session_locatie(request, l_id)
+            wijnvars.handle_filter_options_post(request)
+        url = reverse("WijnVoorraad:bestellingenverzamelen")
+        return HttpResponseRedirect(url)
+
+
+class BestellingVerzamelenDetail(LoginRequiredMixin, DetailView):
+    model = Bestelling
+    template_name = "WijnVoorraad/bestelling_verzamelen_detail.html"
+    context_object_name = "bestelling"
+    success_url = reverse_lazy("WijnVoorraad:bestellingenverzamelen")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        l = wijnvars.get_session_locatie(self.request)
+        vakken = Vak.objects.filter(locatie=l)
+        if vakken:
+            loc_heeft_vakken = True
+        else:
+            loc_heeft_vakken = False
+
         br = BestellingRegel.objects.filter(
-            bestelling__vanLocatie=l,
-            verwerkt="N",
-            bestelling__datumAfgesloten__isnull=True,
+            bestelling=self.object,
         ).order_by(
             "ontvangst__wijn",
             "ontvangst__datumOntvangst",
@@ -1457,64 +1642,50 @@ class BestellingVerzamelen(LoginRequiredMixin, ListView):
                 regel.aantal_vrd = 0
             bestelregel_list.append(regel)
 
-        return bestelregel_list
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        wijnvars.set_context_filter_options(
-            context, self.request, "WijnVoorraad:bestellingverzamelen"
+        br_aggr = br.aggregate(
+            tot_aantal=Sum(
+                Case(
+                    When(
+                        aantal_correctie__isnull=False,
+                        then=F("aantal_correctie"),
+                    ),
+                    default=F("aantal"),
+                )
+            ),
         )
-        wijnvars.set_context_locatie_list(context)
-        l = wijnvars.get_session_locatie(self.request)
-        vakken = Vak.objects.filter(locatie=l)
-        if vakken:
-            loc_heeft_vakken = True
-        else:
-            loc_heeft_vakken = False
-        bestelling_list = Bestelling.objects.filter(
-            vanLocatie=l, datumAfgesloten__isnull=True
-        )
-        context["locatie"] = l
         context["loc_heeft_vakken"] = loc_heeft_vakken
-        context["bestelling_list"] = bestelling_list
-        context["title"] = "Bestellingen verzamelen"
+        context["bestelregel_list"] = bestelregel_list
+        context["tot_aantal"] = br_aggr["tot_aantal"]
+        context["title"] = "Bestelling verzamelen"
         return context
 
     def post(self, request, *args, **kwargs):
-        if "FilterPost" in request.POST:
-            l_id = request.POST["locatie_id"]
-            wijnvars.set_session_locatie(request, l_id)
-            wijnvars.handle_filter_options_post(request)
-            url = reverse(
-                "WijnVoorraad:bestellingverzamelen",
-            )
+        aantal_rgls = request.POST["aantal_rgls"]
+        try:
+            aantal_rgls_int = int(aantal_rgls)
+        except ValueError:
+            aantal_rgls_int = 0
+        for i in range(1, aantal_rgls_int + 1):
+            br_id = request.POST["bestellingregel_id" + str(i)]
+            br_isVerzameld = request.POST.get("isVerzameld" + str(i))
+            br_aantal_correctie = request.POST.get("aantal_correctie" + str(i))
+            br_opmerking = request.POST.get("opmerking" + str(i))
+            if br_id:
+                br = BestellingRegel.objects.get(pk=br_id)
+                br.isVerzameld = br_isVerzameld == "True"
+                if br_aantal_correctie:
+                    br.aantal_correctie = int(br_aantal_correctie)
+                else:
+                    br.aantal_correctie = None
+                br.opmerking = br_opmerking
+                try:
+                    br.save()
+                except ValidationError as e:
+                    messages.error(request, e.message)
+        if messages.get_messages(request):
+            url = reverse("WijnVoorraad:bestellingverzamelendetail")
         else:
-            aantal_rgls = request.POST["aantal_rgls"]
-            try:
-                aantal_rgls_int = int(aantal_rgls)
-            except ValueError:
-                aantal_rgls_int = 0
-            for i in range(1, aantal_rgls_int + 1):
-                br_id = request.POST["bestellingregel_id" + str(i)]
-                br_isVerzameld = request.POST.get("isVerzameld" + str(i))
-                br_aantal_correctie = request.POST["aantal_correctie" + str(i)]
-                br_opmerking = request.POST["opmerking" + str(i)]
-                if br_id:
-                    br = BestellingRegel.objects.get(pk=br_id)
-                    br.isVerzameld = br_isVerzameld == "True"
-                    if br_aantal_correctie:
-                        br.aantal_correctie = int(br_aantal_correctie)
-                    else:
-                        br.aantal_correctie = None
-                    br.opmerking = br_opmerking
-                    try:
-                        br.save()
-                    except ValidationError as e:
-                        messages.error(request, e.message)
-            if messages.get_messages(request):
-                url = reverse("WijnVoorraad:bestellingverzamelen")
-            else:
-                url = reverse("WijnVoorraad:bestellinglist")
+            url = reverse("WijnVoorraad:bestellingenverzamelen")
         return HttpResponseRedirect(url)
 
 

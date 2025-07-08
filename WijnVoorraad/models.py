@@ -531,7 +531,7 @@ class BestellingRegel(models.Model):
     verwerkt = models.CharField(max_length=1, default="N", choices=verwerkt_choices)
 
     def __str__(self):
-        return "%s - %s " % (
+        return "%s - %s" % (
             self.bestelling,
             self.ontvangst.wijn,
         )

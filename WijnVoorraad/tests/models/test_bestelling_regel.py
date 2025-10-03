@@ -274,8 +274,105 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
         regel.refresh_from_db()
         self.assertEqual(regel.verwerkt, "A")
 
-    # igonre test, not needed
-    @unittest.skip("Not implemented yet")
-    def test_expected_result_when_delete_regel_does_not_exist(self, _):
-        """Delete throws exception, None statement is not needed."""
-        self.assertFalse("This test is not implemented yet.")
+    @patch("WijnVoorraad.models.WijnVoorraad.check_voorraad_rsv")
+    def test_expected_result_when_delete_regel_does_not_exist(
+        self, mock_check_voorraad_rsv, mock_bijwerken_rsv
+    ):
+        bestelling = self.create_bestelling()
+        # Create a BestellingRegel instance without saving it to the database
+        regel = BestellingRegel(
+            bestelling=bestelling,
+            ontvangst=self.ontvangst,
+            vak=self.vak_a1,
+            aantal=1,
+            opmerking="",
+        )
+
+        # Attempt to delete again should raise ValueError
+        with self.assertRaises(ValueError):
+            regel.delete()
+
+        # Validate that check_voorraad_rsv was called with (None, None)
+        mock_check_voorraad_rsv.assert_any_call(None, None)
+        # Validate that bijwerken_rsv was called with (None, None)
+        mock_bijwerken_rsv.assert_any_call(None, None)
+
+    def test_regel_verplaatsen_calls_mutatie_verplaatsen_if_not_processed(self, _):
+        """Test that regel_verplaatsen calls VoorraadMutatie.verplaatsen if not processed."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
+
+        # make new locatie and vak
+        new_locatie = self.create_locatie("B")
+        new_vak = self.create_vak("B10", 10, new_locatie)
+
+        with patch(
+            "WijnVoorraad.models.VoorraadMutatie.verplaatsen"
+        ) as mock_verplaatsen:
+            regel.verplaatsen(new_locatie, new_vak, 5)
+
+            # Check that verplaatsen was called with the correct parameters
+            mock_verplaatsen.assert_called_once_with(
+                regel.ontvangst,
+                bestelling.vanLocatie,
+                regel.vak,
+                new_locatie,
+                new_vak,
+                regel.aantal,
+            )
+
+    def test_regel_verplaatsen_does_not_calls_mutatie_verplaatsen_if_processed(self, _):
+        """Test that regel_verplaatsen does not call VoorraadMutatie.verplaatsen if processed."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(
+            bestelling=bestelling, aantal=5, verwerkt="A"
+        )
+
+        nieuwe_vak = self.create_vak("B", 1)
+
+        with patch(
+            "WijnVoorraad.models.VoorraadMutatie.verplaatsen"
+        ) as mock_verplaatsen:
+            regel.verplaatsen(bestelling.vanLocatie, nieuwe_vak, 1)
+
+            # Check that verplaatsen was not called
+            mock_verplaatsen.assert_not_called()
+
+    def test_regel_verplaatsen_updates_by_default(self, _):
+        """Test that regel_verplaatsen updates the vak and calls Bijwerken_rsv."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
+
+        nieuwe_vak = self.create_vak("B", 1)
+
+        regel.verplaatsen(bestelling.vanLocatie, nieuwe_vak, 1)
+
+        regel.refresh_from_db()
+        # Check that the vak was updated
+        self.assertEqual(regel.verwerkt, "V")
+
+    def test_regel_verplaatsen_updates_if_set(self, _):
+        """Test that regel_verplaatsen updates the vak and calls Bijwerken_rsv."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
+
+        nieuwe_vak = self.create_vak("B", 1)
+
+        regel.verplaatsen(bestelling.vanLocatie, nieuwe_vak, 1, True)
+
+        # Check that the vak was updated
+        regel.refresh_from_db()
+        self.assertEqual(regel.verwerkt, "V")
+
+    def test_regel_verplaatsen_does_not_update(self, _):
+        """Test that regel_verplaatsen updates the vak and calls Bijwerken_rsv."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
+
+        nieuwe_vak = self.create_vak("B", 1)
+
+        regel.verplaatsen(bestelling.vanLocatie, nieuwe_vak, 1, False)
+
+        regel.refresh_from_db()
+        # Check that the vak was updated
+        self.assertEqual(regel.verwerkt, "N")

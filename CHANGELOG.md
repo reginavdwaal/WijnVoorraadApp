@@ -1,3 +1,32 @@
+## v0.17.0 (2025-10-02)
+
+### BREAKING CHANGE
+
+- #10
+
+### Feat
+
+- Bestelling verzamelen
+- mutatie omschrijving
+- styling
+- Veld Opmerkingen 4000
+- **Voorraadcontroleren afgerond**: VoorraadControleren
+- Voorraadcontroleren
+- **Bestellingregel verplaatsen**: Bestellingregel verplaatsen
+- **bestelling**: Bestelling
+- **Conversie oude wijndb verwijderd**: Conversie oude wijndb verwijderd
+
+### Fix
+
+- Verplaatsen bestelregels
+- div. verbeteringen
+
+### Refactor
+
+- **test**: Improved readebility bestelling order test
+- **models**: Cleaned Warnings and added tests
+- **models**: Fixed warnings in models and squashed migrations
+
 ## v0.16.0 (2025-04-13)
 
 ### Feat

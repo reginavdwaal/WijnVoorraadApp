@@ -69,6 +69,7 @@ class VoorraadFilterForm(forms.Form):
         WijnSoort.objects, empty_label="----------", required=False
     )
     fuzzy_selectie = forms.CharField(max_length=200, required=False)
+    sortering = forms.ChoiceField(choices=wijnvars.SorteringEnum.choices)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
@@ -76,6 +77,7 @@ class VoorraadFilterForm(forms.Form):
         bool_locatie = wijnvars.get_bool_locatie(self.request)
         bool_wijnsoort = wijnvars.get_bool_wijnsoort(self.request)
         bool_fuzzy = wijnvars.get_bool_fuzzy(self.request)
+        bool_sortering = wijnvars.get_bool_sortering(self.request)
         allow_all_deelnemers = wijnvars.get_allow_all_deelnemers(self.request)
         allow_all_locaties = wijnvars.get_allow_all_locaties(self.request)
         super(VoorraadFilterForm, self).__init__(*args, **kwargs)
@@ -93,6 +95,8 @@ class VoorraadFilterForm(forms.Form):
             del self.fields["wijnsoort"]
         if not bool_fuzzy:
             del self.fields["fuzzy_selectie"]
+        if not bool_sortering:
+            del self.fields["sortering"]
 
 
 class OntvangstCreateForm(forms.ModelForm):

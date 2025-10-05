@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function toUpper(str) {
+    // Capitalize the first letter of each word in a string
+    // Check if the input is a valid string
+    if (typeof str !== 'string' || str.length === 0) {
+        return str; // Return the original input if it's not a valid string
+    }
     return str
         .toLowerCase()
         .split(' ')
@@ -21,12 +26,16 @@ function toUpper(str) {
 
 function populateForm(data) {
     ovData = JSON.parse(data);
-    document.getElementById('id_domein').value = toUpper(ovData.domain);
+
+    document.getElementById('id_domein').value = toUpper(ovData.wine_domain);
     document.getElementById('id_naam').value = toUpper(ovData.name);
     document.getElementById('id_jaar').value = ovData.year;
     document.getElementById('id_land').value = ovData.country;
     document.getElementById('id_streek').value = ovData.region;
     document.getElementById('id_classificatie').value = ovData.classification;
+    document.getElementById('id_opmerking').value = ovData.description;
+    document.getElementById('id_website').value = ovData.domain_website_url;
+    
 
     // Dynamically select the wine type in the combobox
     const wijnsoortSelect = document.getElementById('id_wijnsoort');

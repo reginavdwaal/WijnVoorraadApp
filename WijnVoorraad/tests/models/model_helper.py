@@ -103,3 +103,23 @@ class SharedTestDataMixin:
         )
         regel.save()
         return regel
+
+    def create_locatie(self, omschrijving, aantal_kolommen=3):
+        """
+        Helper to create a Locatie with specified parameters.
+        """
+        locatie = Locatie.objects.create(
+            omschrijving=omschrijving, aantal_kolommen=aantal_kolommen
+        )
+        locatie.save()
+        return locatie
+
+    def create_vak(self, code, capaciteit, locatie=None):
+        """
+        Helper to create a Vak with specified parameters.
+        """
+        if not locatie:
+            locatie = self.locatie
+        vak = Vak.objects.create(locatie=locatie, code=code, capaciteit=capaciteit)
+        vak.save()
+        return vak

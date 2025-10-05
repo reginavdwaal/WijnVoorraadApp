@@ -78,7 +78,9 @@ WineTypeEnum = generate_wine_type_enum()
 
 
 class WineInfo(BaseModel):
-    domain: str
+    """structured response model for wine information to be used with OpenAI"""
+
+    wine_domain: str
     year: int
     name: str
     grape_varieties: list[str]
@@ -86,13 +88,8 @@ class WineInfo(BaseModel):
     wine_type: str  # Use str for OpenAI compatibility
     region: str
     classification: str
-
-    # @field_validator("wine_type")
-    # def wine_type_must_be_valid(cls, v):
-    #    valid_types = [e.value for e in WineTypeEnum]
-    #    if v not in valid_types:
-    #        raise ValueError(f"Invalid wine_type: {v}. Allowed: {valid_types}")
-    #    return v
+    domain_website_url: str
+    description: str
 
 
 class AdminUserMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -1089,6 +1086,7 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class AIview(View):
+    """View to handle AI image wine recognition"""
 
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -1100,6 +1098,10 @@ class AIview(View):
             f"The allowed wine types are: {allowed_types_str}. "
             "Always use one of these values for the wine type field. "
             "You know the wine type, grape varieties, country, region, and classification of wines. "
+            "Search websites like Vivino, Wine-Searcher, and others to find the best information. "
+            "If you are sure aboute the domain, find the domain website and if possible validate the information there. "
+            "A domain website typically has the domain in its url."
+            "From the websites, domain and other also try to find description, taste, and food pairing information. Add references to the websites you used. "
             "You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'"
         )
 
@@ -1109,7 +1111,7 @@ class AIview(View):
 
             # Use GPT-4 Vision to ask a question about the image
             response = client.beta.chat.completions.parse(
-                model="gpt-4o-mini",  # Use GPT-4 with Vision support
+                model="o4-mini",  # Use GPT-4 with Vision support
                 messages=[
                     {
                         "role": "system",
@@ -1120,7 +1122,7 @@ class AIview(View):
                         "content": [
                             {
                                 "type": "text",
-                                "text": "What wine is in this picture?",
+                                "text": "Find all information of the wine in this picture?",
                             },
                             {
                                 "type": "image_url",
@@ -1132,7 +1134,7 @@ class AIview(View):
                     },
                 ],
                 response_format=WineInfo,
-                max_tokens=300,
+                max_completion_tokens=5000,
             )
 
         except APIError as e:
@@ -1171,6 +1173,12 @@ class AIview(View):
             # Translate the "country" field
             if "country" in response_json:
                 response_json["country"] = translate_to_dutch(response_json["country"])
+
+            # translate description field
+            if "description" in response_json:
+                response_json["description"] = translate_to_dutch(
+                    response_json["description"]
+                )
 
             # Convert the modified JSON back to a string
             translated_response = json.dumps(response_json)

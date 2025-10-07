@@ -436,6 +436,19 @@ class VoorraadMutatie(models.Model):
         mutatie.clean()
         mutatie.save()
 
+    @staticmethod
+    def mutation_refer_to_same_voorraad(mutatuin_one, mutation_two):
+        """Check if two mutations refer to the same stock entry."""
+        if (
+            mutatuin_one is None
+            or mutation_two is None
+            or mutatuin_one.ontvangst != mutation_two.ontvangst
+            or mutatuin_one.locatie != mutation_two.locatie
+            or mutatuin_one.vak != mutation_two.vak
+        ):
+            return False
+        return True
+
     class Meta:
         ordering = ["ontvangst", "datum", "in_uit"]
         verbose_name = "voorraadmutatie"
@@ -662,7 +675,9 @@ class WijnVoorraad(models.Model):
 
     @staticmethod
     def Bijwerken_mutatie_IN(mutatie: VoorraadMutatie):
+        """Update the wine stock based on an IN mutation."""
         try:
+            # if there is stock entry for this wine, location, and vak, update it
             vrd = WijnVoorraad.objects.get(
                 ontvangst=mutatie.ontvangst,
                 locatie=mutatie.locatie,
@@ -670,6 +685,7 @@ class WijnVoorraad(models.Model):
             )
             vrd.aantal = F("aantal") + mutatie.aantal
         except WijnVoorraad.DoesNotExist:
+            # if not, create a new stock entry
             vrd = WijnVoorraad(
                 wijn=mutatie.ontvangst.wijn,
                 deelnemer=mutatie.ontvangst.deelnemer,
@@ -681,8 +697,11 @@ class WijnVoorraad(models.Model):
         vrd.save()
         vrd.refresh_from_db()
         wijn = vrd.wijn
+
+        # if the stock is zero after the update, delete the stock entry
         if vrd.aantal == 0:
             vrd.delete()
+        # check if the wine can be closed or reopened
         wijn.check_afsluiten()
 
     @staticmethod
@@ -725,32 +744,8 @@ class WijnVoorraad(models.Model):
     def check_voorraad_wijziging(
         mutatie: VoorraadMutatie, old_mutatie: VoorraadMutatie
     ):
-        if old_mutatie is not None:
-            if old_mutatie.in_uit == "I":
-                wijziging_aantal = old_mutatie.aantal * -1
-            else:
-                wijziging_aantal = old_mutatie.aantal
-            try:
-                vrd = WijnVoorraad.objects.get(
-                    ontvangst=old_mutatie.ontvangst,
-                    locatie=old_mutatie.locatie,
-                    vak=old_mutatie.vak,
-                )
-                if vrd.aantal + wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    )
-            except WijnVoorraad.DoesNotExist as e:
-                if wijziging_aantal < 0:
-                    raise ValidationError(
-                        ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
-                    ) from e
 
-        if mutatie is not None:
-            if mutatie.in_uit == "I":
-                wijziging_aantal = mutatie.aantal
-            else:
-                wijziging_aantal = mutatie.aantal * -1
+        def find_and_check_voorraad(mutatie, wijziging_aantal):
             try:
                 vrd = WijnVoorraad.objects.get(
                     ontvangst=mutatie.ontvangst,
@@ -766,6 +761,28 @@ class WijnVoorraad(models.Model):
                     raise ValidationError(
                         ("Onjuiste mutatie. Hiermee wordt de voorraad negatief!")
                     ) from e
+
+        def bereken_wijziging_aantal(m, is_old):
+            return (
+                m.aantal * -1
+                if (is_old and m.in_uit == "I") or (not is_old and m.in_uit == "U")
+                else m.aantal
+            )
+
+        # check if mutatie and old_mutatie are similar
+        if VoorraadMutatie.mutation_refer_to_same_voorraad(mutatie, old_mutatie):
+            wijziging_aantal = bereken_wijziging_aantal(old_mutatie, True)
+            wijziging_aantal += bereken_wijziging_aantal(mutatie, False)
+
+            find_and_check_voorraad(mutatie, wijziging_aantal)
+
+        elif old_mutatie is not None:
+            wijziging_aantal = bereken_wijziging_aantal(old_mutatie, True)
+            find_and_check_voorraad(old_mutatie, wijziging_aantal)
+
+        elif mutatie is not None:
+            wijziging_aantal = bereken_wijziging_aantal(mutatie, False)
+            find_and_check_voorraad(mutatie, wijziging_aantal)
 
     @staticmethod
     def check_voorraad_rsv(bestelling_regel, old_regel):

@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from WijnVoorraad.models import VoorraadMutatie
+from WijnVoorraad.models import Ontvangst, VoorraadMutatie
 from WijnVoorraad.tests.models.model_helper import SharedTestDataMixin
 
 
@@ -387,3 +387,65 @@ class TestVoorraadMutatie(SharedTestDataMixin, TestCase):
         ) as mock_check:
             voorraad_mutatie.check_fuzzy_selectie("Test omschrijving")
             mock_check.assert_not_called()
+
+
+class TestMutationReferToSameVoorraad(SharedTestDataMixin, TestCase):
+    """
+    Test cases for the VoorraadMutatie.mutation_refer_to_same_voorraad method.
+    This test class verifies the logic that determines whether two VoorraadMutatie
+    instances refer to the same voorraad (stock) location, based on their attributes.
+    Tested scenarios include:
+    - One or both mutations being None.
+    - Both mutations having all relevant fields equal.
+    - Both mutations having a null 'vak' (compartment).
+    - Mutations with different 'ontvangst' (receipt) values.
+    - Mutations with the same location but differing in other fields.
+    Each test ensures that mutation_refer_to_same_voorraad returns the correct boolean
+    value for the given input combinations.
+    """
+
+    def make_mutatie(self, ontvangst=None, locatie=None, vak=None):
+        return VoorraadMutatie(
+            ontvangst=ontvangst or self.ontvangst,
+            locatie=locatie or self.locatie,
+            vak=vak,
+            in_uit="I",
+            actie="K",
+            datum="2024-01-01",
+            aantal=1,
+            omschrijving="test",
+        )
+
+    def test_one_null(self):
+        mut1 = self.make_mutatie()
+        self.assertFalse(VoorraadMutatie.mutation_refer_to_same_voorraad(mut1, None))
+        self.assertFalse(VoorraadMutatie.mutation_refer_to_same_voorraad(None, mut1))
+
+    def test_both_null(self):
+        self.assertFalse(VoorraadMutatie.mutation_refer_to_same_voorraad(None, None))
+
+    def test_all_equal(self):
+        mut1 = self.make_mutatie(self.ontvangst, self.locatie, self.vak_a1)
+        mut2 = self.make_mutatie(self.ontvangst, self.locatie, self.vak_a1)
+        self.assertTrue(VoorraadMutatie.mutation_refer_to_same_voorraad(mut1, mut2))
+
+    def test_vak_null_both(self):
+        mut1 = self.make_mutatie(self.ontvangst, self.locatie, None)
+        mut2 = self.make_mutatie(self.ontvangst, self.locatie, None)
+        self.assertTrue(VoorraadMutatie.mutation_refer_to_same_voorraad(mut1, mut2))
+
+    def test_ontvangst_not_equal(self):
+        ontvangst2 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer, wijn=self.wijn, datumOntvangst="2024-02-01"
+        )
+        mut1 = self.make_mutatie(self.ontvangst, self.locatie, self.vak_a1)
+        mut2 = self.make_mutatie(ontvangst2, self.locatie, self.vak_a1)
+        self.assertFalse(VoorraadMutatie.mutation_refer_to_same_voorraad(mut1, mut2))
+
+    def test_location_equal_others_not(self):
+        ontvangst2 = Ontvangst.objects.create(
+            deelnemer=self.deelnemer, wijn=self.wijn, datumOntvangst="2024-02-01"
+        )
+        mut1 = self.make_mutatie(self.ontvangst, self.locatie, self.vak_a1)
+        mut2 = self.make_mutatie(ontvangst2, self.locatie, self.vak_a2)
+        self.assertFalse(VoorraadMutatie.mutation_refer_to_same_voorraad(mut1, mut2))

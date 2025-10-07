@@ -1,7 +1,17 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from enum import Enum
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 import re
 from .models import Deelnemer, Locatie, WijnSoort
+
+
+class SorteringEnum(models.TextChoices):
+    # Mogelijke sorteringen voor de voorraadlijst
+    WIJNONTVANGST = "WO", _("Wijn + Ontvangstdatum (default)")
+    ONTVANGSTWIJN = "OW", _("Ontvangstdatum oplopend + Wijn")
+    ONTVANGSTDESCWIJN = "ODW", _("Ontvangstdatum aflopend + Wijn")
 
 
 def unified_wijnsoort(wijnsoort_omschrijving):
@@ -147,6 +157,16 @@ def get_session_fuzzy_selectie(request):
     return fuzzy_selectie
 
 
+def set_session_sortering(request, sortering):
+    request.session["sortering"] = sortering
+    return request
+
+
+def get_session_sortering(request):
+    sortering = request.session.get("sortering", SorteringEnum.WIJNONTVANGST)
+    return sortering
+
+
 def set_session_return_url(request, return_url):
     request.session["return_url"] = return_url
     return request
@@ -221,6 +241,11 @@ def get_bool_fuzzy(request):
     return bool_fuzzy
 
 
+def get_bool_sortering(request):
+    bool_sortering = request.session.get("bool_sortering", None)
+    return bool_sortering
+
+
 def get_allow_all_deelnemers(request):
     allow_all_deelnemers = request.session.get("allow_all_deelnemers", None)
     return allow_all_deelnemers
@@ -239,11 +264,13 @@ def set_filter_options(
     allow_all_locaties,
     bool_wijnsoort,
     bool_fuzzy,
+    bool_sortering,
 ):
     request.session["bool_deelnemer"] = bool_deelnemer
     request.session["bool_locatie"] = bool_locatie
     request.session["bool_wijnsoort"] = bool_wijnsoort
     request.session["bool_fuzzy"] = bool_fuzzy
+    request.session["bool_sortering"] = bool_sortering
     request.session["allow_all_deelnemers"] = allow_all_deelnemers
     request.session["allow_all_locaties"] = allow_all_locaties
     if not allow_all_deelnemers and get_session_deelnemer_id(request) is None:
@@ -274,6 +301,8 @@ def handle_filter_options_post(request):
         set_session_wijnsoort(request, None)
     elif "clearfilterFuzzy" in request.POST:
         set_session_fuzzy_selectie(request, None)
+    elif "clearfilterSortering" in request.POST:
+        set_session_sortering(request, None)
     else:
         fuzzy_selectie = request.POST.get("fuzzy_selectie")
         set_session_fuzzy_selectie(request, fuzzy_selectie)
@@ -328,6 +357,16 @@ def set_context_filter_options(context, request, return_url):
             add_filter = {
                 "type": "Fuzzy",
                 "text": fuzzy_selectie,
+            }
+            context["active_filters"].append(add_filter)
+
+    if get_bool_sortering(request):
+        sortering = get_session_sortering(request)
+        if sortering and sortering != SorteringEnum.WIJNONTVANGST:
+            context["sortering"] = sortering
+            add_filter = {
+                "type": "Sortering",
+                "text": f"Sortering: {SorteringEnum(sortering).label}",
             }
             context["active_filters"].append(add_filter)
 

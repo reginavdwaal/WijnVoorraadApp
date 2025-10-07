@@ -103,7 +103,9 @@ class VoorraadListView(LoginRequiredMixin, ListView):
     context_object_name = "voorraad_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, False, False, True, True)
+        wijnvars.set_filter_options(
+            self.request, True, True, False, False, True, True, True
+        )
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         vrd_list = WijnVoorraad.objects.filter(deelnemer=d, locatie=l).order_by(
@@ -121,12 +123,33 @@ class VoorraadListView(LoginRequiredMixin, ListView):
                 if vrd.check_fuzzy_selectie(fuzzy_selectie):
                     vrdnw_list.append(vrd)
             vrd_list = vrdnw_list
-        voorraad_list = (
-            WijnVoorraad.objects.filter(pk__in=[v.pk for v in vrd_list])
-            .group_by("wijn", "ontvangst", "deelnemer", "locatie")
-            .order_by("wijn", "ontvangst__datumOntvangst")
-            .annotate(aantal=Sum("aantal"))
-        )
+        if (
+            wijnvars.get_session_sortering(self.request)
+            == wijnvars.SorteringEnum.ONTVANGSTWIJN
+        ):
+            voorraad_list = (
+                WijnVoorraad.objects.filter(pk__in=[v.pk for v in vrd_list])
+                .group_by("wijn", "ontvangst", "deelnemer", "locatie")
+                .order_by("ontvangst__datumOntvangst", "wijn")
+                .annotate(aantal=Sum("aantal"))
+            )
+        elif (
+            wijnvars.get_session_sortering(self.request)
+            == wijnvars.SorteringEnum.ONTVANGSTDESCWIJN
+        ):
+            voorraad_list = (
+                WijnVoorraad.objects.filter(pk__in=[v.pk for v in vrd_list])
+                .group_by("wijn", "ontvangst", "deelnemer", "locatie")
+                .order_by("-ontvangst__datumOntvangst", "wijn")
+                .annotate(aantal=Sum("aantal"))
+            )
+        else:
+            voorraad_list = (
+                WijnVoorraad.objects.filter(pk__in=[v.pk for v in vrd_list])
+                .group_by("wijn", "ontvangst", "deelnemer", "locatie")
+                .order_by("wijn", "ontvangst__datumOntvangst")
+                .annotate(aantal=Sum("aantal"))
+            )
 
         return voorraad_list
 
@@ -169,6 +192,8 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
             initial["fuzzy_selectie"] = wijnvars.get_session_fuzzy_selectie(
                 self.request
             )
+        if wijnvars.get_bool_sortering(self.request):
+            initial["sortering"] = wijnvars.get_session_sortering(self.request)
         return initial
 
     def post(self, request, *args, **kwargs):
@@ -192,6 +217,9 @@ class VoorraadFilterView(LoginRequiredMixin, FormView):
         if wijnvars.get_bool_fuzzy(self.request):
             fuzzy_selectie = self.request.POST["fuzzy_selectie"]
             wijnvars.set_session_fuzzy_selectie(self.request, fuzzy_selectie)
+        if wijnvars.get_bool_sortering(self.request):
+            sortering = self.request.POST["sortering"]
+            wijnvars.set_session_sortering(self.request, sortering)
         url = wijnvars.get_session_return_url(self.request)
         return HttpResponseRedirect(reverse(url))
 
@@ -269,7 +297,9 @@ class VoorraadVakkenListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/voorraadvakken_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, False, True, True, False, True, True)
+        wijnvars.set_filter_options(
+            self.request, False, True, True, False, True, True, False
+        )
         l = wijnvars.get_session_locatie(self.request)
         vakken_list = (
             Vak.objects.filter(locatie=l)
@@ -459,7 +489,9 @@ class MutatieListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
+        wijnvars.set_filter_options(
+            self.request, True, True, True, True, True, True, False
+        )
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.order_by("-datum")
@@ -500,7 +532,9 @@ class MutatieUitListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_uit_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
+        wijnvars.set_filter_options(
+            self.request, True, True, True, True, True, True, False
+        )
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(in_uit="U").order_by("-datum")
@@ -541,7 +575,9 @@ class MutatieInListView(LoginRequiredMixin, ListView):
     template_name = "WijnVoorraad/mutatie_in_list.html"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True, True, True)
+        wijnvars.set_filter_options(
+            self.request, True, True, True, True, True, True, False
+        )
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
         mutatie_list = VoorraadMutatie.objects.filter(in_uit="I").order_by("-datum")
@@ -678,7 +714,9 @@ class OntvangstListView(LoginRequiredMixin, ListView):
     context_object_name = "ontvangst_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, False, True, True, True, True)
+        wijnvars.set_filter_options(
+            self.request, True, False, True, True, True, True, False
+        )
         ontvangst_list = Ontvangst.objects.all()
         d = wijnvars.get_session_deelnemer(self.request)
         if d:
@@ -896,7 +934,7 @@ class WijnListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         wijnvars.set_filter_options(
-            self.request, False, False, False, False, True, True
+            self.request, False, False, False, False, True, True, False
         )
         wijn_list = Wijn.objects.all()
         ws_id = wijnvars.get_session_wijnsoort_id(self.request)
@@ -1304,7 +1342,9 @@ class BestellingListView(LoginRequiredMixin, ListView):
     context_object_name = "bestelling_list"
 
     def get_queryset(self):
-        wijnvars.set_filter_options(self.request, True, True, True, True, False, False)
+        wijnvars.set_filter_options(
+            self.request, True, True, True, True, False, False, False
+        )
         bestellingen = Bestelling.objects.all()
         d = wijnvars.get_session_deelnemer(self.request)
         l = wijnvars.get_session_locatie(self.request)
@@ -1409,7 +1449,7 @@ class BestellingRegelsSelecteren(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         wijnvars.set_filter_options(
-            self.request, False, False, False, False, True, True
+            self.request, False, False, False, False, True, True, False
         )
         b_id = self.kwargs["bestelling_id"]
         b = Bestelling.objects.get(pk=b_id)
@@ -1526,7 +1566,7 @@ class BestellingenVerzamelen(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         wijnvars.set_filter_options(
-            self.request, False, True, True, False, False, False
+            self.request, False, True, True, False, False, False, False
         )
         l = wijnvars.get_session_locatie(self.request)
         bestellingen = Bestelling.objects.filter(

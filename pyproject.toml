@@ -47,3 +47,6 @@ version_files = [
 post_bump_hooks=[
   "build\\push_all.cmd"
 ]
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"

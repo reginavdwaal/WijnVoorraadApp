@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.db.models import ProtectedError
@@ -25,7 +26,9 @@ class TestWijnVoorraad(TestCase):
             domein="DomeinX", naam="WijnX", wijnsoort=self.wijnsoort
         )
         self.ontvangst = Ontvangst.objects.create(
-            deelnemer=self.deelnemer, wijn=self.wijn, datumOntvangst="2024-01-01"
+            deelnemer=self.deelnemer,
+            wijn=self.wijn,
+            datumOntvangst=datetime.datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
         )
         self.vak = Vak.objects.create(locatie=self.locatie, code="A1", capaciteit=10)
 
@@ -191,6 +194,27 @@ class TestWijnVoorraad(TestCase):
         )
         result = wijnvoorraad.check_fuzzy_selectie("")
         self.assertTrue(result)
+
+    #  WijnVoorraad.verplaatsen should call VoorraadMutatie.verplaatsen
+    @patch("WijnVoorraad.models.VoorraadMutatie.verplaatsen")
+    def test_verplaatsen_calls_voorraadmutatie_verplaatsen(self, mock_verplaatsen):
+        """Test that the verplaatsen method calls VoorraadMutatie.verplaatsen."""
+        wijnvoorraad = WijnVoorraad(
+            wijn=self.wijn,
+            deelnemer=self.deelnemer,
+            ontvangst=self.ontvangst,
+            locatie=self.locatie,
+            vak=self.vak,
+        )
+        nieuwe_locatie = Locatie.objects.create(
+            omschrijving="Zolder", aantal_kolommen=1
+        )
+        nieuwe_vak = Vak.objects.create(locatie=nieuwe_locatie, code="B1", capaciteit=5)
+
+        wijnvoorraad.verplaatsen(nieuwe_locatie, nieuwe_vak, 1)
+        mock_verplaatsen.assert_called_once_with(
+            self.ontvangst, self.locatie, self.vak, nieuwe_locatie, nieuwe_vak, 1
+        )
 
 
 class TestWijnVoorraadBijwerken(TestCase):

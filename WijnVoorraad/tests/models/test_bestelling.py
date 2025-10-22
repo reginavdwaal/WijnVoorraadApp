@@ -75,7 +75,7 @@ class TestBestelling(SharedTestDataMixin, TestCase):
         expected = (
             f"{self.deelnemer.naam} - "
             f"{bestelling.datumAangemaakt.strftime('%d-%m-%Y')} - "
-            f"{self.locatie.omschrijving} "
+            f"{self.locatie.omschrijving}"
         )
         self.assertEqual(str(bestelling), expected)
 

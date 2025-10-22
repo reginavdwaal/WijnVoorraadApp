@@ -1,5 +1,9 @@
 # pylint: disable=no-member
-
+"""Django models for WijnVoorraadApp defining wines, grape varieties, locations, orders,
+inventory and mutations. Implements inventory and reservation logic (VoorraadMutatie, WijnVoorraad),
+validation rules and unique constraints. Includes auxiliary models (Deelnemer, Bestelling, AIUsage)
+and helper methods for copying, searching and auditing.
+"""
 from datetime import date, datetime
 
 from django.conf import settings
@@ -15,6 +19,9 @@ from django_group_by import GroupByMixin
 
 
 class WijnSoort(models.Model):
+    """Represent a wine type with a Dutch description, optional English description,
+    and a selectable CSS style class."""
+
     css_choices = [
         ("wijnsoort_rood", "wijnsoort_rood"),
         ("wijnsoort_wit", "wijnsoort_wit"),
@@ -97,10 +104,12 @@ class Deelnemer(models.Model):
 
 
 class Wijn(models.Model):
+    """Model representing a wine with various attributes including type, year, origin,
+    classification, and associated grape varieties."""
 
     def validate_jaartal(jaartal):  # pylint: disable=no-self-argument
         # Validator to ensure the year is between 1901 and 2499.
-        if not (1900 < jaartal < 2500):
+        if not 1900 < jaartal < 2500:
             raise ValidationError(
                 (
                     "%(jaartal)s is geen geldig jaartal. Het jaartal moet liggen tussen 1901 en 2499"
@@ -258,7 +267,10 @@ class Ontvangst(models.Model):
     opmerking = models.CharField(max_length=4000, blank=True)
 
     def __str__(self):
-        return f"{self.deelnemer.naam} - {self.wijn.volle_naam} - {self.datumOntvangst.strftime('%d-%m-%Y')}"
+        return (
+            f"{self.deelnemer.naam} - {self.wijn.volle_naam}"
+            f" - {self.datumOntvangst.strftime('%d-%m-%Y')}"
+        )
 
     def create_copy(self):
         # orig_ontvangst_id = self.id
@@ -497,10 +509,10 @@ class Bestelling(models.Model):
     datumAfgesloten = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return "%s - %s - %s " % (
-            self.deelnemer,
-            self.datumAangemaakt.strftime("%d-%m-%Y"),
-            self.vanLocatie,
+        return (
+            f"{self.deelnemer} - "
+            f"{self.datumAangemaakt.strftime('%d-%m-%Y')} - "
+            f"{self.vanLocatie}"
         )
 
     def afboeken(self):
@@ -544,10 +556,18 @@ class BestellingRegel(models.Model):
     verwerkt = models.CharField(max_length=1, default="N", choices=verwerkt_choices)
 
     def __str__(self):
-        return "%s - %s" % (
-            self.bestelling,
-            self.ontvangst.wijn,
-        )
+        return f"{self.bestelling} - {self.ontvangst.wijn}"
+
+    # Add property regel_aantal_werkelijk to return the actual number of bottles to be processed
+    @property
+    def aantal_werkelijk(self):
+        """
+        Returns the actual number of bottles to be processed for this order line.
+        If aantal_correctie is set, use that, otherwise use aantal.
+        """
+        if self.aantal_correctie is not None:
+            return self.aantal_correctie
+        return self.aantal
 
     def clean(self, *args, **kwargs):
         try:
@@ -629,17 +649,17 @@ class WijnVoorraad(models.Model):
 
     def __str__(self):
         if self.vak:
-            return "%s - %s - %s (%s)" % (
-                self.wijn.volle_naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
-                self.vak.code,
+            return (
+                f"{self.wijn.volle_naam} - "
+                f"{self.deelnemer.naam} - "
+                f"{self.locatie.omschrijving} ({self.vak.code})"
             )
+
         else:
-            return "%s - %s - %s" % (
-                self.wijn.volle_naam,
-                self.deelnemer.naam,
-                self.locatie.omschrijving,
+            return (
+                f"{self.wijn.volle_naam} - "
+                f"{self.deelnemer.naam} - "
+                f"{self.locatie.omschrijving}"
             )
 
     def drinken(self):
@@ -785,58 +805,86 @@ class WijnVoorraad(models.Model):
             find_and_check_voorraad(mutatie, wijziging_aantal)
 
     @staticmethod
-    def check_voorraad_rsv(bestelling_regel, old_regel):
-        vrd_old = None
-        vrd_new = None
+    def check_voorraad_rsv(
+        bestelling_regel: BestellingRegel, old_bestelling_regel: BestellingRegel
+    ):
+        """Check if there is enough stock available for the reservation change."""
+
+        # if both bestelling_regel or old_bestelling_regel has verwerkt != "N", then no need to check
+        if (bestelling_regel is not None and bestelling_regel.verwerkt != "N") and (
+            old_bestelling_regel is not None and old_bestelling_regel.verwerkt != "N"
+        ):
+            return
+
+        voorraad_old = None
+        voorraad_new = None
         aantal_old = 0
         aantal_new = 0
-        if old_regel is not None:
-            if old_regel.aantal_correctie is not None:
-                aantal_old = old_regel.aantal_correctie
-            else:
-                aantal_old = old_regel.aantal
+
+        # First check if this is a change to a current reservation
+        if old_bestelling_regel is not None:
+            aantal_old = old_bestelling_regel.aantal_werkelijk
+
             try:
-                vrd_old = WijnVoorraad.objects.get(
-                    ontvangst=old_regel.ontvangst,
-                    locatie=old_regel.bestelling.vanLocatie,
-                    vak=old_regel.vak,
+                voorraad_old = WijnVoorraad.objects.get(
+                    ontvangst=old_bestelling_regel.ontvangst,
+                    locatie=old_bestelling_regel.bestelling.vanLocatie,
+                    vak=old_bestelling_regel.vak,
                 )
             except WijnVoorraad.DoesNotExist:
                 aantal_old = 0
-        if bestelling_regel is not None:
-            if bestelling_regel.aantal_correctie is not None:
-                aantal_new = bestelling_regel.aantal_correctie
-            else:
-                aantal_new = bestelling_regel.aantal
+
+        if bestelling_regel is not None:  # hier ook op alleen N
+            aantal_new = bestelling_regel.aantal_werkelijk
+
             try:
-                vrd_new = WijnVoorraad.objects.get(
+                voorraad_new = WijnVoorraad.objects.get(
                     ontvangst=bestelling_regel.ontvangst,
                     locatie=bestelling_regel.bestelling.vanLocatie,
                     vak=bestelling_regel.vak,
                 )
-            except WijnVoorraad.DoesNotExist:
-                aantal_new = 0
+            except WijnVoorraad.DoesNotExist as e:
+                raise ValidationError(
+                    ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                ) from e
 
-        if (
-            old_regel is not None
-            and bestelling_regel is not None
-            and vrd_old is not None
-            and vrd_new is not None
-            and vrd_old == vrd_new
-        ):
-            if vrd_old.aantal_rsv - aantal_old + aantal_new > vrd_old.aantal:
+        # Helper function to check if regels are an update to the same voorraad
+        def is_update_to_same_not_processed_reservation():
+            return (
+                old_bestelling_regel is not None
+                and bestelling_regel is not None
+                and voorraad_old is not None
+                and voorraad_new is not None
+                and voorraad_old == voorraad_new
+                and old_bestelling_regel.verwerkt == "N"
+                and bestelling_regel.verwerkt == "N"
+            )
+
+        # if it is an update to the same reservation,
+        # the stock should be enough for the difference
+        if is_update_to_same_not_processed_reservation():
+            if voorraad_old.aantal_rsv - aantal_old + aantal_new > voorraad_old.aantal:
                 raise ValidationError(
                     ("Onjuiste bestelling. Er is niet voldoende voorraad!")
                 )
         else:
-            if old_regel is not None and vrd_old is not None:
-                if vrd_old.aantal_rsv - aantal_old > vrd_old.aantal:
+            if old_bestelling_regel is not None and bestelling_regel is not None:
+                if (old_bestelling_regel.verwerkt in ("A", "V")) and (
+                    bestelling_regel.verwerkt == "N"
+                ):
+                    raise ValidationError(
+                        (
+                            "Onjuiste bestelling. Afgeboekte of verwerkte bestelling kan niet worden aangepast!"
+                        )
+                    )
+            if old_bestelling_regel is not None and voorraad_old is not None:
+                if voorraad_old.aantal_rsv - aantal_old > voorraad_old.aantal:
                     raise ValidationError(
                         ("Onjuiste bestelling. Er is niet voldoende voorraad!")
                     )
             if bestelling_regel is not None:
-                if vrd_new is not None:
-                    if vrd_new.aantal_rsv + aantal_new > vrd_new.aantal:
+                if voorraad_new is not None:
+                    if voorraad_new.aantal_rsv + aantal_new > voorraad_new.aantal:
                         raise ValidationError(
                             ("Onjuiste bestelling. Er is niet voldoende voorraad!")
                         )

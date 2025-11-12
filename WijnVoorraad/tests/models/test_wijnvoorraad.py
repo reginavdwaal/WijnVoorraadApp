@@ -961,3 +961,22 @@ class TestWijnVoorraadMutatieMethods(TestCase):
             return_value=True,
         ):
             WijnVoorraad.check_voorraad_wijziging(new_mutatie, old_mutatie)
+
+    # For a given location, vak and ontvangst there is no stock , no record
+    # add a new mutation (mutation), h amount 4 and type I
+    # check_voorraad_wijziging should  raise error because there is no stock
+    def test_check_voorraad_wijziging__on_non_existing_stock_raises_error(self):
+        new_mutatie = MagicMock()
+        new_mutatie.in_uit = "U"
+        new_mutatie.aantal = 4
+        new_mutatie.ontvangst = self.ontvangst
+        new_mutatie.locatie = self.locatie
+        new_mutatie.vak = self.vak
+
+        with patch.object(
+            VoorraadMutatie,
+            "mutation_refer_to_same_voorraad",
+            return_value=False,
+        ):
+            with self.assertRaises(ValidationError):
+                WijnVoorraad.check_voorraad_wijziging(new_mutatie, None)

@@ -811,10 +811,19 @@ class WijnVoorraad(models.Model):
         """Check if there is enough stock available for the reservation change."""
 
         # if both bestelling_regel or old_bestelling_regel has verwerkt != "N", then no need to check
-        if (bestelling_regel is not None and bestelling_regel.verwerkt != "N") and (
-            old_bestelling_regel is not None and old_bestelling_regel.verwerkt != "N"
-        ):
+        if bestelling_regel is not None and bestelling_regel.verwerkt != "N":
             return
+
+        # if trying to change an afgeboekt or verwerkte bestelling to a niet verwerkte bestelling, raise error
+        if old_bestelling_regel is not None and bestelling_regel is not None:
+            if (old_bestelling_regel.verwerkt in ("A", "V")) and (
+                bestelling_regel.verwerkt == "N"
+            ):
+                raise ValidationError(
+                    (
+                        "Onjuiste bestelling. Afgeboekte of verwerkte bestelling kan niet worden aangepast!"
+                    )
+                )
 
         voorraad_old = None
         voorraad_new = None
@@ -845,7 +854,7 @@ class WijnVoorraad(models.Model):
                 )
             except WijnVoorraad.DoesNotExist as e:
                 raise ValidationError(
-                    ("Onjuiste bestelling. Er is niet voldoende voorraad!")
+                    ("Onjuiste bestelling. Er is geen voorraad!")
                 ) from e
 
         # Helper function to check if regels are an update to the same voorraad
@@ -868,30 +877,12 @@ class WijnVoorraad(models.Model):
                     ("Onjuiste bestelling. Er is niet voldoende voorraad!")
                 )
         else:
-            if old_bestelling_regel is not None and bestelling_regel is not None:
-                if (old_bestelling_regel.verwerkt in ("A", "V")) and (
-                    bestelling_regel.verwerkt == "N"
-                ):
-                    raise ValidationError(
-                        (
-                            "Onjuiste bestelling. Afgeboekte of verwerkte bestelling kan niet worden aangepast!"
-                        )
-                    )
-            if old_bestelling_regel is not None and voorraad_old is not None:
-                if voorraad_old.aantal_rsv - aantal_old > voorraad_old.aantal:
-                    raise ValidationError(
-                        ("Onjuiste bestelling. Er is niet voldoende voorraad!")
-                    )
+
             if bestelling_regel is not None:
                 if voorraad_new is not None:
                     if voorraad_new.aantal_rsv + aantal_new > voorraad_new.aantal:
                         raise ValidationError(
                             ("Onjuiste bestelling. Er is niet voldoende voorraad!")
-                        )
-                else:
-                    if aantal_new > 0:
-                        raise ValidationError(
-                            ("Onjuiste bestelling. Er is geen voorraad!")
                         )
 
     @staticmethod
@@ -912,18 +903,12 @@ class WijnVoorraad(models.Model):
                 locatie=regel.bestelling.vanLocatie,
                 vak=regel.vak,
             )
-            if regel.aantal_correctie is not None:
-                aantal = regel.aantal_correctie
-            else:
-                aantal = regel.aantal
-            vrd.aantal_rsv = F("aantal_rsv") + aantal
+
+            vrd.aantal_rsv = F("aantal_rsv") + regel.aantal_werkelijk
             vrd.save()
         except WijnVoorraad.DoesNotExist as e:
-            if regel.aantal_correctie is not None:
-                aantal = regel.aantal_correctie
-            else:
-                aantal = regel.aantal
-            if aantal > 0:
+
+            if regel.aantal_werkelijk > 0:
                 raise ValidationError(
                     ("Onjuiste bestelling. Er is geen voorraad!")
                 ) from e
@@ -936,11 +921,7 @@ class WijnVoorraad(models.Model):
                 locatie=regel.bestelling.vanLocatie,
                 vak=regel.vak,
             )
-            if regel.aantal_correctie is not None:
-                aantal = regel.aantal_correctie
-            else:
-                aantal = regel.aantal
-            vrd.aantal_rsv = F("aantal_rsv") - aantal
+            vrd.aantal_rsv = F("aantal_rsv") - regel.aantal_werkelijk
             vrd.save()
         except WijnVoorraad.DoesNotExist:
             pass

@@ -50,6 +50,7 @@ class TestWijnVoorraadRSV(TestCase):
         order_line = MagicMock()
         order_line.ontvangst = self.ontvangst
         order_line.bestelling = bestelling
+        order_line.verwerkt = "N"
         order_line.vak = self.vak
         order_line.aantal = 3
         order_line.aantal_correctie = None
@@ -99,6 +100,7 @@ class TestWijnVoorraadRSV(TestCase):
         order_line.bestelling = bestelling
         order_line.vak = other_vak
         order_line.aantal = 1
+        order_line.verwerkt = "N"
         order_line.aantal_correctie = None
         order_line.aantal_werkelijk = 1
         with self.assertRaises(ValidationError):
@@ -380,8 +382,8 @@ class TestWijnVoorraadRSV(TestCase):
     # and verwerkt state N
     # add a new order line (order_line), based on the old one, but with amount 5
     # and verwerkt state A
-    # check_voorraad_rsv should raise error as the delta is 3, with only 2 stock left
-    def test_check_voorraad_rsv_change_amount_more_afgeboekt_raises_error(self):
+    # check_voorraad_rsv should not error because the voorraad is already corrected
+    def test_check_voorraad_rsv_change_amount_more_afgeboekt_raises__no_error(self):
         WijnVoorraad.objects.create(
             wijn=self.wijn,
             deelnemer=self.deelnemer,
@@ -416,8 +418,7 @@ class TestWijnVoorraadRSV(TestCase):
             "mutation_refer_to_same_voorraad",
             return_value=True,
         ):
-            with self.assertRaises(ValidationError):
-                WijnVoorraad.check_voorraad_rsv(new_order_line, old_order_line)
+            WijnVoorraad.check_voorraad_rsv(new_order_line, old_order_line)
 
     # given stock level 5 and reserved 3
     # given an existing order line (old) with amount 2 for the same  location, vak and ontvangst

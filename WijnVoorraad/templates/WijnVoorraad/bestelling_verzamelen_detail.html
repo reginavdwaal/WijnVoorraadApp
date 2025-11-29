@@ -28,12 +28,6 @@
             <label class="detail-column">{{ tot_aantal }}</label>
         </div>
     </div>  <!-- end detail-block -->
-  <div class="buttons-block">
-    <form method="get" action="{% url 'WijnVoorraad:bestellingdetail' bestelling.id %}">
-      {% csrf_token %}
-      <input type="submit" name="Afronden" value="Afronden"></input>
-    </form>
-  </div>  <!-- end buttons-block -->
 </div>  <!-- end content-main -->
 
 <div id="content-main">

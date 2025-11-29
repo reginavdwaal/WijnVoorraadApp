@@ -1,4 +1,9 @@
-import unittest
+"""
+Unit tests for the BestellingRegel model, covering deletion constraints, field validation,
+business logic methods, and integration with related models and methods.
+Ensures correct behavior for voorraad, mutatie, and model field defaults.
+"""
+
 from unittest.mock import patch
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -72,26 +77,32 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
 
     def test_verwerkt_can_be_set_to_a_v(self, _):
         """Test that verwerkt can be set to 'A' or 'V' not other."""
-        bestelling = self.create_bestelling()
-        regel = BestellingRegel.objects.create(
-            bestelling=bestelling,
-            ontvangst=self.ontvangst,
-            vak=self.vak_a1,
-            aantal=1,
-            opmerking="",
-        )
-        regel.verwerkt = "A"
-        regel.full_clean()
-        self.assertEqual(regel.verwerkt, "A")
 
-        regel.verwerkt = "V"
-        regel.full_clean()
-        self.assertEqual(regel.verwerkt, "V")
+        # Make sure wijnvoorraad.check_voorraad_rsv always returns True
+        with patch(
+            "WijnVoorraad.models.WijnVoorraad.check_voorraad_rsv", return_value=True
+        ):
 
-        regel.verwerkt = "X"
-        with self.assertRaises(ValidationError):
+            bestelling = self.create_bestelling()
+            regel = BestellingRegel.objects.create(
+                bestelling=bestelling,
+                ontvangst=self.ontvangst,
+                vak=self.vak_a1,
+                aantal=1,
+                opmerking="",
+            )
+            regel.verwerkt = "A"
+            regel.full_clean()
+            self.assertEqual(regel.verwerkt, "A")
 
-            regel.full_clean()  # Should raise ValidationError for invalid value
+            regel.verwerkt = "V"
+            regel.full_clean()
+            self.assertEqual(regel.verwerkt, "V")
+
+            regel.verwerkt = "X"
+            with self.assertRaises(ValidationError):
+
+                regel.full_clean()  # Should raise ValidationError for invalid value
 
     def test_str_returns_bestelling_wijn(self, _):
         """Test that the __str__ method returns the correct string representation."""
@@ -102,7 +113,7 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
 
     @patch("WijnVoorraad.models.WijnVoorraad.check_voorraad_rsv", return_value=True)
     def test_clean_should_reload_from_db(self, mock_check_voorraad, _):
-        """Test that clean methdef test_clean_should_reloadod reloads the instance from the database."""
+        """Test that clean meth test_clean_should_reload reloads the instance from the database."""
         bestelling = self.create_bestelling()
         regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
 
@@ -128,7 +139,8 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
         regel.clean()
         mock_check_voorraad.assert_called_once_with(regel, None)
 
-    def test_clean_should_call_super_validate(self, _):
+    @patch("WijnVoorraad.models.WijnVoorraad.check_voorraad_rsv")
+    def test_clean_should_call_super_validate(self, __, _):
         """Test that clean method calls the superclass clean method."""
         bestelling = self.create_bestelling()
         regel = BestellingRegel(
@@ -139,7 +151,6 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
             # set opmerking to 5000 length
             opmerking="a" * 5000,
         )
-
         with patch.object(models.Model, "clean") as mock_super_clean:
             regel.clean()
             # Check that the super clean method was called
@@ -376,3 +387,44 @@ class TestBestellingRegel(SharedTestDataMixin, TestCase):
         regel.refresh_from_db()
         # Check that the vak was updated
         self.assertEqual(regel.verwerkt, "N")
+
+    def test_regel_aantal_werkelijk_is_aantal_correctie_if_set(self, _):
+        """Test that regel_aantal_werkelijk returns aantal_correctie if it is set."""
+        bestelling = self.create_bestelling()
+        correctie_aantal = 3
+        regel = self.create_bestellingregel(
+            bestelling=bestelling, aantal=5, aantal_correctie=correctie_aantal
+        )
+
+        self.assertEqual(regel.aantal_werkelijk, correctie_aantal)
+
+    def test_regel_aantal_werkelijk_is_aantal_if_aantal_correctie_not_set(self, _):
+        """Test that regel_aantal_werkelijk returns aantal if aantal_correctie is not set."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(bestelling=bestelling, aantal=5)
+
+        self.assertEqual(regel.aantal_werkelijk, regel.aantal)
+
+    def test_regel_aantal_werkelijk_is_zero_if_aantal_correctie_is_zero(self, _):
+        """Test that regel_aantal_werkelijk returns 0 if aantal_correctie is 0."""
+        bestelling = self.create_bestelling()
+        regel = self.create_bestellingregel(
+            bestelling=bestelling, aantal=5, aantal_correctie=0
+        )
+
+        self.assertEqual(regel.aantal_werkelijk, 0)
+
+    def test_regel_aantal_werkelijk_is_null_if_aantal_and_aantal_correctie_are_null(
+        self, _
+    ):
+        """Test that regel_aantal_werkelijk returns None if aantal and aantal_correctie are None."""
+        bestelling = self.create_bestelling()
+        regel = BestellingRegel(
+            bestelling=bestelling,
+            ontvangst=self.ontvangst,
+            vak=self.vak_a1,
+            aantal=None,
+            aantal_correctie=None,
+        )
+
+        self.assertEqual(regel.aantal_werkelijk, None)

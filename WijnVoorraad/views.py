@@ -1647,6 +1647,40 @@ class BestellingenVerzamelen(LoginRequiredMixin, ListView):
             loc_heeft_vakken = False
         context["locatie"] = l
         context["loc_heeft_vakken"] = loc_heeft_vakken
+        br = BestellingRegel.objects.filter(
+            bestelling__vanLocatie=l, bestelling__datumAfgesloten__isnull=True
+        ).order_by(
+            "ontvangst__wijn",
+            "ontvangst__datumOntvangst",
+        )
+
+        bestelregel_list = []
+        for regel in br:
+            try:
+                vrd = WijnVoorraad.objects.get(
+                    ontvangst=regel.ontvangst,
+                    locatie=regel.bestelling.vanLocatie,
+                    vak=regel.vak,
+                )
+                regel.aantal_vrd = vrd.aantal
+            except WijnVoorraad.DoesNotExist:
+                regel.aantal_vrd = 0
+            bestelregel_list.append(regel)
+
+        br_aggr = br.aggregate(
+            tot_aantal=Sum(
+                Case(
+                    When(
+                        aantal_correctie__isnull=False,
+                        then=F("aantal_correctie"),
+                    ),
+                    default=F("aantal"),
+                )
+            ),
+        )
+        context["loc_heeft_vakken"] = loc_heeft_vakken
+        context["bestelregel_list"] = bestelregel_list
+        context["tot_aantal"] = br_aggr["tot_aantal"]
         context["title"] = "Bestellingen verzamelen"
         return context
 
@@ -1655,6 +1689,30 @@ class BestellingenVerzamelen(LoginRequiredMixin, ListView):
             l_id = request.POST["locatie_id"]
             wijnvars.set_session_locatie(request, l_id)
             wijnvars.handle_filter_options_post(request)
+        else:
+            aantal_rgls = request.POST["aantal_rgls"]
+            try:
+                aantal_rgls_int = int(aantal_rgls)
+            except ValueError:
+                aantal_rgls_int = 0
+            for i in range(1, aantal_rgls_int + 1):
+                br_id = request.POST["bestellingregel_id" + str(i)]
+                br_isVerzameld = request.POST.get("isVerzameld" + str(i))
+                br_aantal_correctie = request.POST.get("aantal_correctie" + str(i))
+                br_opmerking = request.POST.get("opmerking" + str(i))
+                if br_id:
+                    br = BestellingRegel.objects.get(pk=br_id)
+                    br.isVerzameld = br_isVerzameld == "True"
+                    if br_aantal_correctie:
+                        br.aantal_correctie = int(br_aantal_correctie)
+                    else:
+                        br.aantal_correctie = None
+                    br.opmerking = br_opmerking
+                    try:
+                        br.save()
+                    except ValidationError as e:
+                        messages.error(request, e.message)
+
         url = reverse("WijnVoorraad:bestellingenverzamelen")
         return HttpResponseRedirect(url)
 

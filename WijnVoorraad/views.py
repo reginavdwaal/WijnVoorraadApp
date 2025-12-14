@@ -1139,12 +1139,13 @@ class AIview(View):
 
         except APIError as e:
             # Handle API error, e.g. retry or log
-            message = f"OpenAI API returned an API Error: {e}"
+            message = f"ERROR:OpenAI API returned an API Error: {e}"
 
         except OpenAIError as e:
-            message = f"AI request failed due to {e}"
+            message = f"ERROR:AI request failed due to {e}"
 
         if message:
+            # return message and error code
             return message
         else:
             # Store the response to ai_usage table
@@ -1193,8 +1194,11 @@ class AIview(View):
         print(f"Ontvangen afbeelding: {image.name}")
 
         response = self.searchwine(image, request)
-        print(response)
+        # print(response)
 
+        # if response startswith("ERROR"):
+        if "ERROR" in response:
+            return JsonResponse({"message": response}, status=400)
         # Stuur een antwoord terug
         return JsonResponse({"message": response})
 

@@ -92,10 +92,22 @@ function callPythonFunction() {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value // CSRF-token toevoegen
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        .then( async response => {
+            if (!response.ok) {
+                // Probeer error-body te lezen
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch {
+                    errorData = { message: 'Onbekende serverfout' };
+                }
+
+                throw {
+                    status: response.status,
+                    message: errorData.message || 'Request failed',
+                };
+
+            }
         return response.json();
     })
     .then(data => {
@@ -105,6 +117,10 @@ function callPythonFunction() {
         })
     .catch(error => {
         console.error('Error:', error);
+
+        const errorMessage = error.message || 'Er is een fout opgetreden';
+        document.getElementById('ai_result').textContent = errorMessage;
+        alert('Er is een fout opgetreden, check ai_result field');
     })
     .finally(() => {
         if (btnSearch) {

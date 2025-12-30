@@ -454,7 +454,10 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
         l_nw = Locatie.objects.get(pk=v_nieuwe_locatie_id)
         context["nieuwe_locatie"] = l_nw
         context["vakken_list"] = vakken_list
-        if vakken_list.count() > 10:
+        wijnvars.set_context_is_mobile(context, self.request)
+        if context["is_mobile"]:
+            context["aantal_kolommen"] = 1
+        elif vakken_list.count() > 10:
             context["aantal_kolommen"] = l_nw.aantal_kolommen
         else:
             context["aantal_kolommen"] = 1
@@ -1914,7 +1917,10 @@ class BestellingregelVerplaatsInVakken(LoginRequiredMixin, ListView):
         l_nw = Locatie.objects.get(pk=v_nieuwe_locatie_id)
         context["nieuwe_locatie"] = l_nw
         context["vakken_list"] = vakken_list
-        if vakken_list.count() > 10:
+        wijnvars.set_context_is_mobile(context, self.request)
+        if context["is_mobile"]:
+            context["aantal_kolommen"] = 1
+        elif vakken_list.count() > 10:
             context["aantal_kolommen"] = l_nw.aantal_kolommen
         else:
             context["aantal_kolommen"] = 1

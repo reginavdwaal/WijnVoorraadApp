@@ -10,7 +10,6 @@
         "ms-python.pylint",
         "ms-python.python",
         "ms-python.debugpy",
-        "donjayamanne.python-environment-manager",
         "alexcvzz.vscode-sqlite",
         "knisterpeter.vscode-commitizen"
     ]

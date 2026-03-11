@@ -389,8 +389,21 @@ def set_context_locatie_list(context):
 
 
 def set_context_is_mobile(context, request):
-    MOBILE_AGENT_RE = re.compile(r".*(iphone|mobile|androidtouch)", re.IGNORECASE)
-    if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
+    # MOBILE_AGENT_RE = re.compile(r".*(iphone|mobile|androidtouch)", re.IGNORECASE)
+    # if MOBILE_AGENT_RE.match(request.META["HTTP_USER_AGENT"]):
+    user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
+
+    # Check for mobile keywords in the User-Agent
+    mobile_keywords = [
+        "mobile",
+        "android",
+        "iphone",
+        "ipad",
+        "windows phone",
+        "blackberry",
+    ]
+    is_mobile = any(keyword in user_agent for keyword in mobile_keywords)
+    if is_mobile:
         context["is_mobile"] = True
     else:
         context["is_mobile"] = False

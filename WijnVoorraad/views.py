@@ -9,16 +9,16 @@ from django.utils import timezone
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import F, Sum, Count, Case, When
+from django.db.models import F, Sum, Case, When
 from django.db.models.functions import Lower
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from openai import APIError, OpenAI, OpenAIError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from translate import Translator
 
 from . import wijnvars
@@ -77,19 +77,73 @@ def generate_wine_type_enum():
 WineTypeEnum = generate_wine_type_enum()
 
 
-class WineInfo(BaseModel):
-    """structured response model for wine information to be used with OpenAI"""
+def make_strict_schema(schema: dict) -> dict:
+    """Recursively patch a Pydantic JSON schema to satisfy OpenAI strict mode:
+    adds additionalProperties=false and lists all properties as required."""
+    schema = dict(schema)
+    if "properties" in schema:
+        schema["additionalProperties"] = False
+        schema["required"] = list(schema["properties"].keys())
+        schema["properties"] = {
+            k: make_strict_schema(v) for k, v in schema["properties"].items()
+        }
+    if "$defs" in schema:
+        schema["$defs"] = {k: make_strict_schema(v) for k, v in schema["$defs"].items()}
+    return schema
 
-    wine_domain: str
-    year: int
-    name: str
-    grape_varieties: list[str]
-    country: str
-    wine_type: str  # Use str for OpenAI compatibility
-    region: str
-    classification: str
-    domain_website_url: str
-    description: str
+
+class WineLabelReading(BaseModel):
+    """Structured schema for reading wine label information from an image - only what is physically visible"""
+
+    producer_name: str = Field(
+        description="The producer, château, or domaine name EXACTLY as printed on the label"
+    )
+    wine_name: str = Field(
+        description="The wine or cuvée name EXACTLY as printed on the label"
+    )
+    vintage_year: int | None = Field(
+        default=None,
+        description="The vintage year as printed on the label, or null if not visible",
+    )
+    appellation: str = Field(
+        description="The AOC/DOC/AOP or other appellation as printed, empty string if not visible"
+    )
+    classification: str = Field(
+        description="Any classification printed on the label such as Grand Cru Classé, empty string if not visible"
+    )
+    country_hint: str = Field(
+        description="Country of origin if visible on the label, empty string if not visible"
+    )
+    confidence: str = Field(
+        description="Confidence in the identification: 'high', 'medium', or 'low'"
+    )
+
+
+class WineInfo(BaseModel):
+    """Structured response model for enriched wine information"""
+
+    wine_domain: str = Field(
+        description="The producer, château, or domaine name. This is a producer NAME, not a URL"
+    )
+    year: int = Field(description="Vintage year of the wine")
+    name: str = Field(description="The specific wine or cuvée name")
+    grape_varieties: list[str] = Field(
+        description="List of grape varieties used in this wine"
+    )
+    country: str = Field(description="Country of origin")
+    wine_type: str = Field(
+        description="Type of wine, must be exactly one of the allowed values"
+    )
+    region: str = Field(description="Wine region or appellation")
+    classification: str = Field(
+        description="Wine classification such as Grand Cru Classé, or empty string if none"
+    )
+    domain_website_url: str = Field(
+        description="Official website URL of the wine producer found via web search, or empty string if not found"
+    )
+    description: str = Field(
+        description="Taste profile, character, and food pairings based on web search results"
+    )
 
 
 class AdminUserMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -1089,120 +1143,157 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class AIview(View):
-    """View to handle AI image wine recognition"""
+    """View to handle AI image wine recognition using a two-step OpenAI Responses API flow.
+
+    Step 1: gpt-4o reads the wine label image and extracts only what is physically visible.
+    Step 2: gpt-4o uses web search to enrich the label data with grape varieties,
+            region details, taste profile, and the producer website.
+    """
+
+    MODEL = "gpt-4o"
 
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
         allowed_types = [e.value for e in WineTypeEnum]
         allowed_types_str = ", ".join(allowed_types)
-        system_prompt = (
-            "You are a wine expert helping to identify wines based on images. "
-            f"The allowed wine types are: {allowed_types_str}. "
-            "Always use one of these values for the wine type field. "
-            "You know the wine type, grape varieties, country, region, and classification of wines. "
-            "Search websites like Vivino, Wine-Searcher, and others to find the best information. "
-            "If you are sure aboute the domain, find the domain website and if possible validate the information there. "
-            "A domain website typically has the domain in its url."
-            "From the websites, domain and other also try to find description, taste, and food pairing information. Add references to the websites you used. "
-            "You can answer questions like 'What wine is in this picture?' or 'What grape varieties are in this wine?'"
-        )
 
-        message = None
+        mime_type = my_image.content_type or "image/jpeg"
+        image_base = base64.b64encode(my_image.read()).decode("utf-8")
+
         try:
-            image_base = base64.b64encode(my_image.read()).decode("utf-8")
+            # --- Step 1: Read the label (vision only, no web search) ---
+            step1_instructions = (
+                "You are an expert at reading wine bottle labels. "
+                "Your only task is to carefully read and transcribe text that is physically visible on the label. "
+                "Do not add any information that is not visible on the label. "
+                "If something is not visible or unclear, use an empty string or null. Do not guess."
+            )
+            step1_user_prompt = (
+                "Read this wine label carefully and extract the producer name, wine name, "
+                "vintage year, appellation, classification, and country exactly as printed. "
+                "Do not infer anything not visible on the label."
+            )
 
-            # Use GPT-4 Vision to ask a question about the image
-            response = client.beta.chat.completions.parse(
-                model="o4-mini",  # Use GPT-4 with Vision support
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    },
+            response1 = client.responses.create(
+                model=self.MODEL,
+                instructions=step1_instructions,
+                input=[
                     {
                         "role": "user",
                         "content": [
+                            {"type": "input_text", "text": step1_user_prompt},
                             {
-                                "type": "text",
-                                "text": "Find all information of the wine in this picture?",
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_base}"
-                                },
+                                "type": "input_image",
+                                "image_url": f"data:{mime_type};base64,{image_base}",
                             },
                         ],
-                    },
+                    }
                 ],
-                response_format=WineInfo,
-                max_completion_tokens=5000,
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "WineLabelReading",
+                        "schema": make_strict_schema(
+                            WineLabelReading.model_json_schema()
+                        ),
+                        "strict": True,
+                    }
+                },
             )
 
-        except APIError as e:
-            # Handle API error, e.g. retry or log
-            message = f"ERROR:OpenAI API returned an API Error: {e}"
-
-        except OpenAIError as e:
-            message = f"ERROR:AI request failed due to {e}"
-
-        if message:
-            # return message and error code
-            return message
-        else:
-            # Store the response to ai_usage table
             AIUsage.objects.create(
                 user=request.user,
-                model="gpt-4o-mini",
+                model=self.MODEL,
                 response_time=timezone.now(),
-                response_content=response.choices[0].message.content,
-                response_tokens_used=response.usage.total_tokens,
+                response_content=response1.output_text,
+                response_tokens_used=response1.usage.total_tokens,
             )
 
-            # Parse the JSON response
-            response_content = response.choices[0].message.content
-            response_json = json.loads(response_content)
+            label_data = WineLabelReading.model_validate_json(response1.output_text)
 
-            try:
-                wine_info = WineInfo(**response_json)
-            except ValidationError as e:
-                print("Validation error:", e)
-                # Handle invalid wine_type here
-
-            # if debug print the response
             if settings.DEBUG:
-                print("AI response:", response_content)
+                print("Step 1 label reading:", response1.output_text)
 
-            # Translate the "country" field
-            if "country" in response_json:
-                response_json["country"] = translate_to_dutch(response_json["country"])
+            # --- Step 2: Enrich with web search ---
+            step2_instructions = (
+                "You are a wine expert. You will be given structured information read from a wine label. "
+                "Use web search to find authoritative information about this specific wine: "
+                "grape varieties, full region details, taste profile, food pairings, and the producer's official website. "
+                "Prefer sources like the producer's own website, Wine-Searcher, Vivino, Jancis Robinson, and official appellation bodies. "
+                "Only report information you actually find. Do not invent data. "
+                f"The wine_type field must be exactly one of: {allowed_types_str}."
+            )
+            vintage_str = (
+                str(label_data.vintage_year) if label_data.vintage_year else "unknown"
+            )
+            step2_user_prompt = (
+                f"Find detailed information about this wine:\n"
+                f"- Producer: {label_data.producer_name}\n"
+                f"- Wine name: {label_data.wine_name}\n"
+                f"- Vintage: {vintage_str}\n"
+                f"- Appellation: {label_data.appellation}\n"
+                f"- Classification: {label_data.classification}\n"
+                f"- Country hint: {label_data.country_hint}\n\n"
+                "Search for accurate grape varieties, region, country, wine type, "
+                "official producer website, and a description with taste profile and food pairings."
+            )
 
-            # translate description field
-            if "description" in response_json:
-                response_json["description"] = translate_to_dutch(
-                    response_json["description"]
-                )
+            response2 = client.responses.create(
+                model=self.MODEL,
+                instructions=step2_instructions,
+                previous_response_id=response1.id,
+                input=step2_user_prompt,
+                tools=[{"type": "web_search_preview"}],
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "WineInfo",
+                        "schema": make_strict_schema(WineInfo.model_json_schema()),
+                        "strict": True,
+                    }
+                },
+            )
 
-            # Convert the modified JSON back to a string
-            translated_response = json.dumps(response_json)
-            return translated_response
+            AIUsage.objects.create(
+                user=request.user,
+                model=self.MODEL,
+                response_time=timezone.now(),
+                response_content=response2.output_text,
+                response_tokens_used=response2.usage.total_tokens,
+            )
+
+            if settings.DEBUG:
+                print("Step 2 wine info:", response2.output_text)
+
+        except APIError as e:
+            return f"ERROR:OpenAI API returned an API Error: {e}"
+        except OpenAIError as e:
+            return f"ERROR:AI request failed due to {e}"
+
+        response_json = json.loads(response2.output_text)
+
+        if "country" in response_json:
+            response_json["country"] = translate_to_dutch(response_json["country"])
+        if "description" in response_json:
+            response_json["description"] = translate_to_dutch(
+                response_json["description"]
+            )
+
+        return json.dumps(response_json)
 
     def post(self, request, *args, **kwargs):
-        image = request.FILES.get("image")  # Ophalen van de afbeelding
+        image = request.FILES.get("image")
         if not image:
             return JsonResponse({"message": "Geen afbeelding ontvangen"}, status=400)
 
-        # Verwerk de afbeelding hier
-        print(f"Ontvangen afbeelding: {image.name}")
+        if settings.DEBUG:
+            print(f"Ontvangen afbeelding: {image.name}")
 
         response = self.searchwine(image, request)
-        # print(response)
 
-        # if response startswith("ERROR"):
         if "ERROR" in response:
             return JsonResponse({"message": response}, status=400)
-        # Stuur een antwoord terug
         return JsonResponse({"message": response})
 
 
@@ -1887,9 +1978,12 @@ class BestellingRegelVerplaatsen(LoginRequiredMixin, DetailView):
                     request,
                     "Bestelregel %s verplaatst" % (regel.ontvangst.wijn.volle_naam,),
                 )
-                url = reverse(
-                    "WijnVoorraad:bestellingdetail", kwargs=dict(pk=regel.bestelling.id)
-                )
+            else:
+                # Geen nieuwe locatie en geen vak: niets te verplaatsen
+                pass
+            url = reverse(
+                "WijnVoorraad:bestellingdetail", kwargs=dict(pk=regel.bestelling.id)
+            )
         return HttpResponseRedirect(url)
 
 

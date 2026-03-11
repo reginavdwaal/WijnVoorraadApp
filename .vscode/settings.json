@@ -26,5 +26,6 @@
     },
     "conventionalCommits.scopes": [
         "models"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:poetry"
 }

@@ -43,6 +43,9 @@ major_version_zero = true
 version_files = [
     "WijnProject/__init__.py",
 ]
+pre_bump_hooks=[
+  "make_requirements.cmd"
+]
 
 post_bump_hooks=[
   "push_all.cmd"

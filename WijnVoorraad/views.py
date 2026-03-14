@@ -481,9 +481,7 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                 voorraad.verplaatsen(
                     v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
-                messages.success(
-                    request, f"Voorraad van {wijn.volle_naam} verplaatst"
-                )
+                messages.success(request, f"Voorraad van {wijn.volle_naam} verplaatst")
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
 
@@ -920,9 +918,7 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
             return HttpResponseRedirect(url)
         else:
             wijn = self.object.wijn
-            messages.success(
-                self.request, f"Voorraad van {wijn.volle_naam} toegevoegd"
-            )
+            messages.success(self.request, f"Voorraad van {wijn.volle_naam} toegevoegd")
             return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):

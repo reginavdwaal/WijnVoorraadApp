@@ -17,6 +17,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.core.exceptions import ValidationError
+from django.db.models.deletion import ProtectedError
 from openai import APIError, OpenAI, OpenAIError
 from pydantic import BaseModel, Field
 from translate import Translator
@@ -93,7 +94,8 @@ def make_strict_schema(schema: dict) -> dict:
 
 
 class WineLabelReading(BaseModel):
-    """Structured schema for reading wine label information from an image - only what is physically visible"""
+    """Structured schema for reading wine label information from an image
+    - only what is physically visible"""
 
     producer_name: str = Field(
         description="The producer, château, or domaine name EXACTLY as printed on the label"
@@ -109,7 +111,8 @@ class WineLabelReading(BaseModel):
         description="The AOC/DOC/AOP or other appellation as printed, empty string if not visible"
     )
     classification: str = Field(
-        description="Any classification printed on the label such as Grand Cru Classé, empty string if not visible"
+        description="Any classification printed on the label such as Grand Cru Classé,"
+        " empty string if not visible"
     )
     country_hint: str = Field(
         description="Country of origin if visible on the label, empty string if not visible"
@@ -139,7 +142,8 @@ class WineInfo(BaseModel):
         description="Wine classification such as Grand Cru Classé, or empty string if none"
     )
     domain_website_url: str = Field(
-        description="Official website URL of the wine producer found via web search, or empty string if not found"
+        description="Official website URL of the wine producer found via web search,"
+        " or empty string if not found"
     )
     description: str = Field(
         description="Taste profile, character, and food pairings based on web search results"
@@ -149,7 +153,7 @@ class WineInfo(BaseModel):
 class AdminUserMixin(LoginRequiredMixin, UserPassesTestMixin):
 
     def test_func(self):
-        return self.request.user.is_staff == True
+        return self.request.user.is_staff
 
 
 class VoorraadListView(LoginRequiredMixin, ListView):
@@ -318,7 +322,7 @@ class VoorraadDetailView(LoginRequiredMixin, ListView):
             try:
                 voorraad.drinken()
                 messages.success(
-                    request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
+                    request, f"Voorraad van {wijn.volle_naam} verminderd met 1"
                 )
                 url = reverse("WijnVoorraad:voorraadlist")
             except ValidationError as e:
@@ -450,7 +454,7 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                         v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                     )
                     messages.success(
-                        request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
+                        request, f"Voorraad van {wijn.volle_naam} verplaatst"
                     )
                 url = reverse("WijnVoorraad:voorraadlist")
             else:
@@ -478,7 +482,7 @@ class VoorraadVerplaatsen(LoginRequiredMixin, DetailView):
                     v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
                 messages.success(
-                    request, "Voorraad van %s verplaatst" % (wijn.volle_naam,)
+                    request, f"Voorraad van {wijn.volle_naam} verplaatst"
                 )
             url = reverse("WijnVoorraad:voorraadlist")
         return HttpResponseRedirect(url)
@@ -536,7 +540,7 @@ class VoorraadVerplaatsInVakken(LoginRequiredMixin, ListView):
                     v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen
                 )
 
-        messages.success(request, "Voorraad van %s verplaatst" % (wijn.volle_naam,))
+        messages.success(request, f"Voorraad van {wijn.volle_naam} verplaatst")
         return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
 
 
@@ -695,7 +699,7 @@ class MutatieDetailView(LoginRequiredMixin, DetailView):
                 except ValidationError as e:
                     messages.error(request, e.message)
 
-                except:
+                except ProtectedError:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
@@ -830,8 +834,8 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                 )
                 messages.success(
                     request,
-                    "Mutatie op standaardlocatie %s toegevoegd"
-                    % (ontvangst.deelnemer.standaardLocatie.omschrijving,),
+                    f"Mutatie op standaardlocatie"
+                    f" {ontvangst.deelnemer.standaardLocatie.omschrijving} toegevoegd",
                 )
                 url = reverse("WijnVoorraad:ontvangstdetail", kwargs=dict(pk=o_id))
             elif "Verwijder" in self.request.POST:
@@ -839,7 +843,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                     ontvangst.delete()
                     messages.success(request, "Ontvangst is verwijderd")
                     url = reverse("WijnVoorraad:ontvangstlist")
-                except:
+                except ProtectedError:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
@@ -850,7 +854,7 @@ class OntvangstDetailView(LoginRequiredMixin, DetailView):
                     my_kwargs = {}
                     my_kwargs["pk"] = nieuwe_ontvangst_id
                     url = reverse("WijnVoorraad:ontvangst-update", kwargs=my_kwargs)
-                except:
+                except ValidationError:
                     messages.error(
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
@@ -917,7 +921,7 @@ class OntvangstCreateView(LoginRequiredMixin, CreateView):
         else:
             wijn = self.object.wijn
             messages.success(
-                self.request, "Voorraad van %s toegevoegd" % (wijn.volle_naam,)
+                self.request, f"Voorraad van {wijn.volle_naam} toegevoegd"
             )
             return HttpResponseRedirect(self.get_success_url())
 
@@ -967,7 +971,7 @@ class OntvangstVoorraadView(LoginRequiredMixin, ListView):
             wijn = voorraad.wijn
             voorraad.drinken()
             messages.success(
-                request, "Voorraad van %s verminderd met 1" % (wijn.volle_naam,)
+                request, f"Voorraad van {wijn.volle_naam} verminderd met 1"
             )
             return HttpResponseRedirect(reverse("WijnVoorraad:voorraadlist"))
         elif "Afboeken" in self.request.POST:
@@ -1044,7 +1048,7 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
                     my_kwargs = {}
                     my_kwargs["pk"] = nieuwe_wijn_id
                     url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
-                except:
+                except ValidationError:
                     messages.error(
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
@@ -1054,7 +1058,7 @@ class WijnDetailView(LoginRequiredMixin, DetailView):
                     wijn.delete()
                     messages.success(request, "Wijn is verwijderd")
                     url = reverse("WijnVoorraad:wijnlist")
-                except:
+                except ProtectedError:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
@@ -1089,7 +1093,7 @@ class WijnSearchView(LoginRequiredMixin, DetailView):
                     my_kwargs = {}
                     my_kwargs["pk"] = nieuwe_wijn_id
                     url = reverse("WijnVoorraad:wijn-update", kwargs=my_kwargs)
-                except:
+                except ValidationError:
                     messages.error(
                         request, "Kopiëren is niet gelukt. Al teveel kopieën?"
                     )
@@ -1099,7 +1103,7 @@ class WijnSearchView(LoginRequiredMixin, DetailView):
                     wijn.delete()
                     messages.success(request, "Wijn is verwijderd")
                     url = reverse("WijnVoorraad:wijnlist")
-                except:
+                except ProtectedError:
                     messages.error(
                         request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                     )
@@ -1165,7 +1169,8 @@ class AIview(View):
             # --- Step 1: Read the label (vision only, no web search) ---
             step1_instructions = (
                 "You are an expert at reading wine bottle labels. "
-                "Your only task is to carefully read and transcribe text that is physically visible on the label. "
+                "Your only task is to carefully read and transcribe text that is"
+                " physically visible on the label. "
                 "Do not add any information that is not visible on the label. "
                 "If something is not visible or unclear, use an empty string or null. Do not guess."
             )
@@ -1217,10 +1222,13 @@ class AIview(View):
 
             # --- Step 2: Enrich with web search ---
             step2_instructions = (
-                "You are a wine expert. You will be given structured information read from a wine label. "
+                "You are a wine expert. You will be given structured information"
+                " read from a wine label. "
                 "Use web search to find authoritative information about this specific wine: "
-                "grape varieties, full region details, taste profile, food pairings, and the producer's official website. "
-                "Prefer sources like the producer's own website, Wine-Searcher, Vivino, Jancis Robinson, and official appellation bodies. "
+                "grape varieties, full region details, taste profile, food pairings,"
+                " and the producer's official website. "
+                "Prefer sources like the producer's own website, Wine-Searcher, Vivino,"
+                " Jancis Robinson, and official appellation bodies. "
                 "Only report information you actually find. Do not invent data. "
                 f"The wine_type field must be exactly one of: {allowed_types_str}."
             )
@@ -1395,7 +1403,7 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
             try:
                 bestellingregel.delete()
                 messages.success(request, "Bestellingregel is verwijderd")
-            except:
+            except ProtectedError:
                 messages.error(
                     request, "Verwijderen is niet mogelijk. Gerelateerde gegevens?"
                 )
@@ -1410,7 +1418,7 @@ class BestellingDetailView(LoginRequiredMixin, DetailView):
                         bestelling.delete()
                         messages.success(request, "Bestelling is verwijderd")
                         url = reverse("WijnVoorraad:bestellinglist")
-                    except:
+                    except ProtectedError:
                         messages.error(
                             request,
                             "Verwijderen is niet mogelijk. Gerelateerde gegevens?",
@@ -1576,7 +1584,7 @@ class BestellingRegelsSelecteren(LoginRequiredMixin, ListView):
                 )
                 vrd.bestellingregel_id = br.id
                 vrd.aantal_bestellen = br.aantal
-            except:
+            except BestellingRegel.DoesNotExist:
                 vrd.bestellingregel_id = ""
                 vrd.aantal_bestellen = ""
             bestel_list.append(vrd)
@@ -1634,7 +1642,7 @@ class BestellingRegelsSelecteren(LoginRequiredMixin, ListView):
                     v_nieuwe_bestelregel.opmerking = ""
                     v_nieuwe_bestelregel.save()
                     aantal_regels += 1
-            messages.success(request, "%s bestelregel(s) verwerkt" % (aantal_regels,))
+            messages.success(request, f"{aantal_regels} bestelregel(s) verwerkt")
             url = reverse("WijnVoorraad:bestellingdetail", kwargs=dict(pk=b_id))
         return HttpResponseRedirect(url)
 
@@ -1947,8 +1955,7 @@ class BestellingRegelVerplaatsen(LoginRequiredMixin, DetailView):
                     )
                     messages.success(
                         request,
-                        "Bestelregel %s verplaatst"
-                        % (regel.ontvangst.wijn.volle_naam,),
+                        f"Bestelregel {regel.ontvangst.wijn.volle_naam} verplaatst",
                     )
                 url = reverse(
                     "WijnVoorraad:bestellingdetail", kwargs=dict(pk=regel.bestelling.id)
@@ -1976,7 +1983,7 @@ class BestellingRegelVerplaatsen(LoginRequiredMixin, DetailView):
                 regel.verplaatsen(v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen)
                 messages.success(
                     request,
-                    "Bestelregel %s verplaatst" % (regel.ontvangst.wijn.volle_naam,),
+                    f"Bestelregel {regel.ontvangst.wijn.volle_naam} verplaatst",
                 )
             else:
                 # Geen nieuwe locatie en geen vak: niets te verplaatsen
@@ -2034,7 +2041,8 @@ class BestellingregelVerplaatsInVakken(LoginRequiredMixin, ListView):
             if v_aantal_verplaatsen:
                 v_nieuwe_vak = Vak.objects.get(pk=v_nieuw_vak_id)
                 v_nieuwe_locatie = v_nieuwe_vak.locatie
-                # bijwerken van de verwerktstatus van de regel pas als alle verplaatsingen klaar zijn
+                # bijwerken van de verwerktstatus van de regel
+                # pas als alle verplaatsingen klaar zijn
                 bijwerken = False
                 regel.verplaatsen(
                     v_nieuwe_locatie, v_nieuwe_vak, v_aantal_verplaatsen, bijwerken
@@ -2044,7 +2052,7 @@ class BestellingregelVerplaatsInVakken(LoginRequiredMixin, ListView):
 
         messages.success(
             request,
-            "Bestellingregel %s verplaatst" % (regel.ontvangst.wijn.volle_naam,),
+            f"Bestellingregel {regel.ontvangst.wijn.volle_naam} verplaatst",
         )
         url = reverse(
             "WijnVoorraad:bestellingdetail", kwargs=dict(pk=regel.bestelling.id)

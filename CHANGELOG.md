@@ -1,3 +1,19 @@
+## v0.18.0 (2026-03-14)
+
+### Feat
+
+- **ai_search**: refactor wine search to two-step OpenAI Responses API flow
+- mobiel vakken onder elkaar bij verplaatsen
+- Bestelling verzamelen
+- Sortering
+- **ai_search**: Added website & description
+
+### Fix
+
+- detection of mobile improved
+- **Ai_search**: Fixed error handling
+- **models**: Added tests and changed reservation supply check
+
 ## v0.17.0 (2025-10-02)
 
 ### BREAKING CHANGE

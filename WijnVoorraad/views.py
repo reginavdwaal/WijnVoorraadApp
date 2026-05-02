@@ -20,7 +20,6 @@ from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 from openai import APIError, OpenAI, OpenAIError
 from pydantic import BaseModel, Field
-from translate import Translator
 
 from . import wijnvars
 from .forms import (
@@ -48,12 +47,6 @@ from .models import (
     BestellingRegel,
 )
 from .services import WijnVoorraadService
-
-
-def translate_to_dutch(text):
-    translator = Translator(to_lang="nl")
-    translation = translator.translate(text)
-    return translation
 
 
 # class WineTypeEnum(str, Enum):
@@ -1226,7 +1219,8 @@ class AIview(View):
                 "Prefer sources like the producer's own website, Wine-Searcher, Vivino,"
                 " Jancis Robinson, and official appellation bodies. "
                 "Only report information you actually find. Do not invent data. "
-                f"The wine_type field must be exactly one of: {allowed_types_str}."
+                f"The wine_type field must be exactly one of: {allowed_types_str}. "
+                "Write the description field in Dutch."
             )
             vintage_str = (
                 str(label_data.vintage_year) if label_data.vintage_year else "unknown"
@@ -1276,13 +1270,6 @@ class AIview(View):
             return f"ERROR:AI request failed due to {e}"
 
         response_json = json.loads(response2.output_text)
-
-        if "country" in response_json:
-            response_json["country"] = translate_to_dutch(response_json["country"])
-        if "description" in response_json:
-            response_json["description"] = translate_to_dutch(
-                response_json["description"]
-            )
 
         return json.dumps(response_json)
 

@@ -1,3 +1,9 @@
+## v0.18.1 (2026-05-02)
+
+### Fix
+
+- **ai**: replace post-hoc translation with native Dutch description output
+
 ## v0.18.0 (2026-03-14)
 
 ### Feat

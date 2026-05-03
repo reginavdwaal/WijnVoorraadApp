@@ -1,3 +1,9 @@
+## v0.18.2 (2026-05-03)
+
+### Fix
+
+- **ui**: replace admin jsi18n with public JavaScriptCatalog endpoint
+
 ## v0.18.1 (2026-05-02)
 
 ### Fix

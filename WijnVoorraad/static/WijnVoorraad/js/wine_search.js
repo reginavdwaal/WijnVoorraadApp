@@ -10,58 +10,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function toUpper(str) {
-    // Capitalize the first letter of each word in a string
-    // Check if the input is a valid string
-    if (typeof str !== 'string' || str.length === 0) {
-        return str; // Return the original input if it's not a valid string
-    }
+    if (typeof str !== 'string' || str.length === 0) return str;
     return str
         .toLowerCase()
         .split(' ')
-        .map(function(word) {
-            return word[0].toUpperCase() + word.substr(1);
-        })
+        .map(word => word.length ? word[0].toUpperCase() + word.slice(1) : word)
         .join(' ');
 }
 
+function setField(id, value) {
+    const el = document.getElementById(id);
+    if (!el || value === undefined || value === null) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 function populateForm(data) {
-    ovData = JSON.parse(data);
+    const ovData = JSON.parse(data);
 
-    document.getElementById('id_domein').value = toUpper(ovData.wine_domain);
-    document.getElementById('id_naam').value = toUpper(ovData.name);
-    document.getElementById('id_jaar').value = ovData.year;
-    document.getElementById('id_land').value = ovData.country;
-    document.getElementById('id_streek').value = ovData.region;
-    document.getElementById('id_classificatie').value = ovData.classification;
-    document.getElementById('id_opmerking').value = ovData.description;
-    document.getElementById('id_website').value = ovData.domain_website_url;
-    
+    setField('id_domein', toUpper(ovData.wine_domain));
+    setField('id_naam', toUpper(ovData.name));
+    setField('id_jaar', ovData.year);
+    setField('id_land', ovData.country);
+    setField('id_streek', ovData.region);
+    setField('id_classificatie', ovData.classification);
+    setField('id_opmerking', ovData.description);
+    setField('id_website', ovData.domain_website_url);
 
-    // Dynamically select the wine type in the combobox
+    // Wijnsoort select (Select2)
     const wijnsoortSelect = document.getElementById('id_wijnsoort');
-    const wijnsoortOptions = Array.from(wijnsoortSelect.options);
-
-
-    // Find the option that matches the wine_type and select it
-    const matchingOption = wijnsoortOptions.find(option => option.textContent === ovData.wine_type);
+    const matchingOption = Array.from(wijnsoortSelect.options)
+        .find(option => option.textContent.trim() === ovData.wine_type);
     if (matchingOption) {
         wijnsoortSelect.value = matchingOption.value;
+        wijnsoortSelect.dispatchEvent(new Event('change', { bubbles: true }));
         console.log("Matching wine type found:", matchingOption.value);
     } else {
         console.warn("No matching wine type found for:", ovData.wine_type);
     }
 
-    // Wijndruivensoorten selecteren
+    // Druivensoorten multi-select (Select2)
     const druivenSelect = document.getElementById('id_wijnDruivensoorten');
     const druifOpties = Array.from(druivenSelect.options);
     druifOpties.forEach(option => option.selected = false);
-
-    ovData.grape_varieties.forEach(druif => {
-        const match = druifOpties.find(opt => opt.textContent.trim().toLowerCase() === druif.toLowerCase());
-        if (match) {
-            match.selected = true;
-        }
+    (ovData.grape_varieties || []).forEach(druif => {
+        const match = druifOpties.find(opt =>
+            opt.textContent.trim().toLowerCase() === druif.toLowerCase()
+        );
+        if (match) match.selected = true;
     });
+    druivenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const firstField = document.getElementById('id_domein');
+    if (firstField) firstField.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function callPythonFunction() {

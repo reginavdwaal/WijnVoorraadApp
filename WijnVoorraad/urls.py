@@ -63,6 +63,11 @@ urlpatterns = [
         name="druivensoort-popupadd",
     ),
     path(
+        "druivensoort/ajax-create/",
+        WijnVoorraad.views_popup.druivensoort_ajax_create,
+        name="druivensoort-ajax-create",
+    ),
+    path(
         "gebruiker/<int:pk>/",
         WijnVoorraad.views_basis.GebruikerDetailView.as_view(),
         name="gebruikerdetail",

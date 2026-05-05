@@ -2,7 +2,9 @@
 {% load i18n static %}
 {% load wijnvoorraad_extras %}
 
-{% block header %} 
+{% block header %}
+<link rel="stylesheet" href="{% static 'WijnVoorraad/css/tom-select.min.css' %}">
+<script src="{% static 'WijnVoorraad/js/tom-select.complete.min.js' %}"></script>
 <script src="{% static 'WijnVoorraad/js/wine_search.js' %}"></script>
 {% endblock header %}
 {% block breadcrumbs %} {% endblock %}

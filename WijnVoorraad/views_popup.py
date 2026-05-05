@@ -1,10 +1,12 @@
 """All popup views and main function to handle the popup"""
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.html import escape
+from django.views.decorators.http import require_POST
 
+from WijnVoorraad.models import DruivenSoort
 from WijnVoorraad.forms import (
     DeelnemerForm,
     DruivenSoortForm,
@@ -90,3 +92,16 @@ def wijn_druiven_soorten_create_popup_view(request):
 @login_required
 def wijn_soort_create_popup_view(request):
     return handle_pop_add(request, WijnSoortForm, "wijnsoort")
+
+
+@login_required
+@require_POST
+def druivensoort_ajax_create(request):
+    naam = request.POST.get('omschrijving', '').strip()
+    if not naam:
+        return JsonResponse({'error': 'Naam is verplicht'}, status=400)
+    try:
+        obj = DruivenSoort.objects.get(omschrijving__iexact=naam)
+    except DruivenSoort.DoesNotExist:
+        obj = DruivenSoort.objects.create(omschrijving=naam)
+    return JsonResponse({'id': obj.pk, 'omschrijving': obj.omschrijving})

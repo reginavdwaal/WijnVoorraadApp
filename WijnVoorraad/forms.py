@@ -161,13 +161,16 @@ class LocatieForm(forms.ModelForm):
 
 
 class WijnForm(forms.ModelForm):
+    field_order = ['domein', 'naam', 'wijnsoort', 'jaar', 'land', 'streek',
+                   'classificatie', 'website', 'wijnDruivensoorten', 'opmerking',
+                   'foto', 'datumAfgesloten']
     domein = forms.CharField(
         max_length=200, widget=forms.TextInput(attrs={"size": "40"})
     )
     naam = forms.CharField(max_length=200, widget=forms.TextInput(attrs={"size": "40"}))
     wijnsoort = forms.ModelChoiceField(WijnSoort.objects, widget=SelectWithPop)
     wijnDruivensoorten = forms.ModelMultipleChoiceField(
-        DruivenSoort.objects, required=False, widget=MultipleSelectWithPop
+        DruivenSoort.objects, required=False, widget=forms.SelectMultiple
     )
     website = forms.CharField(max_length=200, required=False)
     # website = forms.URLInput.attrs={'novalidate': True}

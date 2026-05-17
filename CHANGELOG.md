@@ -1,3 +1,13 @@
+## v0.19.0 (2026-05-17)
+
+### Feat
+
+- **ui**: add Tom Select grape picker with AI mismatch warning panel
+
+### Fix
+
+- **ui**: ensure AI wine search populates form correctly on Android and Firefox
+
 ## v0.18.2 (2026-05-03)
 
 ### Fix

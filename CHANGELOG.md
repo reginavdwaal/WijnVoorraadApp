@@ -1,3 +1,9 @@
+## v0.20.0 (2026-09-20)
+
+### Feat
+
+- **ai-search**: require login for AI wine label search
+
 ## v0.19.0 (2026-05-17)
 
 ### Feat

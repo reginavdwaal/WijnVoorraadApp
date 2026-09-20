@@ -4,6 +4,7 @@ import base64
 from datetime import datetime
 from enum import Enum
 import json
+import re
 from django.utils import timezone
 
 from django.conf import settings
@@ -1135,15 +1136,32 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class AIview(View):
+class AIview(LoginRequiredMixin, View):
     """View to handle AI image wine recognition using a two-step OpenAI Responses API flow.
 
     Step 1: gpt-4o reads the wine label image and extracts only what is physically visible.
     Step 2: gpt-4o uses web search to enrich the label data with grape varieties,
             region details, taste profile, and the producer website.
+
+    Elke aanroep kost geld bij OpenAI, dus alleen ingelogde gebruikers mogen hier komen.
     """
 
     MODEL = "gpt-4o"
+
+    def handle_no_permission(self):
+        """Antwoord met JSON in plaats van een redirect naar de loginpagina.
+
+        Deze view wordt alleen via fetch() aangeroepen. Een redirect (302) wordt door
+        fetch stilzwijgend gevolgd, waarna de HTML van de loginpagina als JSON wordt
+        geparsed en de gebruiker een onbegrijpelijke fout ziet.
+        """
+        return JsonResponse(
+            {
+                "message": "Niet ingelogd. Log opnieuw in om AI-zoeken te gebruiken.",
+                "login_url": f"{settings.LOGIN_URL}?next={self.request.path}",
+            },
+            status=401,
+        )
 
     def searchwine(self, my_image, request):
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -1269,7 +1287,10 @@ class AIview(View):
         except OpenAIError as e:
             return f"ERROR:AI request failed due to {e}"
 
-        response_json = json.loads(response2.output_text)
+        # Strip C0 control character escapes (\x00-\x1f) that OpenAI sometimes
+        # emits from garbage OCR input; also catches truncated \uXXX sequences.
+        output_text = re.sub(r'\\u00[01][0-9a-fA-F]?', '', response2.output_text)
+        response_json = json.loads(output_text)
 
         return json.dumps(response_json)
 

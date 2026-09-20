@@ -198,8 +198,11 @@ function callPythonFunction() {
     fetch(baseUrl + '/AI-zoeken/', {
         method: 'POST',
         body: formData,
+        // De sessiecookie is de authenticatie; stuur die expliciet mee.
+        credentials: 'same-origin',
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
     .then(async response => {
@@ -209,6 +212,14 @@ function callPythonFunction() {
                 errorData = await response.json();
             } catch {
                 errorData = { message: 'Onbekende serverfout' };
+            }
+            // Sessie verlopen of niet ingelogd: stuur de gebruiker naar de login.
+            if (response.status === 401 || response.status === 403) {
+                const loginUrl = errorData.login_url
+                    || '/accounts/login/?next=' + encodeURIComponent(window.location.pathname);
+                alert(errorData.message || 'Je sessie is verlopen. Log opnieuw in.');
+                window.location.assign(loginUrl);
+                return Promise.reject({ status: response.status, handled: true });
             }
             throw {
                 status: response.status,
@@ -222,6 +233,10 @@ function callPythonFunction() {
         document.getElementById('ai_result').textContent = data.message;
     })
     .catch(error => {
+        // Redirect naar login is al in gang gezet; geen tweede melding tonen.
+        if (error && error.handled) {
+            return;
+        }
         console.error('Error:', error);
         const errorMessage = error.message || 'Er is een fout opgetreden';
         document.getElementById('ai_result').textContent = errorMessage;

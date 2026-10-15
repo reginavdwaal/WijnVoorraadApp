@@ -8,6 +8,8 @@ WijnVoorraadApp ("Wine Inventory App") is a Django web application for managing 
 
 ## Commands
 
+**Always run Python tooling through Poetry** (`poetry run ...`), which uses the in-project virtualenv at `.venv` (`poetry.toml` sets `in-project = true`). Never use a global `python`, `pytest`, `pip`, etc., and never install packages outside Poetry (`poetry add` / `poetry install`).
+
 ### Development
 
 ```bash
@@ -15,54 +17,60 @@ WijnVoorraadApp ("Wine Inventory App") is a Django web application for managing 
 poetry install
 
 # Run development server
-python manage.py runserver --settings=WijnProject.settings.dev
+poetry run python manage.py runserver --settings=WijnProject.settings.dev
 
 # Apply migrations
-python manage.py migrate --settings=WijnProject.settings.dev
+poetry run python manage.py migrate --settings=WijnProject.settings.dev
 
 # Create new migration
-python manage.py makemigrations --settings=WijnProject.settings.dev
+poetry run python manage.py makemigrations --settings=WijnProject.settings.dev
 
 # Collect static files (production)
-python manage.py collectstatic --settings=WijnProject.settings.prod
+poetry run python manage.py collectstatic --settings=WijnProject.settings.prod
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-pytest
+poetry run pytest
 
 # Run tests with coverage
-pytest --cov
+poetry run pytest --cov
 
 # Run a single test file
-pytest WijnVoorraad/tests_something.py
+poetry run pytest WijnVoorraad/tests/models/test_voorraadmutatie.py
 
 # Run a specific test
-pytest WijnVoorraad/tests_something.py::TestClass::test_method
+poetry run pytest WijnVoorraad/tests/models/test_voorraadmutatie.py::TestClass::test_method
 ```
 
-pytest uses `WijnProject.settings.dev` (configured in `pytest.ini`). The dev settings use SQLite.
+pytest uses `WijnProject.settings.dev` (configured in `pytest.ini`). The dev settings use SQLite (`db.sqlite3` in the repo root, which is tracked in git).
+
+Tests live in `WijnVoorraad/tests/models/` and `WijnVoorraad/tests/views/`. Model tests share fixtures through `SharedTestDataMixin` in `tests/models/model_helper.py`. View tests that touch OpenAI must patch `WijnVoorraad.views.OpenAI` so no paid call is made.
+
+### Environment / secrets
+
+`base.py` calls `config("DB_PASSWORD")` and `config("OPENAI_API_KEY")` with no default, and `prod.py` also requires `SECRET_KEY`. `python-decouple` reads these from the environment or from the gitignored `WijnProject/settings/.env`. Without them, importing settings (and therefore pytest) fails.
 
 ### Linting
 
 ```bash
 # Lint Python
-pylint WijnVoorraad WijnProject
+poetry run pylint WijnVoorraad WijnProject
 
 # Lint templates
-djlint WijnVoorraad/templates --check
+poetry run djlint WijnVoorraad/templates --check
 ```
 
 ### Versioning & Releases
 
 ```bash
 # Bump version (uses commitizen, updates CHANGELOG.md, triggers build/push_all.cmd)
-cz bump
+poetry run cz bump
 ```
 
-Commitizen is configured to use conventional commits. Version is stored in `pyproject.toml` and `WijnProject/__init__.py`.
+Commitizen is configured to use conventional commits. Version is stored in `pyproject.toml` and `WijnProject/__init__.py`. The `[tool.commitizen]` section in `pyproject.toml` is the live config; `.cz.toml` is a stale leftover (still says 0.16.0) and `pyproject.toml`'s `pre_bump_hooks` references a `make_requirements.cmd` that is not in the repo. The post-bump hook (`build/push_all.cmd`) pushes tags. Production deployment is done with the shell scripts in `build/` (e.g. `install.sh <app> <tag>`), run on the host against a tagged release.
 
 ## Architecture
 
@@ -97,6 +105,14 @@ WijnSoort (wine type) ←── Wijn (wine) ←── Ontvangst (receipt) ←─
 
 **Critical invariant**: `WijnVoorraad.aantal` must equal sum of IN mutations minus sum of OUT mutations. `WijnVoorraadService.ControleerLocatie/ControleerOntvangst` verify this. `WijnVoorraadService.BijwerkenVrdOntvangst` can recalculate and repair the stock table from mutations.
 
+Behaviors that are easy to break:
+
+- Stock is a "stock row per (ontvangst, locatie, vak)". Editing or deleting a `VoorraadMutatie` first reverses the old mutation, then applies the new one (`WijnVoorraad.Bijwerken`). A stock row that reaches 0 is deleted, and `Wijn.check_afsluiten()` then sets or clears `datumAfgesloten`. So rows with `aantal == 0` should never exist.
+- Validation lives in `clean()`, not `save()`. `VoorraadMutatie.clean()` calls `WijnVoorraad.check_voorraad_wijziging` (rejects negative stock) and `BestellingRegel.clean()` calls `check_voorraad_rsv` (rejects over-reservation). Programmatic callers must call `clean()` themselves; the `drinken` and `afboeken` helpers do, but `verplaatsen` and `voorraad_plus_1` do not.
+- `VoorraadMutatie.drinken/verplaatsen/afboeken/voorraad_plus_1` are the static factory methods for creating mutations. A move (`verplaatsen`) is two mutations, one UIT at the old location and one IN at the new one, both with action `V`.
+- Reservations: `BestellingRegel.save()/delete()` maintain `WijnVoorraad.aantal_rsv` through `Bijwerken_rsv`, but only for lines with `verwerkt == "N"`. `aantal_werkelijk` (the `aantal_correctie` if set, else `aantal`) is the number used everywhere. Once a line is processed (`A` afgeboekt / `V` verplaatst) it can't go back to `N`. Saving a line also calls `Bestelling.check_afsluiten()`.
+- Model method names mix Dutch and English, and some use PascalCase (`Bijwerken`, `ControleerLocatie`); follow the existing name when calling or extending them.
+
 ### Views Organization
 
 - **`views.py`** — main views: inventory list/detail, mutations, orders, AI wine search (OpenAI integration)
@@ -117,6 +133,6 @@ Templates are under `WijnVoorraad/templates/WijnVoorraad/`. Base template: `base
 
 ### External Integrations
 
-- **OpenAI** — used in the AI wine search feature to parse wine labels; model and response usage tracked in `AIUsage`
+- **OpenAI** — used in the AI wine search feature (`AIview` in `views.py`, URL name `WijnVoorraad:AI-zoeken`): a two-step Responses API flow (read the label image, then enrich via web search) with the model named in `settings.OPENAI_MODEL` (override via `OPENAI_MODEL` in `.env`; default `gpt-6.1-sol`), structured output via Pydantic models (`WineLabelReading`, `WineInfo`), and usage tracked in `AIUsage`. Every call costs money, so the view requires login and must refuse anonymous requests before any OpenAI client is created.
 - **django-select2** — for autocomplete fields in forms
 - **translate** — for translating wine type names to Dutch

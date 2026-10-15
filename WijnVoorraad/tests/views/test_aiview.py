@@ -6,11 +6,11 @@ OpenAI. These tests therefore assert on the OpenAI client mock as well as on the
 status code.
 """
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from WijnVoorraad.models import AIUsage
@@ -77,3 +77,49 @@ class TestAIviewAuthentication(TestCase):
 
         self.assertEqual(response.status_code, 400)
         mock_openai.assert_not_called()
+
+
+class TestAIviewModelSettings(TestCase):
+    """The model and search tool sent to OpenAI come from settings, not code."""
+
+    def setUp(self):
+        self.url = reverse("WijnVoorraad:AI-zoeken")
+        self.user = get_user_model().objects.create_user(
+            username="wijnliefhebber", password="geheim123"
+        )
+
+    @staticmethod
+    def _fake_response(output_text, response_id):
+        response = MagicMock()
+        response.id = response_id
+        response.output_text = output_text
+        response.usage.total_tokens = 10
+        return response
+
+    @override_settings(OPENAI_MODEL="test-model-x")
+    @patch("WijnVoorraad.views.OpenAI")
+    def test_model_and_search_tool_come_from_settings(self, mock_openai):
+        """Both steps use settings.OPENAI_MODEL and the non-preview web_search tool."""
+        label = (
+            '{"producer_name": "P", "wine_name": "W", "vintage_year": 2015,'
+            ' "appellation": "", "classification": "", "country_hint": "",'
+            ' "confidence": "high"}'
+        )
+        mock_openai.return_value.responses.create.side_effect = [
+            self._fake_response(label, "resp_1"),
+            self._fake_response('{"name": "W"}', "resp_2"),
+        ]
+        self.client.force_login(self.user)
+
+        response = self.client.post(self.url, {"image": _image()})
+
+        self.assertEqual(response.status_code, 200)
+        calls = mock_openai.return_value.responses.create.call_args_list
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            self.assertEqual(call.kwargs["model"], "test-model-x")
+        self.assertEqual(calls[1].kwargs["tools"], [{"type": "web_search"}])
+        self.assertEqual(
+            list(AIUsage.objects.values_list("model", flat=True)),
+            ["test-model-x", "test-model-x"],
+        )

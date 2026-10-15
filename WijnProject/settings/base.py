@@ -67,6 +67,9 @@ WSGI_APPLICATION = "WijnProject.wsgi.application"
 
 DB_PASSWORD = config("DB_PASSWORD")
 OPENAI_API_KEY = config("OPENAI_API_KEY")
+# Model for the AI wine label search (views.AIview). OpenAI retires models
+# regularly, so override it in .env instead of changing code.
+OPENAI_MODEL = config("OPENAI_MODEL", default="gpt-6.1-sol")
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

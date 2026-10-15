@@ -1139,14 +1139,19 @@ class WijnUpdateView(LoginRequiredMixin, UpdateView):
 class AIview(LoginRequiredMixin, View):
     """View to handle AI image wine recognition using a two-step OpenAI Responses API flow.
 
-    Step 1: gpt-4o reads the wine label image and extracts only what is physically visible.
-    Step 2: gpt-4o uses web search to enrich the label data with grape varieties,
+    Step 1: the model reads the wine label image and extracts only what is physically visible.
+    Step 2: the model uses web search to enrich the label data with grape varieties,
             region details, taste profile, and the producer website.
+
+    The model comes from settings.OPENAI_MODEL.
 
     Elke aanroep kost geld bij OpenAI, dus alleen ingelogde gebruikers mogen hier komen.
     """
 
-    MODEL = "gpt-4o"
+    @property
+    def MODEL(self):  # pylint: disable=invalid-name
+        """Read at call time so the model can be changed through settings/.env."""
+        return settings.OPENAI_MODEL
 
     def handle_no_permission(self):
         """Antwoord met JSON in plaats van een redirect naar de loginpagina.
@@ -1260,7 +1265,7 @@ class AIview(LoginRequiredMixin, View):
                 instructions=step2_instructions,
                 previous_response_id=response1.id,
                 input=step2_user_prompt,
-                tools=[{"type": "web_search_preview"}],
+                tools=[{"type": "web_search"}],
                 text={
                     "format": {
                         "type": "json_schema",

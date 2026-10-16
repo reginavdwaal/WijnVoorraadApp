@@ -66,11 +66,11 @@ poetry run djlint WijnVoorraad/templates --check
 ### Versioning & Releases
 
 ```bash
-# Bump version (uses commitizen, updates CHANGELOG.md, triggers build/push_all.cmd)
+# Bump version (uses commitizen, updates CHANGELOG.md, pushes the tag, which triggers the deploy)
 poetry run cz bump
 ```
 
-Commitizen is configured to use conventional commits. Version is stored in `pyproject.toml` and `WijnProject/__init__.py`. The `[tool.commitizen]` section in `pyproject.toml` is the live config; `.cz.toml` is a stale leftover (still says 0.16.0) and `pyproject.toml`'s `pre_bump_hooks` references a `make_requirements.cmd` that is not in the repo. The post-bump hook (`build/push_all.cmd`) pushes tags. Production deployment is done with the shell scripts in `build/` (e.g. `install.sh <app> <tag>`), run on the host against a tagged release.
+Commitizen is configured to use conventional commits (config in `pyproject.toml`). Version is stored in `pyproject.toml` and `WijnProject/__init__.py`. The post-bump hook runs `git push origin HEAD --tags`, and **pushing the `vX.Y.Z` tag deploys to production**: `.github/workflows/release-deploy.yaml` runs the tests, creates the GitHub release, rsyncs the tree to the server and activates it with the shared `activate.sh` from the `www_installer` repo (automatic rollback if the smoke test fails). Per-app deploy config is `deploy/vino_config.sh`; the one-time GitHub secrets and server setup are in `deploy/README.md`. `requirements.txt` is regenerated in CI from `poetry.lock`; the tracked copy is not used for deploys. The old manual scripts in `build/` are legacy.
 
 ## Architecture
 

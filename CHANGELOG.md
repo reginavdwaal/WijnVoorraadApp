@@ -1,3 +1,9 @@
+## v0.21.0 (2026-10-16)
+
+### Feat
+
+- **ai-search**: make the OpenAI model configurable and use web_search
+
 ## v0.20.0 (2026-09-20)
 
 ### Feat

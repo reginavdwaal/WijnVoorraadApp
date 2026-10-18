@@ -1,3 +1,9 @@
+## v0.22.0 (2026-10-18)
+
+### Feat
+
+- **deploy**: deploy to production automatically when a release tag is pushed
+
 ## v0.21.0 (2026-10-16)
 
 ### Feat
